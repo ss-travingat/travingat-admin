@@ -2114,7 +2114,7 @@ export default function AdminProfilesPage() {
                   </label>
                   <Input
                     type="text"
-                    value={form.name}
+                    value={form.name || ""}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, name: e.target.value }))
                     }
@@ -2130,7 +2130,7 @@ export default function AdminProfilesPage() {
                   </label>
                   <Input
                     type="text"
-                    value={form.handle}
+                    value={form.handle || ""}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, handle: e.target.value }))
                     }
@@ -2145,7 +2145,7 @@ export default function AdminProfilesPage() {
                     Bio
                   </label>
                   <Textarea
-                    value={form.bio}
+                    value={form.bio || ""}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, bio: e.target.value }))
                     }
@@ -2193,7 +2193,7 @@ export default function AdminProfilesPage() {
                   />
                   <Input
                     type="text"
-                    value={form.homeland}
+                    value={form.homeland || ""}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, homeland: e.target.value }))
                     }
@@ -2217,7 +2217,7 @@ export default function AdminProfilesPage() {
                   />
                   <Input
                     type="text"
-                    value={form.currentlyIn}
+                    value={form.currentlyIn || ""}
                     onChange={(e) =>
                       setForm((prev) => ({ ...prev, currentlyIn: e.target.value }))
                     }
