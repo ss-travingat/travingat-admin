@@ -1052,12 +1052,12 @@ export default function AdminProfilesPage() {
       align: p.align,
       bio: p.bio,
       interests: [...p.interests],
-      languages: [...p.languages],
+      languages: p.languages ? [...p.languages] : [],
       homeland: p.homeland,
       currentlyIn: p.currentlyIn,
       socials: { ...p.socials, x: p.socials.x || "", instagram: p.socials.instagram || "", linkedin: p.socials.linkedin || "", youtube: p.socials.youtube || "" },
       aboutImages: p.aboutImages ? [...p.aboutImages] : [],
-      visitedCountryCodes: [...p.visitedCountryCodes],
+      visitedCountryCodes: p.visitedCountryCodes ? [...p.visitedCountryCodes] : [],
       countryImages: p.countryImages ? [...p.countryImages] : [],
       collectionImages: p.collectionImages
         ? p.collectionImages.map((collection) => ({
@@ -2444,7 +2444,7 @@ export default function AdminProfilesPage() {
                         <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1">{p.collections} collections</span>
                       </div>
                       {/* Visited flags preview */}
-                      {p.visitedCountryCodes.length > 0 && (
+                      {p.visitedCountryCodes && p.visitedCountryCodes.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
                           {p.visitedCountryCodes.slice(0, 15).map((code) => (
                             <img
