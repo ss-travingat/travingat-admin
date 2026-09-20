@@ -9,7 +9,7 @@ export default function AdminNavbar() {
 
   const handleSignOut = async () => {
     try {
-      await fetch("/api/cms/session", { method: "DELETE" });
+      await fetch("/api/admin/session", { method: "DELETE" });
       router.push("/login");
     } catch {
       router.push("/login");

@@ -6,8 +6,9 @@ export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
 
   const isLoginPage = url.pathname === '/login';
+  const isLoginApi = url.pathname === '/api/cms/login' || url.pathname === '/api/admin/login';
 
-  if (isLoginPage) {
+  if (isLoginPage || isLoginApi) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 

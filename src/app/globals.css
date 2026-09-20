@@ -3,11 +3,25 @@
 @plugin "@tailwindcss/typography";
 
 /* ── Z-Index Layers ── */
-@utility z-header { z-index: 100; }
-@utility z-dropdown { z-index: 500; }
-@utility z-tooltip { z-index: 1000; }
-@utility z-modal { z-index: 2000; }
-@utility z-toast { z-index: 3000; }
+@utility z-header {
+  z-index: 100;
+}
+
+@utility z-dropdown {
+  z-index: 500;
+}
+
+@utility z-tooltip {
+  z-index: 1000;
+}
+
+@utility z-modal {
+  z-index: 2000;
+}
+
+@utility z-toast {
+  z-index: 3000;
+}
 
 @theme {
   /* ── Font Families ── */
@@ -243,18 +257,18 @@ body {
   }
 
   a,
-  button, 
-  [role="button"], 
-  input[type="button"], 
-  input[type="submit"], 
+  button,
+  [role="button"],
+  input[type="button"],
+  input[type="submit"],
   input[type="reset"] {
     cursor: pointer;
   }
-  
-  button:disabled, 
+
+  button:disabled,
   [role="button"]:disabled,
-  input[type="button"]:disabled, 
-  input[type="submit"]:disabled, 
+  input[type="button"]:disabled,
+  input[type="submit"]:disabled,
   input[type="reset"]:disabled {
     cursor: default;
   }
@@ -507,6 +521,7 @@ body {
   from {
     transform: scale(1.02);
   }
+
   to {
     transform: scale(1);
   }
@@ -518,8 +533,13 @@ body {
 
 /* ── Page transition ── */
 @keyframes page-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-page-in {
@@ -528,8 +548,13 @@ body {
 
 /* ── Tab transition ── */
 @keyframes tab-dissolve {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-tab-dissolve {
@@ -538,18 +563,35 @@ body {
 
 /* ── Travingat loader ── */
 @keyframes plane-orbit {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes loader-fade-in {
-  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 @keyframes carousel-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .carousel-image {
@@ -595,7 +637,7 @@ body {
   width: 28px;
   height: 28px;
   display: block;
-  filter: drop-shadow(0 0 6px rgba(255,255,255,0.5));
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
 }
 
 .travingat-loader__label {
@@ -614,15 +656,16 @@ body {
 
 /* Safari anti-fix to match Chrome rendering and bypass Safari's var() comma parsing bug */
 @supports (background: -webkit-named-image(i)) {
+
   .trv-nav-link,
   .trv-cta-desktop,
   .trv-mobile-link,
   .trv-cta-mobile {
     font-family: var(--font-inter) !important;
   }
+
   .trv-nav-link {
     letter-spacing: 0.3px !important;
     font-weight: 450 !important;
   }
 }
-

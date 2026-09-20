@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
 import LoadedImage from "@/components/ui/LoadedImage";
 import Link from "next/link";
 import { toLandingAssetUrl, getOptimizedMediaUrl } from "@/lib/landing-assets";
@@ -172,9 +171,8 @@ function CountrySelect({
                     setOpen(false);
                     setSearch("");
                   }}
-                  className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${
-                    value === c.code ? "bg-[#5A45F9]/20 text-white" : "text-white/70"
-                  }`}
+                  className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${value === c.code ? "bg-[#5A45F9]/20 text-white" : "text-white/70"
+                    }`}
                 >
                   <img
                     src={`/flags/${c.code}.svg`}
@@ -283,18 +281,16 @@ function MultiCountrySelect({
                 key={c.code}
                 type="button"
                 onClick={() => toggle(c.code)}
-                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${
-                  value.includes(c.code)
+                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${value.includes(c.code)
                     ? "bg-[#5A45F9]/20 text-white"
                     : "text-white/70"
-                }`}
+                  }`}
               >
                 <div
-                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
-                    value.includes(c.code)
+                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${value.includes(c.code)
                       ? "bg-[#5A45F9] border-[#5A45F9]"
                       : "border-white/20"
-                  }`}
+                    }`}
                 >
                   {value.includes(c.code) && (
                     <span className="text-white text-xs">✓</span>
@@ -469,9 +465,9 @@ export default function AdminProfilesPage() {
         countryImages: Array.isArray(profile.countryImages) ? profile.countryImages : [],
         collectionImages: Array.isArray(profile.collectionImages)
           ? profile.collectionImages.map((collection: CollectionImage) => ({
-              ...collection,
-              countryCodes: Array.isArray(collection.countryCodes) ? collection.countryCodes : [],
-            }))
+            ...collection,
+            countryCodes: Array.isArray(collection.countryCodes) ? collection.countryCodes : [],
+          }))
           : [],
       })) as Profile[];
       setProfiles([...normalizedProfiles].reverse());
@@ -491,11 +487,11 @@ export default function AdminProfilesPage() {
         const email = params.get("email") || "";
         const waitlistId = params.get("waitlistId") || "";
         const countryName = params.get("country") || "";
-        
+
         let flagCode = "";
         let flag = "";
         let finalCountryName = countryName;
-        
+
         if (countryName) {
           const matchedCountry = COUNTRY_LIST.find(
             (c) => c.name.toLowerCase() === countryName.toLowerCase() || c.code.toLowerCase() === countryName.toLowerCase()
@@ -515,7 +511,7 @@ export default function AdminProfilesPage() {
           flagCode,
           flag,
         }));
-        
+
         // Remove the search params from URL so it doesn't stay there on refresh
         window.history.replaceState({}, '', '/admin/profiles');
 
@@ -526,7 +522,7 @@ export default function AdminProfilesPage() {
             .then(user => {
               if (user && !user.error) {
                 const ec = user.explorerCard || {};
-                
+
                 let fname = user.first_name;
                 let lname = user.last_name;
                 if (!fname && !lname && ec.name) {
@@ -535,7 +531,7 @@ export default function AdminProfilesPage() {
                   lname = parts.slice(1).join(' ');
                 }
                 const fullName = [fname, lname].filter(Boolean).join(" ");
-                
+
                 // Extract socials from links jsonb array if it exists
                 const newSocials = { x: "", instagram: "", linkedin: "", youtube: "" };
                 if (Array.isArray(user.links)) {
@@ -547,7 +543,7 @@ export default function AdminProfilesPage() {
                     else if (lc.includes("linkedin.com")) newSocials.linkedin = link;
                   });
                 }
-                
+
                 let fetchedFlagCode = flagCode;
                 let fetchedFlag = flag;
                 let fetchedCountryName = finalCountryName;
@@ -564,7 +560,7 @@ export default function AdminProfilesPage() {
                     fetchedCountryName = bestCountry;
                   }
                 }
-                
+
                 let count = user.visited_count;
                 if (!count && ec.visited_countries) {
                   if (Array.isArray(ec.visited_countries)) count = ec.visited_countries.length;
@@ -699,7 +695,7 @@ export default function AdminProfilesPage() {
         showToast(presignData.error || "Failed to get upload URL", true);
         return null;
       }
-      
+
       const { uploadUrl, publicUrl } = presignData;
 
       const putRes = await fetch(uploadUrl, {
@@ -765,7 +761,7 @@ export default function AdminProfilesPage() {
 
     setUploading({ field: type, stage: "uploading", idx, current: batch?.current, total: batch?.total });
     try {
-      const presignRes = await fetch("/api/profiles/upload", {
+      const presignRes = await fetch("/api/upload/presign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -776,7 +772,7 @@ export default function AdminProfilesPage() {
 
       if (!presignRes.ok) {
         let err = "Failed to get upload URL";
-        try { err = (await presignRes.json()).error || err; } catch {}
+        try { err = (await presignRes.json()).error || err; } catch { }
         throw new Error(err);
       }
 
@@ -941,11 +937,11 @@ export default function AdminProfilesPage() {
     const computedMedia =
       cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
       cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
-    const payload = { 
-      ...newForm, 
+    const payload = {
+      ...newForm,
       countryImages: cleanCountryImages,
       collectionImages: cleanCollectionImages,
-      media: computedMedia 
+      media: computedMedia
     };
     try {
       const res = await fetch(`/api/profiles/${editing.id}`, {
@@ -988,11 +984,11 @@ export default function AdminProfilesPage() {
       const computedMedia =
         cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
         cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
-      const payload = { 
-        ...form, 
+      const payload = {
+        ...form,
         countryImages: cleanCountryImages,
         collectionImages: cleanCollectionImages,
-        media: computedMedia 
+        media: computedMedia
       };
       let res: Response;
       if (editing) {
@@ -1065,9 +1061,9 @@ export default function AdminProfilesPage() {
       countryImages: p.countryImages ? [...p.countryImages] : [],
       collectionImages: p.collectionImages
         ? p.collectionImages.map((collection) => ({
-            ...collection,
-            countryCodes: Array.isArray(collection.countryCodes) ? [...collection.countryCodes] : [],
-          }))
+          ...collection,
+          countryCodes: Array.isArray(collection.countryCodes) ? [...collection.countryCodes] : [],
+        }))
         : [],
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1165,12 +1161,12 @@ export default function AdminProfilesPage() {
                             loop
                             preload="metadata"
                             className="w-full h-full object-cover"
-                            onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
+                            onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
                             onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
                           >
-                                        <source src={getOptimizedMediaUrl(toLandingAssetUrl(url))} type="video/webm" />
-                                        <source src={toLandingAssetUrl(url)} type="video/mp4" />
-                                      </video>
+                            <source src={getOptimizedMediaUrl(toLandingAssetUrl(url))} type="video/webm" />
+                            <source src={toLandingAssetUrl(url)} type="video/mp4" />
+                          </video>
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
                             <span className="text-white text-[14px] drop-shadow">▶</span>
                           </div>
@@ -1387,7 +1383,7 @@ export default function AdminProfilesPage() {
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-white/35">Editor</p>
                 <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em]">
-              {editing ? "Edit Profile" : "Add New Profile"}
+                  {editing ? "Edit Profile" : "Add New Profile"}
                 </h2>
               </div>
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/45">
@@ -1567,8 +1563,8 @@ export default function AdminProfilesPage() {
                           {uploading.stage === "processing"
                             ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
                             : uploading.stage === "uploading"
-                            ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                            : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                              ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                              : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
                         </span>
                       ) : "+ Add Media"}
                     </Button>
@@ -1668,8 +1664,8 @@ export default function AdminProfilesPage() {
                                     {uploading.stage === "processing"
                                       ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
                                       : uploading.stage === "uploading"
-                                      ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                      : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                                        ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                        : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
                                   </span>
                                 ) : "+ Add Media"}
                                 <input
@@ -1737,54 +1733,54 @@ export default function AdminProfilesPage() {
                               return (
                                 <div key={imgIdx} className="relative group w-16 h-12 shrink-0">
                                   <div className="w-full h-full rounded-md overflow-hidden bg-white/5">
-                                  {isVid ? (
-                                    <>
-                                      <video
-                                        muted
-                                        playsInline
-                                        loop
-                                        preload="metadata"
+                                    {isVid ? (
+                                      <>
+                                        <video
+                                          muted
+                                          playsInline
+                                          loop
+                                          preload="metadata"
+                                          className="w-full h-full object-cover"
+                                          onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
+                                          onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                          onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
+                                        >
+                                          <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
+                                          <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
+                                        </video>
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
+                                          <span className="text-white text-[16px] drop-shadow">▶</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <LoadedImage
+                                        src={toLandingAssetUrl(imgUrl)}
+                                        thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
+                                        alt={`${country?.name || ci.countryCode} ${imgIdx + 1}`}
+                                        containerClassName="w-full h-full absolute inset-0"
                                         className="w-full h-full object-cover"
-                                        onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
-                                        onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                        onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => {}); else { v.pause(); v.currentTime = 0; } }}
+                                      />
+                                    )}
+                                    {ci.coverPhoto === imgUrl && (
+                                      <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
+                                    )}
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setForm((prev) => ({
+                                            ...prev,
+                                            countryImages: prev.countryImages.map((c, i) =>
+                                              i === idx ? { ...c, coverPhoto: imgUrl } : c
+                                            ),
+                                          }));
+                                        }}
+                                        className="px-2 py-1 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
                                       >
-                                        <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
-                                        <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
-                                      </video>
-                                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
-                                        <span className="text-white text-[16px] drop-shadow">▶</span>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <LoadedImage
-                                      src={toLandingAssetUrl(imgUrl)}
-                                      thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
-                                      alt={`${country?.name || ci.countryCode} ${imgIdx + 1}`}
-                                      containerClassName="w-full h-full absolute inset-0"
-                                      className="w-full h-full object-cover"
-                                    />
-                                  )}
-                                  {ci.coverPhoto === imgUrl && (
-                                    <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
-                                  )}
-                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setForm((prev) => ({
-                                          ...prev,
-                                          countryImages: prev.countryImages.map((c, i) =>
-                                            i === idx ? { ...c, coverPhoto: imgUrl } : c
-                                          ),
-                                        }));
-                                      }}
-                                      className="px-2 py-1 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
-                                    >
-                                      Set Cover
-                                    </button>
-                                  </div>
+                                        Set Cover
+                                      </button>
+                                    </div>
                                   </div>
                                   <button
                                     type="button"
@@ -1876,8 +1872,8 @@ export default function AdminProfilesPage() {
                                   {uploading.stage === "processing"
                                     ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
                                     : uploading.stage === "uploading"
-                                    ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                    : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                                      ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                      : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
                                 </span>
                               ) : "+ Add Media"}
                               <input
@@ -1952,13 +1948,13 @@ export default function AdminProfilesPage() {
                                       loop
                                       preload="metadata"
                                       className="w-full h-full object-cover"
-                                      onMouseEnter={(e) => e.currentTarget.play().catch(() => {})}
+                                      onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
                                       onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                      onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => {}); else { v.pause(); v.currentTime = 0; } }}
+                                      onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
                                     >
-                                        <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
-                                        <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
-                                      </video>
+                                      <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
+                                      <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
+                                    </video>
                                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
                                       <span className="text-white text-[16px] drop-shadow">▶</span>
                                     </div>
@@ -1972,42 +1968,42 @@ export default function AdminProfilesPage() {
                                     className="w-full h-full object-cover"
                                   />
                                 )}
-                                  {ci.coverPhoto === imgUrl && (
-                                    <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
-                                  )}
-                                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-10">
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setForm((prev) => ({
-                                          ...prev,
-                                          collectionImages: prev.collectionImages.map((c, i) =>
-                                            i === idx ? { ...c, coverPhoto: imgUrl } : c
-                                          ),
-                                        }));
-                                      }}
-                                      className="px-1.5 py-0.5 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
-                                    >
-                                      Set Cover
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setForm((prev) => ({
-                                          ...prev,
-                                          collectionImages: prev.collectionImages.map((c, i) =>
-                                            i === idx ? { ...c, images: c.images.filter((_, j) => j !== imgIdx) } : c
-                                          ).filter((c) => c.images.length > 0),
-                                        }));
-                                      }}
-                                      className="w-5 h-5 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-white/10"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
+                                {ci.coverPhoto === imgUrl && (
+                                  <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
+                                )}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-10">
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        collectionImages: prev.collectionImages.map((c, i) =>
+                                          i === idx ? { ...c, coverPhoto: imgUrl } : c
+                                        ),
+                                      }));
+                                    }}
+                                    className="px-1.5 py-0.5 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
+                                  >
+                                    Set Cover
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        collectionImages: prev.collectionImages.map((c, i) =>
+                                          i === idx ? { ...c, images: c.images.filter((_, j) => j !== imgIdx) } : c
+                                        ).filter((c) => c.images.length > 0),
+                                      }));
+                                    }}
+                                    className="w-5 h-5 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-white/10"
+                                  >
+                                    ✕
+                                  </button>
                                 </div>
+                              </div>
                             );
                           })}
                         </div>
@@ -2407,11 +2403,10 @@ export default function AdminProfilesPage() {
               {profiles.map((p) => (
                 <div
                   key={p.id}
-                  className={`rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/6 ${
-                    editing?.id === p.id
+                  className={`rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/6 ${editing?.id === p.id
                       ? "border-[#5A45F9]/60 bg-[#5A45F9]/8 shadow-[0_18px_40px_rgba(90,69,249,0.12)]"
                       : "border-white/10 bg-white/4"
-                  }`}
+                    }`}
                 >
                   <div className="flex gap-4 items-start">
                     {/* Avatar */}

@@ -88,7 +88,7 @@ export default function AdminPage() {
 
           {/* Profiles List */}
           <Link
-            href="/admin-profiles"
+            href="https://app.travingat.com/admin-profiles"
             className="group ds-card p-7 transition-all hover:border-white/20 hover:bg-[#151618] hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] flex flex-col h-full relative"
           >
             <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center mb-6 text-white/50 group-hover:text-white group-hover:bg-white/10 group-hover:border-white/10 transition-all">

@@ -324,7 +324,7 @@ export function MainUsersTab() {
   const handleDelete = onDeleteUser;
 
   const onSignOut = async () => {
-    await fetch("/api/cms/session", { method: "DELETE" });
+    await fetch("/api/admin/session", { method: "DELETE" });
     window.location.href = "/login";
   };
 
