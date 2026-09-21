@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import AdminNavbar from "@/components/admin/AdminNavbar";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (!+bytes) return "0 Bytes";
@@ -85,15 +84,9 @@ export default function MediaEngineDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
-      <AdminNavbar />
-
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link href="/" className="text-white/40 hover:text-white transition-colors text-sm flex items-center gap-2 mb-4">
-              <span className="material-symbols-rounded text-[18px]">arrow_back</span>
-              Back to Dashboard
-            </Link>
             <h1 className="ds-font-display text-4xl font-semibold tracking-tight text-white mb-2">
               Media Engine
             </h1>
