@@ -144,7 +144,7 @@ export default function LoadedImage({
         ref={imgRef}
         src={currentSrc}
         alt={alt}
-        className={`relative z-10 transition-opacity duration-300 ${status === "loaded" ? "opacity-100" : "opacity-0"} ${className}`}
+        className={`relative z-10 transition-all duration-700 ${status === "loaded" ? "opacity-100 blur-none" : "opacity-0 blur-lg"} ${className}`}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         {...(priority ? { fetchPriority: "high" as any, loading: "eager" } : { loading: "lazy" })}
         onClick={onClick}
