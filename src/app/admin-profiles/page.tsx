@@ -1,4 +1,4 @@
-import Link from "next/link";
+import countryData from "@/lib/countries.json";
 
 import { toLandingAssetUrl, getOptimizedMediaUrl } from "@/lib/landing-assets";
 import LoadedImage from "@/components/ui/LoadedImage";
@@ -29,11 +29,28 @@ function resolveImageAsset(img: any) {
   return typeof img === "string" ? img : img?.url ?? "";
 }
 
+// Build reverse map for country names
+const nameToCode: Record<string, string> = {};
+for (const [code, name] of Object.entries(countryData)) {
+  nameToCode[(name as string).toLowerCase()] = code;
+}
+
 function normalizeProfile(p: any): Profile {
   const images = p.images || { cover: "", avatar: "", gallery: [] };
+
+  let flagCode = (p.flag_code || p.flagCode || "").toLowerCase();
+  let country = p.country || "";
+
+  if (flagCode && !country) {
+    country = (countryData as Record<string, string>)[flagCode] || "";
+  } else if (country && !flagCode) {
+    flagCode = nameToCode[country.toLowerCase()] || "";
+  }
+
   return {
     ...p,
-    flagCode: p.flag_code || p.flagCode || "",
+    country,
+    flagCode,
     images: {
       cover: toLandingAssetUrl(resolveImageAsset(images.cover)),
       avatar: toLandingAssetUrl(resolveImageAsset(images.avatar)),
@@ -83,13 +100,15 @@ function TravellerCard({ profile }: { profile: Profile }) {
       <div className="flex w-full flex-col items-start gap-4 px-2 xl:gap-6 xl:px-3">
         <div className="flex w-full flex-col items-center gap-[5.333px] xl:gap-3">
           <div className="flex w-full items-center justify-center gap-1">
-            <img
-              src={toFlagAssetPath(profile.flagCode || "US")}
-              alt={`${profile.country} flag`}
-              className="h-1.5 w-2.5 shrink-0 rounded-xs object-cover xl:h-4 xl:w-6"
-            />
+            {profile.flagCode && (
+              <img
+                src={toFlagAssetPath(profile.flagCode)}
+                alt={`${profile.country} flag`}
+                className="h-1.5 w-2.5 shrink-0 rounded-xs object-cover xl:h-4 xl:w-6"
+              />
+            )}
             <p className="text-[9.33px] font-normal leading-none tracking-[-0.056px] whitespace-nowrap text-white-600 xl:text-sm xl:leading-5 xl:tracking-[-0.084px]">
-              {profile.country || "Unknown"}
+              {profile.country || "Global"}
             </p>
           </div>
           <p className="w-full text-center text-[13.33px] font-semibold leading-[18.667px] tracking-[-0.0667px] text-white ds-font-display xl:text-xl xl:leading-normal xl:tracking-[-0.41px]">
