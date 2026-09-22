@@ -44,8 +44,9 @@ function normalizeProfile(p: any): Profile {
 
 async function getAllActiveProfiles() {
   const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000/api";
+  const baseUrl = BACKEND_URL.endsWith('/api') ? BACKEND_URL : `${BACKEND_URL.replace(/\/+$/, '')}/api`;
   try {
-    const res = await fetch(`${BACKEND_URL}/profiles`, { next: { revalidate: 60 } });
+    const res = await fetch(`${baseUrl}/profiles`, { next: { revalidate: 60 } });
     if (!res.ok) return [];
     const profiles = await res.json();
     return profiles.map(normalizeProfile);
