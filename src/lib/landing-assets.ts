@@ -48,8 +48,39 @@ export function normalizeAssetHtml(html: string): string {
   });
 }
 
-export function getOptimizedMediaUrl(assetUrl: string): string {
-  // If the user uploaded a specific extension, respect it.
-  // We no longer force .webp or .webm overrides globally to ensure we use what's in the DB.
-  return assetUrl;
+/**
+ * Returns the thumbnail URL for a given full-resolution CDN URL.
+ *
+ * The backend stores thumbnails at:
+ *   thumbnails/{original_key_without_ext}_{size}.webp
+ *
+ * e.g. https://cdn.travingat.com/profiles/abc.jpg
+ *   → https://cdn.travingat.com/thumbnails/profiles/abc_720.webp
+ *
+ * Falls back to the original URL if it can't be derived (blobs, data URIs, videos).
+ */
+export function getOptimizedMediaUrl(assetUrl: string, size: number = 720): string {
+  if (!assetUrl) return assetUrl;
+  // Don't try to thumbnail blobs, data URIs, or videos
+  if (/^blob:/i.test(assetUrl) || /^data:/i.test(assetUrl)) return assetUrl;
+  if (/\.(mp4|mov|webm|m4v|3gp|3g2)$/i.test(assetUrl)) return assetUrl;
+  // Already a thumbnail URL — don't double-process
+  if (assetUrl.includes('/thumbnails/')) return assetUrl;
+
+  try {
+    const cdnBase = getLandingAssetsCdnBase().replace(/\/+$/, '');
+    // getLandingAssetsCdnBase() returns e.g. "https://cdn.travingat.com/landingpage-assets"
+    // Strip the "/landingpage-assets" suffix to get the R2 root.
+    const r2Base = cdnBase.replace(/\/landingpage-assets$/, '').replace(/\/+$/, '');
+
+    if (!assetUrl.startsWith(r2Base)) return assetUrl;
+
+    // Extract the key: everything after the r2 base domain
+    const key = assetUrl.slice(r2Base.length).replace(/^\/+/, '');
+    // Strip extension
+    const keyNoExt = key.replace(/\.[^/.]+$/, '');
+    return `${r2Base}/thumbnails/${keyNoExt}_${size}.webp`;
+  } catch {
+    return assetUrl;
+  }
 }

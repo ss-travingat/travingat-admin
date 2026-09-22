@@ -108,7 +108,7 @@ export default function AdminPage() {
             </div>
           </Link>
 
-          {/* Featured Profiles */}
+          {/* Create Profiles */}
           <Link
             href="/profiles"
             className="group ds-card p-7 transition-all hover:border-white/20 hover:bg-[#151618] hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] flex flex-col h-full relative"
@@ -117,10 +117,10 @@ export default function AdminPage() {
               <span className="material-symbols-rounded text-[24px]">public</span>
             </div>
             <h3 className="ds-font-display text-[20px] font-semibold mb-2 text-white transition-colors tracking-tight">
-              Featured Profiles
+              Create Profiles
             </h3>
             <p className="ds-font-body text-[#798298] text-[14px] leading-relaxed flex-1">
-              Curate and highlight top traveler profiles. Control images, links, and featured status.
+              Create a new profile. Control images, links, and featured status.
             </p>
             <div className="flex items-center justify-between mt-8 pt-5 border-t border-[#20242d] group-hover:border-white/10 transition-colors">
               <span className="ds-font-body text-white/70 group-hover:text-white text-[13px] font-medium transition-colors">
@@ -130,7 +130,7 @@ export default function AdminPage() {
             </div>
           </Link>
 
-          {/* Featured Requests */}
+          {/* View Featured Requests */}
           <Link
             href="/featured-requests"
             className="group ds-card p-7 transition-all hover:border-white/20 hover:bg-[#151618] hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] flex flex-col h-full relative"
@@ -139,7 +139,7 @@ export default function AdminPage() {
               <span className="material-symbols-rounded text-[24px]">mark_email_unread</span>
             </div>
             <h3 className="ds-font-display text-[20px] font-semibold mb-2 text-white transition-colors tracking-tight">
-              Featured Requests
+              View Featured Requests
             </h3>
             <p className="ds-font-body text-[#798298] text-[14px] leading-relaxed flex-1">
               Review applications from users requesting to be featured on the platform.

@@ -62,6 +62,8 @@ interface Profile {
   email?: string;
   isExplorerCard?: boolean;
   isFeaturedProfile?: boolean;
+  showBadge?: boolean;
+  isSampleProfile?: boolean;
 }
 
 const emptyForm: Omit<Profile, "id"> = {
@@ -90,6 +92,8 @@ const emptyForm: Omit<Profile, "id"> = {
   email: "",
   isExplorerCard: false,
   isFeaturedProfile: true,
+  showBadge: false,
+  isSampleProfile: false,
 };
 
 
@@ -185,14 +189,14 @@ function MultiCountrySelect({
                 type="button"
                 onClick={() => toggle(c.code)}
                 className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${value.includes(c.code)
-                    ? "bg-[#5A45F9]/20 text-white"
-                    : "text-white/70"
+                  ? "bg-[#5A45F9]/20 text-white"
+                  : "text-white/70"
                   }`}
               >
                 <div
                   className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${value.includes(c.code)
-                      ? "bg-[#5A45F9] border-[#5A45F9]"
-                      : "border-white/20"
+                    ? "bg-[#5A45F9] border-[#5A45F9]"
+                    : "border-white/20"
                     }`}
                 >
                   {value.includes(c.code) && (
@@ -363,17 +367,21 @@ export default function AdminProfilesPage() {
     try {
       const res = await fetch("/api/profiles", { cache: "no-store" });
       const data = await res.json();
-      const normalizedProfiles = (Array.isArray(data) ? data : []).map((profile) => ({
-        ...profile,
-        aboutImages: Array.isArray(profile.aboutImages) ? profile.aboutImages : [],
-        countryImages: Array.isArray(profile.countryImages) ? profile.countryImages : [],
-        collectionImages: Array.isArray(profile.collectionImages)
-          ? profile.collectionImages.map((collection: CollectionImage) => ({
-            ...collection,
-            countryCodes: Array.isArray(collection.countryCodes) ? collection.countryCodes : [],
-          }))
-          : [],
-      })) as Profile[];
+      const normalizedProfiles = (Array.isArray(data) ? data : []).map((profile) => {
+        const aboutImages = Array.isArray(profile.aboutImages) ? profile.aboutImages : (Array.isArray(profile.about_images) ? profile.about_images : []);
+        const countryImages = Array.isArray(profile.countryImages) ? profile.countryImages : (Array.isArray(profile.country_images) ? profile.country_images : []);
+        const rawCollectionImages = Array.isArray(profile.collectionImages) ? profile.collectionImages : (Array.isArray(profile.collection_images) ? profile.collection_images : []);
+        const collectionImages = rawCollectionImages.map((collection: any) => ({
+          ...collection,
+          countryCodes: Array.isArray(collection.countryCodes) ? collection.countryCodes : (Array.isArray(collection.country_codes) ? collection.country_codes : []),
+        }));
+        return {
+          ...profile,
+          aboutImages,
+          countryImages,
+          collectionImages,
+        };
+      }) as Profile[];
       setProfiles([...normalizedProfiles].reverse());
     } catch {
       showToast("Failed to load profiles");
@@ -501,7 +509,7 @@ export default function AdminProfilesPage() {
       setTimeout(() => setHandleStatus('idle'), 0);
       return;
     }
-    
+
     setTimeout(() => setHandleStatus('checking'), 0);
     const timer = setTimeout(async () => {
       try {
@@ -889,6 +897,74 @@ export default function AdminProfilesPage() {
     }));
   };
 
+  // Returns only the fields that differ from the original editing profile.
+  // For a new profile (no editing) this is a no-op — we always send the full form on POST.
+  const buildPatch = (newForm: typeof form, cleanCountryImages: typeof form.countryImages, cleanCollectionImages: typeof form.collectionImages, computedMedia: number) => {
+    if (!editing) return { ...newForm, countryImages: cleanCountryImages, collectionImages: cleanCollectionImages, media: computedMedia };
+
+    const patch: Record<string, any> = {};
+    const orig = editing;
+
+    // Scalar fields
+    const scalarFields = [
+      'name', 'handle', 'country', 'flag', 'flagCode', 'homelandFlagCode',
+      'currentlyInFlagCode', 'align', 'bio', 'homeland', 'currentlyIn',
+      'email', 'isExplorerCard', 'isFeaturedProfile', 'showBadge', 'isSampleProfile',
+    ] as const;
+    for (const key of scalarFields) {
+      const formVal = (newForm as any)[key];
+      const origVal = (orig as any)[key] ?? (orig as any)[key.replace(/([A-Z])/g, (m) => `_${m.toLowerCase()}`)];
+      if (formVal !== origVal) patch[key] = formVal;
+    }
+
+    // Arrays compared by JSON serialization
+    const origAbout = orig.aboutImages || (orig as any).about_images || [];
+    if (JSON.stringify(newForm.aboutImages) !== JSON.stringify(origAbout)) {
+      patch.aboutImages = newForm.aboutImages;
+    }
+
+    const origVisited = orig.visitedCountryCodes || (orig as any).visited_country_codes || [];
+    if (JSON.stringify(newForm.visitedCountryCodes) !== JSON.stringify(origVisited)) {
+      patch.visitedCountryCodes = newForm.visitedCountryCodes;
+    }
+
+    const origInterests = orig.interests || [];
+    if (JSON.stringify(newForm.interests) !== JSON.stringify(origInterests)) {
+      patch.interests = newForm.interests;
+    }
+
+    const origLanguages = orig.languages || [];
+    if (JSON.stringify(newForm.languages) !== JSON.stringify(origLanguages)) {
+      patch.languages = newForm.languages;
+    }
+
+    // Nested objects
+    const origImages = orig.images || { cover: '', avatar: '', gallery: [] };
+    if (JSON.stringify(newForm.images) !== JSON.stringify(origImages)) {
+      patch.images = newForm.images;
+    }
+
+    const origSocials = orig.socials || { x: '', instagram: '', linkedin: '', youtube: '' };
+    if (JSON.stringify(newForm.socials) !== JSON.stringify(origSocials)) {
+      patch.socials = newForm.socials;
+    }
+
+    // Country / collection images — always send cleaned versions if they changed
+    const origCountry = orig.countryImages || (orig as any).country_images || [];
+    if (JSON.stringify(cleanCountryImages) !== JSON.stringify(origCountry)) {
+      patch.countryImages = cleanCountryImages;
+      patch.media = computedMedia; // media must be recalculated whenever images change
+    }
+
+    const origCollection = orig.collectionImages || (orig as any).collection_images || [];
+    if (JSON.stringify(cleanCollectionImages) !== JSON.stringify(origCollection)) {
+      patch.collectionImages = cleanCollectionImages;
+      patch.media = computedMedia;
+    }
+
+    return patch;
+  };
+
   const saveFormState = async (newForm: typeof form) => {
     if (!editing) return;
     const cleanCountryImages = newForm.countryImages.filter(c => c.images.length > 0);
@@ -896,17 +972,13 @@ export default function AdminProfilesPage() {
     const computedMedia =
       cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
       cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
-    const payload = {
-      ...newForm,
-      countryImages: cleanCountryImages,
-      collectionImages: cleanCollectionImages,
-      media: computedMedia
-    };
+    const patch = buildPatch(newForm, cleanCountryImages, cleanCollectionImages, computedMedia);
+    if (Object.keys(patch).length === 0) return; // nothing changed
     try {
       const res = await fetch(`/api/profiles/${editing.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(patch),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
@@ -943,20 +1015,29 @@ export default function AdminProfilesPage() {
       const computedMedia =
         cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
         cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
-      const payload = {
-        ...form,
-        countryImages: cleanCountryImages,
-        collectionImages: cleanCollectionImages,
-        media: computedMedia
-      };
+
       let res: Response;
       if (editing) {
+        // Only send fields that actually changed
+        const patch = buildPatch(form, cleanCountryImages, cleanCollectionImages, computedMedia);
+        if (Object.keys(patch).length === 0) {
+          showToast("No changes to save");
+          setSaving(false);
+          return;
+        }
         res = await fetch(`/api/profiles/${editing.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(patch),
         });
       } else {
+        // New profile — send everything
+        const payload = {
+          ...form,
+          countryImages: cleanCountryImages,
+          collectionImages: cleanCollectionImages,
+          media: computedMedia,
+        };
         res = await fetch("/api/profiles", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1024,6 +1105,11 @@ export default function AdminProfilesPage() {
           countryCodes: Array.isArray(collection.countryCodes || collection.country_codes) ? [...(collection.countryCodes || collection.country_codes)] : [],
         }))
         : [],
+      email: p.email || "",
+      isExplorerCard: p.isExplorerCard ?? (p as any).is_explorer_card ?? false,
+      isFeaturedProfile: p.isFeaturedProfile ?? (p as any).is_featured_profile ?? true,
+      showBadge: p.showBadge ?? (p as any).show_badge ?? false,
+      isSampleProfile: p.isSampleProfile ?? (p as any).is_sample_profile ?? false,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -1595,7 +1681,7 @@ export default function AdminProfilesPage() {
                     <label className="text-sm text-white/60 block">
                       Country Images
                     </label>
-                    <BulkUploadModal 
+                    <BulkUploadModal
                       onUploadComplete={(results) => {
                         setForm(prev => {
                           const newCountryImages = [...prev.countryImages];
@@ -1616,7 +1702,7 @@ export default function AdminProfilesPage() {
                           return { ...prev, countryImages: newCountryImages };
                         });
                         showToast("Bulk upload completed successfully!");
-                      }} 
+                      }}
                     />
                   </div>
                   <div className="space-y-2 mb-2">
@@ -2122,13 +2208,12 @@ export default function AdminProfilesPage() {
                       setForm((prev) => ({ ...prev, handle: e.target.value }))
                     }
                     placeholder="e.g. @micheal.th99"
-                    className={`bg-white/5 border placeholder:text-white/25 focus:border-[#5A45F9] transition-colors ${
-                      handleStatus === 'unavailable'
+                    className={`bg-white/5 border placeholder:text-white/25 focus:border-[#5A45F9] transition-colors ${handleStatus === 'unavailable'
                         ? 'border-red-500 focus:border-red-500'
                         : handleStatus === 'available'
-                        ? 'border-emerald-500 focus:border-emerald-500'
-                        : 'border-white/10'
-                    }`}
+                          ? 'border-emerald-500 focus:border-emerald-500'
+                          : 'border-white/10'
+                      }`}
                   />
                 </div>
 
@@ -2338,6 +2423,69 @@ export default function AdminProfilesPage() {
                 </div>
               </div>
 
+              {/* Badge */}
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <h3 className="text-sm font-medium text-white/80 pb-3 border-b border-white/10 mb-3">
+                  Founding Explorer Badge
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, showBadge: !prev.showBadge }))}
+                  className="w-full flex items-center justify-between gap-3 group"
+                >
+                  <div className="flex items-center gap-3">
+                    <img src="/icons/badge.svg" alt="Badge" className="w-10 h-10 shrink-0 opacity-80" />
+                    <div className="text-left">
+                      <p className="text-sm text-white font-medium leading-snug">Show badge on profile</p>
+                      <p className="text-xs text-white/40 leading-snug mt-0.5">
+                        Displays the Founding Explorer badge on the cover photo
+                      </p>
+                    </div>
+                  </div>
+                  {/* Toggle pill */}
+                  <div
+                    className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${form.showBadge ? "bg-[#5A45F9]" : "bg-white/10"
+                      }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.showBadge ? "translate-x-5" : "translate-x-0"
+                        }`}
+                    />
+                  </div>
+                </button>
+              </div>
+
+              {/* Sample Profile */}
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <h3 className="text-sm font-medium text-white/80 pb-3 border-b border-white/10 mb-3">
+                  Sample Profile Indicator
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setForm((prev) => ({ ...prev, isSampleProfile: !prev.isSampleProfile }))}
+                  className="w-full flex items-center justify-between gap-3 group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-left">
+                      <p className="text-sm text-white font-medium leading-snug">Mark as Sample Profile</p>
+                      <p className="text-xs text-white/40 leading-snug mt-0.5">
+                        Displays the "Sample Profile" tag on the cover photo
+                      </p>
+                    </div>
+                  </div>
+                  {/* Toggle pill */}
+                  <div
+                    className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${form.isSampleProfile ? "bg-[#5A45F9]" : "bg-white/10"
+                      }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.isSampleProfile ? "translate-x-5" : "translate-x-0"
+                        }`}
+                    />
+                  </div>
+                </button>
+              </div>
+
               {/* Actions */}
               <div className="flex items-center gap-3 pt-2">
                 <Button
@@ -2397,8 +2545,8 @@ export default function AdminProfilesPage() {
                 <div
                   key={p.id}
                   className={`rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/6 ${editing?.id === p.id
-                      ? "border-[#5A45F9]/60 bg-[#5A45F9]/8 shadow-[0_18px_40px_rgba(90,69,249,0.12)]"
-                      : "border-white/10 bg-white/4"
+                    ? "border-[#5A45F9]/60 bg-[#5A45F9]/8 shadow-[0_18px_40px_rgba(90,69,249,0.12)]"
+                    : "border-white/10 bg-white/4"
                     }`}
                 >
                   <div className="flex gap-4 items-start">
