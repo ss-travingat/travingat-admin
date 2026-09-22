@@ -46,6 +46,9 @@ export default function MediaEngineDashboard() {
   const [loadingJobs, setLoadingJobs] = useState(true);
   const [retryMessage, setRetryMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -55,24 +58,43 @@ export default function MediaEngineDashboard() {
     finally { setLoadingStats(false); }
   };
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (pageNumber = 1, append = false, isPolling = false) => {
+    if (!isPolling && !append) setLoadingJobs(true);
+    if (append) setLoadingMore(true);
     try {
-      const res = await fetch("/api/media/queue");
+      const res = await fetch(`/api/media/queue?page=${pageNumber}`);
       if (res.ok) {
         const data = await res.json();
         const raw = Array.isArray(data) ? data : data.results ?? [];
-        // Only show IMAGE_PROCESSING jobs
-        setJobs(raw.filter((j: any) => j.job_type === "IMAGE_PROCESSING"));
+        const filtered = raw.filter((j: any) => j.job_type === "IMAGE_PROCESSING");
+        
+        if (append) {
+          setJobs(prev => [...prev, ...filtered]);
+        } else {
+          setJobs(filtered);
+        }
+        setHasMore(!!data.next);
       }
     } catch { }
-    finally { setLoadingJobs(false); }
+    finally { 
+      setLoadingJobs(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (loadingMore || !hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchJobs(nextPage, true);
   };
 
   const refresh = async () => {
     setRefreshing(true);
     setLoadingStats(true);
     setLoadingJobs(true);
-    await Promise.all([fetchStats(), fetchJobs()]);
+    setPage(1);
+    await Promise.all([fetchStats(), fetchJobs(1)]);
     setRefreshing(false);
   };
 
@@ -94,9 +116,9 @@ export default function MediaEngineDashboard() {
   useEffect(() => {
     setTimeout(() => {
       fetchStats();
-      fetchJobs();
+      fetchJobs(1);
     }, 0);
-    const iv = setInterval(() => { fetchStats(); fetchJobs(); }, 15000);
+    const iv = setInterval(() => { fetchStats(); fetchJobs(1, false, true); }, 15000);
     return () => clearInterval(iv);
   }, []);
 
@@ -260,6 +282,24 @@ export default function MediaEngineDashboard() {
               </tbody>
             </table>
           </div>
+          {hasMore && (
+            <div className="p-4 border-t border-white/5 flex justify-center">
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="px-6 py-2 bg-white/5 hover:bg-white/10 disabled:opacity-50 rounded-xl text-sm font-medium transition-colors border border-white/8 flex items-center gap-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <span className="material-symbols-rounded animate-spin text-[16px]">refresh</span>
+                    Loading...
+                  </>
+                ) : (
+                  "Load More"
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
