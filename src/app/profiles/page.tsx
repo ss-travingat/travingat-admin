@@ -779,7 +779,7 @@ export default function AdminProfilesPage() {
       if (url) {
         setForm((prev) => ({
           ...prev,
-          images: { ...prev.images, gallery: [...prev.images.gallery, url] },
+          images: { ...prev.images, gallery: [...prev.images.gallery, typeof url === 'string' ? url : url.url] },
         }));
       }
     }
@@ -798,7 +798,7 @@ export default function AdminProfilesPage() {
       if (url) {
         setForm((prev) => ({
           ...prev,
-          images: { ...prev.images, gallery: [...prev.images.gallery, url] },
+          images: { ...prev.images, gallery: [...prev.images.gallery, typeof url === 'string' ? url : url.url] },
         }));
       }
     }
@@ -822,7 +822,7 @@ export default function AdminProfilesPage() {
 
     for (const file of filesToUpload) {
       const url = await handleImageUpload(file, "about");
-      if (url) uploadedUrls.push(url);
+      if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
     }
 
     if (uploadedUrls.length > 0) {
@@ -1516,10 +1516,10 @@ export default function AdminProfilesPage() {
                           const batch = { current: fi + 1, total: filesToUpload.length };
                           if (file.type.startsWith("video/")) {
                             const url = await handleVideoUpload(file, "about", undefined, batch);
-                            if (url) uploadedUrls.push(url);
+                            if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
                           } else {
                             const url = await handleImageUpload(file, "about", undefined, batch);
-                            if (url) uploadedUrls.push(url);
+                            if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
                           }
                         }
 
@@ -1632,10 +1632,10 @@ export default function AdminProfilesPage() {
                                       const batch = { current: fi + 1, total: files.length };
                                       if (file.type.startsWith("video/")) {
                                         const url = await handleVideoUpload(file, "country", idx, batch);
-                                        if (url) urls.push(url);
+                                        if (url) urls.push(typeof url === 'string' ? url : url.url);
                                       } else {
                                         const url = await handleImageUpload(file, "country", idx, batch);
-                                        if (url) urls.push(url);
+                                        if (url) urls.push(typeof url === 'string' ? url : url.url);
                                       }
                                     }
                                     if (urls.length > 0) {
@@ -1840,10 +1840,10 @@ export default function AdminProfilesPage() {
                                     const batch = { current: fi + 1, total: files.length };
                                     if (file.type.startsWith("video/")) {
                                       const url = await handleVideoUpload(file, "collection", idx, batch);
-                                      if (url) urls.push(url);
+                                      if (url) urls.push(typeof url === 'string' ? url : url.url);
                                     } else {
                                       const url = await handleImageUpload(file, "collection", idx, batch);
-                                      if (url) urls.push(url);
+                                      if (url) urls.push(typeof url === 'string' ? url : url.url);
                                     }
                                   }
                                   if (urls.length > 0) {
