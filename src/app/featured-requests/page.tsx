@@ -25,26 +25,29 @@ export default function FeaturedRequestsPage() {
   const [archivedIds, setArchivedIds] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState("all");
 
-  const handleApprove = async (id: string, email: string) => {
-    const isCurrentlyApproved = approvedIds.has(id);
-    const newStatus = isCurrentlyApproved ? 'Created' : 'Approved';
-
-    setApprovedIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
-      return newSet;
-    });
-
-    try {
-      await fetch('/api/admin/featured-requests/status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, status: newStatus })
-      });
-    } catch (err) {
-      console.error("Failed to update status", err);
+  const handleApprove = async (req: FeaturedRequest) => {
+    // If not approved, approve it first
+    if (!approvedIds.has(req.id)) {
+      try {
+        await fetch('/api/admin/featured-requests/status', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: req.email, status: 'Approved' })
+        });
+        setApprovedIds(prev => new Set([...prev, req.id]));
+      } catch (err) {
+        console.error("Failed to update status", err);
+      }
     }
+    
+    // Redirect to profile creation page
+    const searchParams = new URLSearchParams();
+    searchParams.set("create", "true");
+    if (req.email) searchParams.set("email", req.email);
+    if (req.country) searchParams.set("country", req.country);
+    if (req.id) searchParams.set("waitlistId", req.id);
+
+    window.open(`/profiles?${searchParams.toString()}`, "_blank");
   };
 
   const handleDelete = async (id: string, email: string) => {
@@ -248,7 +251,7 @@ export default function FeaturedRequestsPage() {
                     
                     <div className="flex items-center gap-2 mb-1">
                       <button 
-                        onClick={() => handleApprove(req.id, req.email)}
+                        onClick={() => handleApprove(req)}
                         className={`pl-4 pr-3 h-[36px] rounded-xl text-sm font-medium transition-colors flex items-center gap-2.5 shrink-0 ${
                           approvedIds.has(req.id)
                             ? "bg-green-500 text-white hover:bg-green-600"

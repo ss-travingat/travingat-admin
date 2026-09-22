@@ -416,7 +416,7 @@ export default function AdminProfilesPage() {
         }));
 
         // Remove the search params from URL so it doesn't stay there on refresh
-        window.history.replaceState({}, '', '/admin/profiles');
+        window.history.replaceState({}, '', '/profiles');
 
         // Fetch detailed user info if email exists
         if (email) {

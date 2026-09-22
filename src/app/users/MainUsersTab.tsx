@@ -170,7 +170,7 @@ function UserActionsDropdown({
             </a>
             {/* Edit */}
             <a
-              href={`/admin/profiles?edit=${user.id}`}
+              href={`/profiles?edit=${user.id}`}
               target="_blank"
               rel="noreferrer"
               className="block w-full px-5 py-2 text-[12px] text-white/70 hover:text-white hover:bg-white/5 transition-colors"

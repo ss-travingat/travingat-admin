@@ -710,7 +710,7 @@ export function WaitlistTab() {
                           if (detailsModalEntry.country) searchParams.set("country", detailsModalEntry.country);
                           if (detailsModalEntry.id) searchParams.set("waitlistId", detailsModalEntry.id.toString());
 
-                          window.open(`/admin/profiles?${searchParams.toString()}`, "_blank");
+                          window.open(`/profiles?${searchParams.toString()}`, "_blank");
                         }}
                         className="px-4 py-2 bg-[#e8f5e9] text-[#1b5e20] hover:bg-[#c8e6c9] font-medium rounded-lg text-[13px] transition-colors"
                       >
