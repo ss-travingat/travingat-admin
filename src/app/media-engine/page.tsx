@@ -19,15 +19,15 @@ function formatBytes(bytes: number, decimals = 2) {
 function StatusBadge({ status }: { status: any }) {
   const s = String(status).toUpperCase();
   const cfg: Record<string, string> = {
-    SUCCESS:   "bg-green-500/10 text-green-400 border-green-500/20",
+    SUCCESS: "bg-green-500/10 text-green-400 border-green-500/20",
     COMPLETED: "bg-green-500/10 text-green-400 border-green-500/20",
-    DONE:      "bg-green-500/10 text-green-400 border-green-500/20",
-    PENDING:   "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-    PROCESSING:"bg-blue-500/10 text-blue-400 border-blue-500/20",
-    RETRYING:  "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    FAILURE:   "bg-red-500/10 text-red-400 border-red-500/20",
-    ERROR:     "bg-red-500/10 text-red-400 border-red-500/20",
-    FAILED:    "bg-red-500/10 text-red-400 border-red-500/20",
+    DONE: "bg-green-500/10 text-green-400 border-green-500/20",
+    PENDING: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    PROCESSING: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    RETRYING: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    FAILURE: "bg-red-500/10 text-red-400 border-red-500/20",
+    ERROR: "bg-red-500/10 text-red-400 border-red-500/20",
+    FAILED: "bg-red-500/10 text-red-400 border-red-500/20",
   };
   return (
     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg[s] ?? cfg["FAILED"]}`}>
@@ -51,20 +51,20 @@ export default function MediaEngineDashboard() {
     try {
       const res = await fetch("/api/media/stats");
       if (res.ok) setStats(await res.json());
-    } catch {}
+    } catch { }
     finally { setLoadingStats(false); }
   };
 
   const fetchJobs = async () => {
     try {
-      const res = await fetch("/api/media/jobs");
+      const res = await fetch("/api/media/queue");
       if (res.ok) {
         const data = await res.json();
         const raw = Array.isArray(data) ? data : data.results ?? [];
         // Only show IMAGE_PROCESSING jobs
         setJobs(raw.filter((j: any) => j.job_type === "IMAGE_PROCESSING"));
       }
-    } catch {}
+    } catch { }
     finally { setLoadingJobs(false); }
   };
 
@@ -79,7 +79,7 @@ export default function MediaEngineDashboard() {
   const retryJob = async (jobId: string) => {
     try {
       setRetryMessage(null);
-      const res = await fetch(`/api/media/jobs/${jobId}/retry`, { method: "POST" });
+      const res = await fetch(`/api/media/queue/${jobId}/retry`, { method: "POST" });
       if (res.ok) {
         setRetryMessage("Job queued for retry.");
         fetchJobs();
@@ -98,7 +98,6 @@ export default function MediaEngineDashboard() {
     }, 0);
     const iv = setInterval(() => { fetchStats(); fetchJobs(); }, 15000);
     return () => clearInterval(iv);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
