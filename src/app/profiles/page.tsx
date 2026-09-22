@@ -339,6 +339,7 @@ export default function AdminProfilesPage() {
   const [pendingCountryCode, setPendingCountryCode] = useState<string>("");
   const [pendingCollectionTitle, setPendingCollectionTitle] = useState<string>("");
   const [mediaPickerTarget, setMediaPickerTarget] = useState<{ type: "country" | "collection" | "about"; idx?: number } | null>(null);
+  const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
 
   // Orphan cleanup state
   const [orphanScanning, setOrphanScanning] = useState(false);
@@ -493,6 +494,40 @@ export default function AdminProfilesPage() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (form.handle.length < 3) {
+      setHandleStatus('idle');
+      return;
+    }
+    
+    setHandleStatus('checking');
+    const timer = setTimeout(async () => {
+      try {
+        let url = `/api/profiles/check-handle?handle=${encodeURIComponent(form.handle)}`;
+        if (editing) {
+          url += `&current_handle=${encodeURIComponent(editing.handle)}`;
+        }
+        const res = await fetch(url);
+        const data = await res.json();
+        if (active) {
+          if (res.ok) {
+            setHandleStatus(data.available ? 'available' : 'unavailable');
+          } else {
+            setHandleStatus('idle');
+          }
+        }
+      } catch (e) {
+        if (active) setHandleStatus('idle');
+      }
+    }, 500);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [form.handle, editing]);
 
   const scanOrphans = async () => {
     setOrphanScanning(true);
@@ -2074,8 +2109,11 @@ export default function AdminProfilesPage() {
 
                 {/* Handle */}
                 <div>
-                  <label className="text-sm text-white/60 block mb-1.5">
-                    Handle <span className="text-red-400">*</span>
+                  <label className="text-sm text-white/60 block mb-1.5 flex justify-between items-center">
+                    <span>Handle <span className="text-red-400">*</span></span>
+                    {handleStatus === 'checking' && <span className="text-white/40 text-xs">Checking...</span>}
+                    {handleStatus === 'available' && <span className="text-emerald-400 text-xs">Available</span>}
+                    {handleStatus === 'unavailable' && <span className="text-red-400 text-xs">Not available</span>}
                   </label>
                   <Input
                     type="text"
@@ -2084,7 +2122,13 @@ export default function AdminProfilesPage() {
                       setForm((prev) => ({ ...prev, handle: e.target.value }))
                     }
                     placeholder="e.g. @micheal.th99"
-                    className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
+                    className={`bg-white/5 border placeholder:text-white/25 focus:border-[#5A45F9] transition-colors ${
+                      handleStatus === 'unavailable'
+                        ? 'border-red-500 focus:border-red-500'
+                        : handleStatus === 'available'
+                        ? 'border-emerald-500 focus:border-emerald-500'
+                        : 'border-white/10'
+                    }`}
                   />
                 </div>
 
