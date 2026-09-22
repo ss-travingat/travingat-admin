@@ -61,8 +61,6 @@ export function WaitlistTab() {
   });
 
   const uniqueSources = Array.from(new Set(entries.map((e) => e.source || "Waitlist")));
-  const uniqueDevices = Array.from(new Set(entries.map((e) => e.device)));
-  const uniqueBrowsers = Array.from(new Set(entries.map((e) => e.browser)));
   const uniqueCountries = Array.from(new Set(entries.map((e) => e.country))).filter(Boolean);
 
   const activeFiltersCount = Object.values(advancedFilters).filter(v => v !== "").length;
@@ -187,8 +185,8 @@ export function WaitlistTab() {
                   type="button"
                   onClick={() => setFilter(f)}
                   className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all capitalize whitespace-nowrap ${filter === f
-                      ? "bg-white text-black shadow-sm"
-                      : "text-white/50 hover:text-white hover:bg-white/5"
+                    ? "bg-white text-black shadow-sm"
+                    : "text-white/50 hover:text-white hover:bg-white/5"
                     }`}
                 >
                   {f}
@@ -201,8 +199,8 @@ export function WaitlistTab() {
             <button
               onClick={() => setIsFilterModalOpen(true)}
               className={`h-10 px-3.5 rounded-xl text-[13px] font-medium transition-all flex items-center gap-2 shrink-0 ${activeFiltersCount > 0
-                  ? "bg-white/10 text-white border border-white/20 hover:bg-white/15"
-                  : "bg-[#151618] text-white/60 border border-white/10 hover:text-white hover:border-white/20"
+                ? "bg-white/10 text-white border border-white/20 hover:bg-white/15"
+                : "bg-[#151618] text-white/60 border border-white/10 hover:text-white hover:border-white/20"
                 }`}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" /></svg>
