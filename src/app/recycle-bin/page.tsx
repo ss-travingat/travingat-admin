@@ -16,11 +16,12 @@ export default function AdminRecycleBinPage() {
   const [waitlistItems, setWaitlistItems] = useState<SoftDeletedItem[]>([]);
   const [userItems, setUserItems] = useState<SoftDeletedItem[]>([]);
   const [profileItems, setProfileItems] = useState<SoftDeletedItem[]>([]);
+  const [featuredRequestItems, setFeaturedRequestItems] = useState<SoftDeletedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingID, setProcessingID] = useState("");
   const [error, setError] = useState("");
   
-  const [activeTab, setActiveTab] = useState<"waitlist" | "users" | "profiles">("waitlist");
+  const [activeTab, setActiveTab] = useState<"waitlist" | "users" | "profiles" | "featured_requests">("waitlist");
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -45,6 +46,14 @@ export default function AdminRecycleBinPage() {
         ...p
       })) : [];
       setProfileItems(mappedProfiles);
+
+      const mappedFeatured = Array.isArray(data.featured_requests) ? data.featured_requests.map((p: any) => ({
+        id: p.id,
+        email: p.email,
+        deleted_at: p.created_at,
+        ...p
+      })) : [];
+      setFeaturedRequestItems(mappedFeatured);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -98,8 +107,9 @@ export default function AdminRecycleBinPage() {
   const currentItems = useMemo(() => {
     if (activeTab === "waitlist") return waitlistItems;
     if (activeTab === "users") return userItems;
+    if (activeTab === "featured_requests") return featuredRequestItems;
     return profileItems;
-  }, [activeTab, waitlistItems, userItems, profileItems]);
+  }, [activeTab, waitlistItems, userItems, profileItems, featuredRequestItems]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -174,6 +184,12 @@ export default function AdminRecycleBinPage() {
             className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === 'profiles' ? 'bg-[#2a2a2a] text-white shadow-sm' : 'text-white/50 hover:text-white'}`}
           >
             Featured Profiles ({profileItems.length})
+          </button>
+          <button 
+            onClick={() => { setActiveTab('featured_requests'); setCurrentPage(1); }} 
+            className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === 'featured_requests' ? 'bg-[#2a2a2a] text-white shadow-sm' : 'text-white/50 hover:text-white'}`}
+          >
+            Featured Requests ({featuredRequestItems.length})
           </button>
         </div>
 
