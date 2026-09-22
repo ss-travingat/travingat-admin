@@ -160,7 +160,7 @@ function UserActionsDropdown({
             </button>
             {/* View */}
             <a
-              href={`/profiles/${user.username || user.id}`}
+              href={`https://app.travingat.com/profiles/${user.username || user.id}`}
               target="_blank"
               rel="noreferrer"
               className="block w-full px-5 py-2 text-[12px] text-white/70 hover:text-white hover:bg-white/5 transition-colors"
@@ -566,7 +566,7 @@ export function MainUsersTab() {
               {/* Quick Actions inside modal */}
               <div className="mt-4 pt-4 border-t border-[#1E1E1E] flex flex-col gap-2">
                 <a
-                  href={`/profiles/${detailsModalUser.username || detailsModalUser.id}`}
+                  href={`https://app.travingat.com/profiles/${detailsModalUser.username || detailsModalUser.id}`}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-2.5 bg-[#2A2A2A] hover:bg-[#333333] text-white text-sm font-medium rounded-lg text-center transition-colors"

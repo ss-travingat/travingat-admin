@@ -2415,7 +2415,7 @@ export default function AdminProfilesPage() {
                     {/* Actions */}
                     <div className="flex items-center gap-1 shrink-0 rounded-full border border-white/10 bg-black/20 p-1">
                       <Link
-                        href={`/profiles/${p.handle.replace(/^@/, "")}`}
+                        href={`https://app.travingat.com/profiles/${p.handle.replace(/^@/, "")}`}
                         target="_blank"
                         className="p-2 hover:bg-white/10 rounded-full text-xs text-white/60 hover:text-white transition-colors"
                         title="View profile"
