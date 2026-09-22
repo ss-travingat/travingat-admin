@@ -54,10 +54,6 @@ export default function LoadedImage({
     ? `${activeSrc}${activeSrc.includes("?") ? "&" : "?"}retry=${retryCount}` 
     : activeSrc;
 
-  if (currentSrc.startsWith("http")) {
-    currentSrc = `/api/proxy-image?url=${encodeURIComponent(currentSrc)}`;
-  }
-
   const handleLoad = () => {
     if (maxLoadTimeoutRef.current) clearTimeout(maxLoadTimeoutRef.current);
     setStatus("loaded");

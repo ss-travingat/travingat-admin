@@ -17,12 +17,7 @@ function formatBytes(bytes: number | undefined, decimals = 2) {
 }
 
 function getProxiedImageUrl(url: string | undefined | null): string | undefined {
-  if (!url) return undefined;
-  if (url.includes('minio:9000') || url.includes('localhost:9000') || url.includes('127.0.0.1:9000')) {
-    const fixedUrl = url.replace('https://', 'http://');
-    return `/api/proxy-image?url=${encodeURIComponent(fixedUrl)}`;
-  }
-  return url;
+  return url || undefined;
 }
 
 interface MediaVariant {
