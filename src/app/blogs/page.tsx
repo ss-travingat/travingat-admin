@@ -66,8 +66,8 @@ export default function AdminBlogsPage() {
   };
 
   useEffect(() => {
-    fetchBlogs();
-  }, []);
+    setTimeout(fetchBlogs, 0);
+  },[]);
 
   // Sync editor content → form
   const syncContent = useCallback(() => {

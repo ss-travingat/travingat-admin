@@ -53,8 +53,8 @@ export default function AdminRecycleBinPage() {
   };
 
   useEffect(() => {
-    loadRecycleBin();
-  }, []);
+    setTimeout(loadRecycleBin, 0);
+  },[]);
 
   const onRestore = async (id: string, type: string) => {
     setProcessingID(id);

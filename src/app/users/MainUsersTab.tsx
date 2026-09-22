@@ -266,8 +266,8 @@ export function MainUsersTab() {
   };
 
   useEffect(() => {
-    loadUsers();
-  }, []);
+    setTimeout(loadUsers, 0);
+  },[]);
 
   const onToggleStatus = async (user: AdminUser) => {
     const disableTarget = user.status !== "disabled";

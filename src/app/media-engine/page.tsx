@@ -92,8 +92,10 @@ export default function MediaEngineDashboard() {
   };
 
   useEffect(() => {
-    fetchStats();
-    fetchJobs();
+    setTimeout(() => {
+      fetchStats();
+      fetchJobs();
+    }, 0);
     const iv = setInterval(() => { fetchStats(); fetchJobs(); }, 15000);
     return () => clearInterval(iv);
   // eslint-disable-next-line react-hooks/exhaustive-deps

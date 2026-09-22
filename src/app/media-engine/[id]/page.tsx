@@ -85,11 +85,13 @@ export default function MediaEngineJobPage() {
 
   useEffect(() => {
     if (!id) return;
-    setLoading(true);
-    fetch(`/api/media/${id}`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => { setAsset(data); setLoading(false); })
-      .catch(() => setLoading(false));
+    setTimeout(() => {
+      setLoading(true);
+      fetch(`/api/media/${id}`, { credentials: 'include' })
+        .then(r => r.json())
+        .then(data => { setAsset(data); setLoading(false); })
+        .catch(() => setLoading(false));
+    }, 0);
   }, [id]);
 
   if (loading) {

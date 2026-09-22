@@ -57,8 +57,8 @@ export default function AdminTestimonialsPage() {
   };
 
   useEffect(() => {
-    fetchTestimonials();
-  }, []);
+    setTimeout(fetchTestimonials, 0);
+  },[]);
 
   // Upload photo
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

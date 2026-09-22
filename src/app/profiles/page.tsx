@@ -382,7 +382,7 @@ export default function AdminProfilesPage() {
   };
 
   useEffect(() => {
-    fetchProfiles();
+    setTimeout(fetchProfiles, 0);
 
     // Check if we are navigated here to create a new profile with prefilled data
     if (typeof window !== "undefined") {
@@ -498,11 +498,11 @@ export default function AdminProfilesPage() {
   useEffect(() => {
     let active = true;
     if (form.handle.length < 3) {
-      setHandleStatus('idle');
+      setTimeout(() => setHandleStatus('idle'), 0);
       return;
     }
     
-    setHandleStatus('checking');
+    setTimeout(() => setHandleStatus('checking'), 0);
     const timer = setTimeout(async () => {
       try {
         let url = `/api/profiles/check-handle?handle=${encodeURIComponent(form.handle)}`;
