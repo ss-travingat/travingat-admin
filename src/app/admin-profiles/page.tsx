@@ -176,11 +176,14 @@ export default async function FeaturedProfilesPage() {
 
         <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:mt-16 xl:grid-cols-4 xl:gap-8">
           {allProfiles.length > 0 ? (
-            allProfiles.map((profile: Profile, index: number) => (
-              <div key={`${profile.id}-${index}`} className="block w-full">
-                <TravellerCard profile={profile} />
-              </div>
-            ))
+            allProfiles.map((profile: Profile, index: number) => {
+              const username = profile.handle?.startsWith('@') ? profile.handle.slice(1) : profile.handle;
+              return (
+                <a key={`${profile.id}-${index}`} href={`https://app.travingat.com/${username}`} className="block w-full transition-transform hover:scale-[1.02]">
+                  <TravellerCard profile={profile} />
+                </a>
+              );
+            })
           ) : (
             <p className="text-center text-white-400 col-span-full">No active profiles found.</p>
           )}
