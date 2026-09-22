@@ -107,16 +107,6 @@ export function WaitlistTab() {
     return matchesSearch && matchesFilter && matchesAdvanced;
   });
 
-  const deviceIcon = (device: string) => {
-    switch (device) {
-      case "mobile":
-        return "smartphone";
-      case "tablet":
-        return "tablet_mac";
-      default:
-        return "desktop_windows";
-    }
-  };
 
   return (
     <div className="flex-1 w-full relative">
@@ -322,7 +312,7 @@ export function WaitlistTab() {
                                   </p>
                                   {entry.user_uuid && (
                                     <a
-                                      href={`/view/explorercard/${entry.user_uuid}?style=${entry.card_style?.toLowerCase() || 'adventure'}`}
+                                      href={`https://app.travingat.com/ec/${entry.user_uuid.split("-")[0]}-${entry.card_style === "Classic" ? "a" : entry.card_style === "Minimal" ? "b" : "c"}`}
                                       target="_blank"
                                       rel="noreferrer"
                                       className="block w-full px-5 py-2 text-[12px] text-white/70 hover:text-white hover:bg-white/5 transition-colors"
@@ -436,6 +426,7 @@ export function WaitlistTab() {
                                         alert("Failed to delete entry");
                                       }
                                     } catch (err) {
+                                      console.log(err);
                                       alert("Error deleting entry");
                                     }
                                   }
@@ -796,6 +787,7 @@ export function WaitlistTab() {
                       alert("Failed to send email.");
                     }
                   } catch (e) {
+                    console.log(e)
                     alert("Error sending email.");
                   } finally {
                     setResendLoading(false);
