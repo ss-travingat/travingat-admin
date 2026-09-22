@@ -8,7 +8,8 @@ import { COUNTRY_LIST } from "@/lib/countries";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-
+import BulkUploadModal from "./components/BulkUploadModal";
+import CountrySelect from "./components/CountrySelect";
 
 interface CountryImage {
   countryCode: string;
@@ -91,105 +92,7 @@ const emptyForm: Omit<Profile, "id"> = {
   isFeaturedProfile: true,
 };
 
-function CountrySelect({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (code: string, name: string, flag: string) => void;
-}) {
-  const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const filtered = COUNTRY_LIST.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const selected = COUNTRY_LIST.find((c) => c.code === value);
-
-  return (
-    <div ref={ref} className="relative">
-      <label className="text-sm text-white/60 block mb-1.5">{label}</label>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-left flex items-center gap-2 hover:border-white/20 transition-colors cursor-pointer"
-      >
-        {selected ? (
-          <>
-            <img
-              src={`/flags/${selected.code}.svg`}
-              alt={selected.name}
-              className="w-5 h-3.5 rounded-sm object-cover"
-            />
-            <span className="text-white">{selected.name}</span>
-            <span className="text-white/30 ml-auto">{selected.code}</span>
-          </>
-        ) : (
-          <span className="text-white/25">Select country...</span>
-        )}
-      </button>
-      {open && (
-        <div className="absolute z-40 mt-1 w-full bg-black-700 border border-white/10 rounded-lg shadow-xl max-h-60 overflow-hidden">
-          <div className="p-2 border-b border-white/10">
-            <Input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search countries..."
-              className="bg-white/5 border border-white/10 text-sm placeholder:text-white/25 focus:border-[#5A45F9]"
-              autoFocus
-            />
-          </div>
-          <div className="max-h-48 overflow-y-auto">
-            {filtered.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-white/30">
-                No countries found
-              </div>
-            ) : (
-              filtered.map((c) => (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => {
-                    onChange(c.code, c.name, c.flag);
-                    setOpen(false);
-                    setSearch("");
-                  }}
-                  className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${value === c.code ? "bg-[#5A45F9]/20 text-white" : "text-white/70"
-                    }`}
-                >
-                  <img
-                    src={`/flags/${c.code}.svg`}
-                    alt={c.name}
-                    className="w-5 h-3.5 rounded-sm object-cover"
-                  />
-                  <span>{c.name}</span>
-                  <span className="text-white/30 ml-auto text-xs">{c.code}</span>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function MultiCountrySelect({
   label,
@@ -685,7 +588,7 @@ export default function AdminProfilesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fileName: file.name,
+          fileName: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
           fileType: file.type,
           prefix: "profiles",
         }),
@@ -761,12 +664,30 @@ export default function AdminProfilesPage() {
 
     setUploading({ field: type, stage: "uploading", idx, current: batch?.current, total: batch?.total });
     try {
+      let dims = null;
+      if (file.type.startsWith("image/")) {
+        dims = await new Promise<{ width: number; height: number } | null>((resolve) => {
+          const img = new Image();
+          const objectUrl = URL.createObjectURL(file);
+          img.onload = () => {
+            resolve({ width: img.naturalWidth, height: img.naturalHeight });
+            URL.revokeObjectURL(objectUrl);
+          };
+          img.onerror = () => {
+            resolve(null);
+            URL.revokeObjectURL(objectUrl);
+          };
+          img.src = objectUrl;
+        });
+      }
+
       const presignRes = await fetch("/api/upload/presign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileType: file.type,
           prefix: type,
+          fileName: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
         }),
       });
 
@@ -806,6 +727,9 @@ export default function AdminProfilesPage() {
         await new Promise((r) => setTimeout(r, 800));
       }
       showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} image uploaded`);
+      if (dims) {
+        return { url: String(publicUrl), width: dims.width, height: dims.height };
+      }
       return String(publicUrl);
 
     } catch (err) {
@@ -820,11 +744,11 @@ export default function AdminProfilesPage() {
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await handleImageUpload(file, "cover");
-    if (url) {
+    const urlOrObj = await handleImageUpload(file, "cover");
+    if (urlOrObj) {
       setForm((prev) => ({
         ...prev,
-        images: { ...prev.images, cover: url },
+        images: { ...prev.images, cover: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
       }));
     }
   };
@@ -832,11 +756,11 @@ export default function AdminProfilesPage() {
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = await handleImageUpload(file, "avatar");
-    if (url) {
+    const urlOrObj = await handleImageUpload(file, "avatar");
+    if (urlOrObj) {
       setForm((prev) => ({
         ...prev,
-        images: { ...prev.images, avatar: url },
+        images: { ...prev.images, avatar: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
       }));
     }
   };
@@ -1042,27 +966,27 @@ export default function AdminProfilesPage() {
       handle: p.handle,
       country: p.country,
       flag: p.flag,
-      flagCode: p.flagCode,
-      homelandFlagCode: p.homelandFlagCode || "",
-      currentlyInFlagCode: p.currentlyInFlagCode || "",
+      flagCode: p.flagCode || (p as any).flag_code || "",
+      homelandFlagCode: p.homelandFlagCode || (p as any).homeland_flag_code || "",
+      currentlyInFlagCode: p.currentlyInFlagCode || (p as any).currently_in_flag_code || "",
       countries: p.countries,
       media: p.media,
       collections: p.collections,
-      images: { ...p.images, gallery: [...p.images.gallery] },
+      images: { ...p.images, gallery: p.images?.gallery ? [...p.images.gallery] : [] },
       align: p.align,
       bio: p.bio,
-      interests: [...p.interests],
+      interests: p.interests ? [...p.interests] : [],
       languages: p.languages ? [...p.languages] : [],
       homeland: p.homeland,
       currentlyIn: p.currentlyIn,
-      socials: { ...p.socials, x: p.socials.x || "", instagram: p.socials.instagram || "", linkedin: p.socials.linkedin || "", youtube: p.socials.youtube || "" },
-      aboutImages: p.aboutImages ? [...p.aboutImages] : [],
-      visitedCountryCodes: p.visitedCountryCodes ? [...p.visitedCountryCodes] : [],
-      countryImages: p.countryImages ? [...p.countryImages] : [],
-      collectionImages: p.collectionImages
-        ? p.collectionImages.map((collection) => ({
+      socials: { ...p.socials, x: p.socials?.x || "", instagram: p.socials?.instagram || "", linkedin: p.socials?.linkedin || "", youtube: p.socials?.youtube || "" },
+      aboutImages: p.aboutImages || (p as any).about_images ? [...(p.aboutImages || (p as any).about_images)] : [],
+      visitedCountryCodes: p.visitedCountryCodes || (p as any).visited_country_codes ? [...(p.visitedCountryCodes || (p as any).visited_country_codes)] : [],
+      countryImages: p.countryImages || (p as any).country_images ? [...(p.countryImages || (p as any).country_images)] : [],
+      collectionImages: p.collectionImages || (p as any).collection_images
+        ? (p.collectionImages || (p as any).collection_images).map((collection: any) => ({
           ...collection,
-          countryCodes: Array.isArray(collection.countryCodes) ? [...collection.countryCodes] : [],
+          countryCodes: Array.isArray(collection.countryCodes || collection.country_codes) ? [...(collection.countryCodes || collection.country_codes)] : [],
         }))
         : [],
     });
@@ -1632,9 +1556,34 @@ export default function AdminProfilesPage() {
 
                 {/* Country Images */}
                 <div>
-                  <label className="text-sm text-white/60 block mb-2">
-                    Country Images
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-sm text-white/60 block">
+                      Country Images
+                    </label>
+                    <BulkUploadModal 
+                      onUploadComplete={(results) => {
+                        setForm(prev => {
+                          const newCountryImages = [...prev.countryImages];
+                          results.forEach(({ countryCode, urls }) => {
+                            const existingIndex = newCountryImages.findIndex(c => c.countryCode === countryCode);
+                            if (existingIndex >= 0) {
+                              newCountryImages[existingIndex] = {
+                                ...newCountryImages[existingIndex],
+                                images: [...newCountryImages[existingIndex].images, ...urls]
+                              };
+                            } else {
+                              newCountryImages.push({
+                                countryCode,
+                                images: urls
+                              });
+                            }
+                          });
+                          return { ...prev, countryImages: newCountryImages };
+                        });
+                        showToast("Bulk upload completed successfully!");
+                      }} 
+                    />
+                  </div>
                   <div className="space-y-2 mb-2">
                     {form.countryImages.map((ci, idx) => {
                       const country = COUNTRY_LIST.find((c) => c.code === ci.countryCode);
@@ -1650,7 +1599,7 @@ export default function AdminProfilesPage() {
                                 />
                               )}
                               <span className="text-sm text-white font-medium">{country?.name || ci.countryCode}</span>
-                              <span className="text-xs text-white/40 ml-1">({ci.images.filter(u => !u.match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter(u => u.match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                              <span className="text-xs text-white/40 ml-1">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <label className="px-2 py-1 bg-white/10 hover:bg-white/15 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
