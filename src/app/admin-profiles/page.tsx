@@ -43,7 +43,7 @@ function normalizeProfile(p: any): Profile {
 }
 
 async function getAllActiveProfiles() {
-  const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api";
+  const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:8000/api";
   try {
     const res = await fetch(`${BACKEND_URL}/profiles`, { next: { revalidate: 60 } });
     if (!res.ok) return [];
@@ -141,7 +141,7 @@ function TravellerCard({ profile }: { profile: Profile }) {
 
 export default async function FeaturedProfilesPage() {
   const allProfiles = await getAllActiveProfiles();
-  
+
   return (
     <main>
       <section id="featured" className="px-3 pb-16 pt-16 md:px-12 md:pb-20 md:pt-20 xl:px-24 xl:pb-24 xl:pt-16">
