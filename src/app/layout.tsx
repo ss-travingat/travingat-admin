@@ -39,7 +39,7 @@ export default function AdminLayout({
 
     setChecking(true);
     verifySession();
-  }, [pathname, router]);
+  }, [router]);
 
   if (pathname !== "/login" && checking) {
     return (
