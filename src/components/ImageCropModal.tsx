@@ -37,11 +37,11 @@ export default function ImageCropModal({
   // Load image
   useEffect(() => {
     const url = URL.createObjectURL(file);
-    setImgSrc(url);
     const img = new window.Image();
     img.onload = () => {
       imgRef.current = img;
       setImgSize({ w: img.naturalWidth, h: img.naturalHeight });
+      setImgSrc(url);
     };
     img.src = url;
     return () => URL.revokeObjectURL(url);

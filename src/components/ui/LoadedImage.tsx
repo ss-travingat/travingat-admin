@@ -32,6 +32,18 @@ export default function LoadedImage({
   const [isHealing, setIsHealing] = useState(false);
   // Track whether we've fallen back from thumbnail to original
   const [useThumbnail, setUseThumbnail] = useState(!!thumbnailSrc);
+  
+  const [prevSrc, setPrevSrc] = useState(src);
+  const [prevThumbnailSrc, setPrevThumbnailSrc] = useState(thumbnailSrc);
+
+  if (src !== prevSrc || thumbnailSrc !== prevThumbnailSrc) {
+    setPrevSrc(src);
+    setPrevThumbnailSrc(thumbnailSrc);
+    setStatus("loading");
+    setRetryCount(0);
+    setUseThumbnail(!!thumbnailSrc);
+    setIsHealing(false);
+  }
   const maxRetries = 2;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const maxLoadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -102,9 +114,6 @@ export default function LoadedImage({
   };
 
   useEffect(() => {
-    setStatus("loading");
-    setRetryCount(0);
-    setUseThumbnail(!!thumbnailSrc);
     // Force error state if image hangs for more than 1 minute
     maxLoadTimeoutRef.current = setTimeout(() => {
       setStatus("error");
