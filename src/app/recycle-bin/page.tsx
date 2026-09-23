@@ -26,8 +26,8 @@ export default function AdminRecycleBinPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  const loadRecycleBin = async () => {
-    setLoading(true);
+  const loadRecycleBin = async (showLoader = true) => {
+    if (showLoader) setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/admin/recycle-bin", { cache: "no-store" });
@@ -57,7 +57,7 @@ export default function AdminRecycleBinPage() {
     } catch {
       setError("Network error. Please try again.");
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
@@ -75,7 +75,7 @@ export default function AdminRecycleBinPage() {
         setError(data.error || "Failed to restore record");
         return;
       }
-      await loadRecycleBin();
+      await loadRecycleBin(false);
     } catch {
       setError("Failed to restore record");
     } finally {
@@ -96,7 +96,7 @@ export default function AdminRecycleBinPage() {
         setError(data.error || "Failed to permanently delete record");
         return;
       }
-      await loadRecycleBin();
+      await loadRecycleBin(false);
     } catch {
       setError("Failed to permanently delete record");
     } finally {
