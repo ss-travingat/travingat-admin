@@ -758,7 +758,11 @@ export default function AdminProfilesPage() {
         await fetch("/api/media-engine/optimize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ key, mediaType: "IMAGE" }),
+          body: JSON.stringify({ 
+            key, 
+            mediaType: "IMAGE", 
+            thumbnails: type === "avatar" || type === "cover" ? [] : [720] 
+          }),
         });
       } catch (err) {
         console.warn("Media engine optimization trigger failed", err);
