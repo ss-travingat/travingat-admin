@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
+import AdminDetailsTable from "./AdminDetailsTable";
 
 type AdminUser = {
   id: string;
@@ -475,117 +476,16 @@ export function MainUsersTab() {
       {detailsModalUser && (
         <div className="fixed inset-0 z-[120] flex justify-end p-5">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailsModalUser(null)} />
-          <div className="bg-[#161616] border border-[#1E1E1E] rounded-2xl w-[420px] h-full relative z-10 shadow-[20px_20px_40px_rgba(0,0,0,0.40)] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
-            <div className="p-6 border-b border-[#1E1E1E] flex justify-between items-center bg-[#161616]">
-              <h2 className="text-xl font-semibold text-white">Details</h2>
-              <button onClick={() => setDetailsModalUser(null)} className="text-white/40 hover:text-white transition-colors">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-6 overflow-y-auto flex-1 flex flex-col gap-6">
-
-              {/* Profile Overview */}
-              <div>
-                <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Profile Overview</p>
-                <div className="bg-[#1E1E1E]/40 rounded-xl p-4 border border-white/5 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Display Name</span>
-                    <span className="text-sm text-white font-medium">{detailsModalUser.display_name || "N/A"}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Username</span>
-                    <span className="text-sm text-white">@{detailsModalUser.username || "N/A"}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Email</span>
-                    <span className="text-sm text-white">{detailsModalUser.email}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">User ID</span>
-                    <span className="text-xs text-white/80 bg-white/5 px-2 py-1 rounded font-mono truncate max-w-[200px]">{detailsModalUser.id}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Joined</span>
-                    <span className="text-sm text-white">{new Date(detailsModalUser.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Status & Analytics */}
-              <div>
-                <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Status & Analytics</p>
-                <div className="bg-[#1E1E1E]/40 rounded-xl p-4 border border-white/5 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Status</span>
-                    <span className={`text-sm font-medium ${detailsModalUser.status === 'active' ? 'text-green-400' : 'text-red-400'}`}>
-                      {detailsModalUser.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Onboarded</span>
-                    <span className="text-sm text-white">{detailsModalUser.onboarded ? "Yes" : "No"}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Auth Provider</span>
-                    <span className="text-sm text-white capitalize">{detailsModalUser.auth_provider || "N/A"}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Countries Traveled</span>
-                    <span className="text-sm text-white">{detailsModalUser.countries_traveled}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Based In</span>
-                    <span className="text-sm text-white">{detailsModalUser.based_in || "N/A"}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Media Usage */}
-              <div>
-                <p className="text-xs font-bold text-white/40 uppercase tracking-wider mb-3">Media Storage</p>
-                <div className="bg-[#1E1E1E]/40 rounded-xl p-4 border border-white/5 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Total Media</span>
-                    <span className="text-sm text-white">{detailsModalUser.total_media_count} files</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Images</span>
-                    <span className="text-sm text-white">{detailsModalUser.image_count}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Videos</span>
-                    <span className="text-sm text-white">{detailsModalUser.video_count}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-white/60">Storage Used</span>
-                    <span className="text-sm text-white">{(detailsModalUser.storage_bytes / (1024 * 1024)).toFixed(2)} MB</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Actions inside modal */}
-              <div className="mt-4 pt-4 border-t border-[#1E1E1E] flex flex-col gap-2">
-                <a
-                  href={`https://app.travingat.com/profiles/${detailsModalUser.username || detailsModalUser.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-2.5 bg-[#2A2A2A] hover:bg-[#333333] text-white text-sm font-medium rounded-lg text-center transition-colors"
-                >
-                  View Public Profile
-                </a>
-                <button
-                  className="w-full py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 text-sm font-medium rounded-lg text-center transition-colors"
-                  onClick={() => {
-                    handleDelete(detailsModalUser);
-                    setDetailsModalUser(null);
-                  }}
-                  disabled={!!processingUserID}
-                >
-                  {processingUserID === detailsModalUser.id ? "Deleting..." : "Delete User"}
-                </button>
-              </div>
-
-            </div>
+          <div className="relative z-10 h-full animate-in slide-in-from-right duration-300">
+            <AdminDetailsTable
+              user={detailsModalUser}
+              onClose={() => setDetailsModalUser(null)}
+              onDelete={(u) => {
+                handleDelete(u);
+                setDetailsModalUser(null);
+              }}
+              processing={processingUserID === detailsModalUser.id}
+            />
           </div>
         </div>
       )}

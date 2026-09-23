@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import WaitlistDetailsCard from "./WaitlistDetailsCard";
 
 const BouncingDots = () => (
   <div className="flex items-center gap-[3px] h-[40px]">
@@ -560,193 +561,22 @@ export function WaitlistTab() {
       {detailsModalEntry && (
         <div className="fixed inset-0 z-[120] flex justify-end p-5">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setDetailsModalEntry(null)} />
-          <div className="bg-[#161616] border border-[#1E1E1E] rounded-2xl w-[420px] h-full relative z-10 shadow-[20px_20px_40px_rgba(0,0,0,0.40)] flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
-
-            <div className="p-6 flex justify-between items-center bg-[#161616] shrink-0">
-              <h2 className="text-xl font-bold text-white">VIew</h2>
-              <button
-                onClick={() => setDetailsModalEntry(null)}
-                className="text-white/60 hover:text-white bg-white/5 hover:bg-white/10 rounded-md p-1.5 transition-colors"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-              </button>
-            </div>
-
-            <div className="px-6 pb-8 overflow-y-auto flex-1 flex flex-col">
-
-              {/* Basic info */}
-              <div className="mb-6">
-                <h3 className="text-[15px] font-bold text-white mb-4">Basic info</h3>
-                <div className="flex flex-col gap-3 text-[13.5px]">
-                  {detailsModalEntry.user_uuid && (
-                    <div className="grid grid-cols-[130px_1fr] items-center">
-                      <span className="text-white/50 font-medium">User ID</span>
-                      <span className="text-white font-mono text-xs">{detailsModalEntry.user_uuid}</span>
-                    </div>
-                  )}
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Email</span>
-                    <span className="text-white break-all">{detailsModalEntry.email}</span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Country</span>
-                    <span className="text-white">{detailsModalEntry.country || "N/A"}</span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Joined</span>
-                    <span className="text-white">
-                      {new Date(detailsModalEntry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} &bull; {new Date(detailsModalEntry.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Source</span>
-                    <span className="text-white">{detailsModalEntry.source || "Waitlist"}</span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Waitlist status</span>
-                    <div className="flex">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-medium tracking-wide ${detailsModalEntry.confirmed
-                        ? "bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/20"
-                        : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                        }`}>
-                        {detailsModalEntry.confirmed ? "Confirmed" : "Pending"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Email verified</span>
-                    <span className="text-white">
-                      {detailsModalEntry.confirmed_at ? (
-                        <>{new Date(detailsModalEntry.confirmed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} &bull; {new Date(detailsModalEntry.confirmed_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</>
-                      ) : (
-                        "N/A"
-                      )}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-px w-full bg-white/5 mb-6" />
-
-              {/* Explorer Card */}
-              <div className="mb-6">
-                <h3 className="text-[15px] font-bold text-white mb-4">Explorer Card</h3>
-                <div className="flex flex-col gap-3 text-[13.5px]">
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Status</span>
-                    <div className="flex">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-medium tracking-wide ${detailsModalEntry.explorer_card_status?.toLowerCase() === 'created'
-                        ? "bg-[#4ade80]/10 text-[#4ade80] border border-[#4ade80]/20"
-                        : "bg-white/10 text-white/70 border border-white/10"
-                        }`}>
-                        {detailsModalEntry.explorer_card_status || "Not created"}
-                      </span>
-                    </div>
-                  </div>
-                  {detailsModalEntry.explorer_card_status?.toLowerCase() === 'created' && (
-                    <>
-                      <div className="grid grid-cols-[130px_1fr] items-center">
-                        <span className="text-white/50 font-medium">Card style</span>
-                        <span className="text-white capitalize">{detailsModalEntry.card_style || "Adventure"}</span>
-                      </div>
-                      <div className="grid grid-cols-[130px_1fr] items-center">
-                        <span className="text-white/50 font-medium">Countries visited</span>
-                        <span className="text-white">{detailsModalEntry.countries_count || 0}</span>
-                      </div>
-                      <div className="grid grid-cols-[130px_1fr] items-center">
-                        <span className="text-white/50 font-medium">View card</span>
-                        <a
-                          href={`/view/explorercard/${detailsModalEntry.user_uuid}?style=${detailsModalEntry.card_style?.toLowerCase() || 'adventure'}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[#60a5fa] hover:underline"
-                        >
-                          Open card
-                        </a>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="h-px w-full bg-white/5 mb-6" />
-
-              {/* Featured Application */}
-              <div className="mb-6">
-                <h3 className="text-[15px] font-bold text-white mb-4">Featured Application</h3>
-                <div className="flex flex-col gap-3 text-[13.5px]">
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Status</span>
-                    <div className="flex">
-                      <span className={`px-2 py-0.5 rounded text-[11px] font-medium tracking-wide ${detailsModalEntry.get_featured_status?.toLowerCase() === 'approved'
-                        ? "bg-[#60a5fa]/10 text-[#60a5fa] border border-[#60a5fa]/20"
-                        : detailsModalEntry.get_featured_status?.toLowerCase() === 'created'
-                          ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                          : "bg-white/10 text-white/70 border border-white/10"
-                        }`}>
-                        {detailsModalEntry.get_featured_status || "Not created"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {detailsModalEntry.get_featured_status?.toLowerCase() === 'created' && (
-                    <div className="flex gap-3 mt-2">
-                      <button
-                        onClick={() => {
-                          const searchParams = new URLSearchParams();
-                          searchParams.set("create", "true");
-                          if (detailsModalEntry.email) searchParams.set("email", detailsModalEntry.email);
-                          if (detailsModalEntry.country) searchParams.set("country", detailsModalEntry.country);
-                          if (detailsModalEntry.id) searchParams.set("waitlistId", detailsModalEntry.id.toString());
-
-                          window.open(`/profiles?${searchParams.toString()}`, "_blank");
-                        }}
-                        className="px-4 py-2 bg-[#e8f5e9] text-[#1b5e20] hover:bg-[#c8e6c9] font-medium rounded-lg text-[13px] transition-colors"
-                      >
-                        Mark as Featured
-                      </button>
-                      <button className="px-4 py-2 bg-white text-black hover:bg-gray-100 font-medium rounded-lg text-[13px] transition-colors">
-                        Reject
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="h-px w-full bg-white/5 mb-6" />
-
-              {/* Additional info */}
-              <div>
-                <h3 className="text-[15px] font-bold text-white mb-4">Additional info</h3>
-                <div className="flex flex-col gap-3 text-[13.5px]">
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Device</span>
-                    <span className="text-white">{detailsModalEntry.device || "N/A"}</span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Browser</span>
-                    <span className="text-white">{detailsModalEntry.browser || "N/A"}</span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Location</span>
-                    <span className="text-white">
-                      {[detailsModalEntry.city, detailsModalEntry.country].filter(Boolean).join(", ") || "N/A"}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">IP address</span>
-                    <span className="text-white">{detailsModalEntry.ip || "N/A"}</span>
-                  </div>
-                  <div className="grid grid-cols-[130px_1fr] items-center">
-                    <span className="text-white/50 font-medium">Last seen</span>
-                    <span className="text-white">
-                      {new Date(detailsModalEntry.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} &bull; {new Date(detailsModalEntry.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-            </div>
+          <div className="relative z-10 h-full animate-in slide-in-from-right duration-300">
+            <WaitlistDetailsCard
+              entry={detailsModalEntry}
+              onClose={() => setDetailsModalEntry(null)}
+              onMarkFeatured={(entry) => {
+                const searchParams = new URLSearchParams();
+                searchParams.set("create", "true");
+                if (entry.email) searchParams.set("email", entry.email);
+                if (entry.country) searchParams.set("country", entry.country);
+                if (entry.id) searchParams.set("waitlistId", entry.id.toString());
+                window.open(`/profiles?${searchParams.toString()}`, "_blank");
+              }}
+              onReject={() => {
+                // Reject logic
+              }}
+            />
           </div>
         </div>
       )}
