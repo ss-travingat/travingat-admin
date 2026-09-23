@@ -42,7 +42,7 @@ export default function AdminRecycleBinPage() {
       const mappedProfiles = Array.isArray(data.profiles) ? data.profiles.map((p: any) => ({
         id: p.id,
         email: p.handle || p.name,
-        deleted_at: p.deletedAt,
+        deleted_at: p.deleted_at || p.deletedAt,
         ...p
       })) : [];
       setProfileItems(mappedProfiles);
