@@ -57,7 +57,7 @@ export default function LoadedImage({
     if (activeSrc.match(/\.(mp4|mov|m4v|3gp|3g2)$/i)) {
       activeSrc = activeSrc.replace(/\.[^/.]+$/, ".webm");
     } else {
-      activeSrc = activeSrc.replace(/\.[^/.]+$/, ".webp");
+      activeSrc = activeSrc.replace(/\.[^/.]+$/, ".avif");
     }
   }
 
@@ -100,8 +100,8 @@ export default function LoadedImage({
         setStatus("loading");
       }, 1000 * (retryCount + 1));
     } else {
-      // Before giving up completely, if the image isn't already webp/webm, attempt to fallback to it.
-      if (!isHealing && !activeSrc.match(/\.(webp|webm)$/i) && !activeSrc.startsWith("blob:") && !activeSrc.startsWith("data:")) {
+      // Before giving up completely, if the image isn't already avif/webm, attempt to fallback to it.
+      if (!isHealing && !activeSrc.match(/\.(avif|webm)$/i) && !activeSrc.startsWith("blob:") && !activeSrc.startsWith("data:")) {
         setIsHealing(true);
         setRetryCount(0); // Reset retries for the new URL
         setStatus("loading");

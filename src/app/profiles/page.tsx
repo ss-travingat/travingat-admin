@@ -1489,7 +1489,7 @@ export default function AdminProfilesPage() {
                       <input
                         ref={coverInputRef}
                         type="file"
-                        accept="image/jpeg, image/png, image/webp"
+                        accept="image/jpeg, image/png, image/webp, image/avif"
                         onChange={handleCoverUpload}
                         className="hidden"
                       />
@@ -1546,7 +1546,7 @@ export default function AdminProfilesPage() {
                       <input
                         ref={avatarInputRef}
                         type="file"
-                        accept="image/jpeg, image/png, image/webp"
+                        accept="image/jpeg, image/png, image/webp, image/avif"
                         onChange={handleAvatarUpload}
                         className="hidden"
                       />
@@ -1616,7 +1616,7 @@ export default function AdminProfilesPage() {
                     <input
                       ref={aboutInputRef}
                       type="file"
-                      accept="image/jpeg, image/png, image/webp, video/*"
+                      accept="image/jpeg, image/png, image/webp, image/avif, video/*"
                       multiple
                       onChange={async (e) => {
                         const files = Array.from(e.target.files ?? []);
@@ -1740,7 +1740,7 @@ export default function AdminProfilesPage() {
                                 ) : "+ Add Media"}
                                 <input
                                   type="file"
-                                  accept="image/jpeg, image/png, image/webp, video/*"
+                                  accept="image/jpeg, image/png, image/webp, image/avif, video/*"
                                   multiple
                                   className="hidden"
                                   onChange={async (e) => {
@@ -1948,7 +1948,7 @@ export default function AdminProfilesPage() {
                               ) : "+ Add Media"}
                               <input
                                 type="file"
-                                accept="image/jpeg, image/png, image/webp, video/*"
+                                accept="image/jpeg, image/png, image/webp, image/avif, video/*"
                                 multiple
                                 className="hidden"
                                 onChange={async (e) => {

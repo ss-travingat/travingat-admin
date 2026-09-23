@@ -604,7 +604,7 @@ export default function AdminBlogsPage() {
                 <input
                   ref={coverInputRef}
                   type="file"
-                  accept="image/jpeg, image/png, image/webp"
+                  accept="image/jpeg, image/png, image/webp, image/avif"
                   onChange={handleCoverFileSelect}
                   className="hidden"
                 />
@@ -706,7 +706,7 @@ export default function AdminBlogsPage() {
               <input
                 ref={contentImageInputRef}
                 type="file"
-                accept="image/jpeg, image/png, image/webp"
+                accept="image/jpeg, image/png, image/webp, image/avif"
                 onChange={handleContentImageSelect}
                 className="hidden"
               />

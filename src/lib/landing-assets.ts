@@ -52,10 +52,10 @@ export function normalizeAssetHtml(html: string): string {
  * Returns the thumbnail URL for a given full-resolution CDN URL.
  *
  * The backend stores thumbnails at:
- *   thumbnails/{original_key_without_ext}_{size}.webp
+ *   thumbnails/{original_key_without_ext}_{size}.avif
  *
  * e.g. https://cdn.travingat.com/profiles/abc.jpg
- *   → https://cdn.travingat.com/thumbnails/profiles/abc_720.webp
+ *   → https://cdn.travingat.com/thumbnails/profiles/abc_720.avif
  *
  * Falls back to the original URL if it can't be derived (blobs, data URIs, videos).
  */
@@ -79,7 +79,7 @@ export function getOptimizedMediaUrl(assetUrl: string, size: number = 720): stri
     const key = assetUrl.slice(r2Base.length).replace(/^\/+/, '');
     // Strip extension
     const keyNoExt = key.replace(/\.[^/.]+$/, '');
-    return `${r2Base}/thumbnails/${keyNoExt}_${size}.webp`;
+    return `${r2Base}/thumbnails/${keyNoExt}_${size}.avif`;
   } catch {
     return assetUrl;
   }
