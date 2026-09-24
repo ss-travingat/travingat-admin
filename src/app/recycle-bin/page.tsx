@@ -235,6 +235,7 @@ export default function AdminRecycleBinPage() {
                               variant="ghost"
                               size="sm"
                               loading={processingID === u.id}
+                              disabled={!!processingID}
                               className="px-2.5 py-1.5 rounded-md text-xs font-medium border border-green-500/40 bg-green-500/10 text-green-400 hover:bg-green-500/20 transition"
                             >
                               Restore
@@ -245,6 +246,7 @@ export default function AdminRecycleBinPage() {
                               variant="ghost"
                               size="sm"
                               loading={processingID === u.id}
+                              disabled={!!processingID}
                               className="px-2.5 py-1.5 rounded-md text-xs font-medium border border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition"
                             >
                               Delete
