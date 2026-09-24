@@ -117,8 +117,8 @@ export default function MediaEngineJobPage() {
     );
   }
 
-  const originalSize = asset.original?.file_size ?? 0;
-  const optimizedSize = asset.optimized?.file_size ?? 0;
+  const originalSize = asset.original?.size ?? asset.original?.file_size ?? 0;
+  const optimizedSize = asset.optimized?.size ?? asset.optimized?.file_size ?? 0;
   const savings = originalSize - optimizedSize;
   const savingsPct = originalSize > 0 ? ((savings / originalSize) * 100).toFixed(1) : '0';
   const isIncrease = savings < 0;
@@ -287,7 +287,7 @@ export default function MediaEngineJobPage() {
                   </div>
                   <div className="space-y-2">
                     {[
-                      { label: 'Format', value: asset.original?.content_type },
+                      { label: 'Format', value: asset.original?.filename?.split('.').pop()?.toUpperCase() || asset.original?.content_type },
                       { label: 'Size', value: formatBytes(originalSize) },
                       { label: 'Dimensions', value: asset.original?.width ? `${asset.original.width} × ${asset.original.height}` : '—' },
                     ].map(row => (
