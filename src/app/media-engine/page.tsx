@@ -47,8 +47,8 @@ export default function MediaEngineDashboard() {
   const [retryMessage, setRetryMessage] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -58,35 +58,36 @@ export default function MediaEngineDashboard() {
     finally { setLoadingStats(false); }
   };
 
-  const fetchJobs = async (pageNumber = 1, append = false, isPolling = false) => {
-    if (!isPolling && !append) setLoadingJobs(true);
-    if (append) setLoadingMore(true);
+  const fetchJobs = async (pageNumber = 1, isPolling = false) => {
+    if (!isPolling) setLoadingJobs(true);
     try {
       const res = await fetch(`/api/media/queue?page=${pageNumber}`);
       if (res.ok) {
         const data = await res.json();
         const raw = Array.isArray(data) ? data : data.results ?? [];
         const filtered = raw.filter((j: any) => j.job_type === "IMAGE_PROCESSING");
+        setJobs(filtered);
         
-        if (append) {
-          setJobs(prev => [...prev, ...filtered]);
+        if (!Array.isArray(data) && data.count) {
+            // Assuming default page size of DRF is used (e.g. 10 or 20), we can estimate total pages
+            // If the DRF provides `count`, we can approximate.
+            const pageSize = 10; // Default fallback
+            setTotalPages(Math.ceil(data.count / pageSize));
         } else {
-          setJobs(filtered);
+            setTotalPages(data.next ? pageNumber + 1 : pageNumber);
         }
         setHasMore(!!data.next);
       }
     } catch { }
     finally { 
       setLoadingJobs(false);
-      setLoadingMore(false);
     }
   };
 
-  const loadMore = () => {
-    if (loadingMore || !hasMore) return;
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchJobs(nextPage, true);
+  const goToPage = (newPage: number) => {
+    if (newPage < 1 || (newPage > totalPages && totalPages > 1)) return;
+    setPage(newPage);
+    fetchJobs(newPage);
   };
 
   const refresh = async () => {
@@ -104,7 +105,7 @@ export default function MediaEngineDashboard() {
       const res = await fetch(`/api/media/queue/${jobId}/retry`, { method: "POST" });
       if (res.ok) {
         setRetryMessage("Job queued for retry.");
-        fetchJobs();
+        fetchJobs(page);
       } else {
         const d = await res.json();
         setRetryMessage(d.error || "Failed to retry job.");
@@ -118,9 +119,9 @@ export default function MediaEngineDashboard() {
       fetchStats();
       fetchJobs(1);
     }, 0);
-    const iv = setInterval(() => { fetchStats(); fetchJobs(1, false, true); }, 15000);
+    const iv = setInterval(() => { fetchStats(); fetchJobs(page, true); }, 15000);
     return () => clearInterval(iv);
-  }, []);
+  }, [page]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
@@ -320,24 +321,28 @@ export default function MediaEngineDashboard() {
             )}
           </div>
           
-          {hasMore && (
-            <div className="p-4 border-t border-white/5 flex justify-center bg-white/[0.01]">
+          {/* Pagination Controls */}
+          <div className="p-4 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
+            <div className="text-sm text-white/40">
+              Page <span className="text-white/80 font-medium">{page}</span> of <span className="text-white/80 font-medium">{totalPages}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="px-6 py-2.5 bg-white/5 hover:bg-white/10 disabled:opacity-50 rounded-xl text-sm font-medium transition-all border border-white/10 hover:border-white/20 flex items-center gap-2 text-white/70 hover:text-white"
+                onClick={() => goToPage(page - 1)}
+                disabled={page <= 1 || loadingJobs}
+                className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center text-white/70 hover:text-white"
               >
-                {loadingMore ? (
-                  <>
-                    <span className="material-symbols-rounded animate-spin text-[18px]">refresh</span>
-                    Loading...
-                  </>
-                ) : (
-                  "Load More"
-                )}
+                <span className="material-symbols-rounded text-[20px]">chevron_left</span>
+              </button>
+              <button
+                onClick={() => goToPage(page + 1)}
+                disabled={(!hasMore && page >= totalPages) || loadingJobs}
+                className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center text-white/70 hover:text-white"
+              >
+                <span className="material-symbols-rounded text-[20px]">chevron_right</span>
               </button>
             </div>
-          )}
+          </div>
         </div>
 
       </div>
