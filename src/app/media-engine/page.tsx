@@ -132,14 +132,31 @@ export default function MediaEngineDashboard() {
             <h1 className="text-2xl font-bold tracking-tight">Media Engine</h1>
             <p className="text-white/40 text-sm mt-1">Image processing pipeline &amp; optimization dashboard.</p>
           </div>
-          <button
-            onClick={refresh}
-            disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/8 active:bg-white/10 disabled:opacity-50 rounded-xl text-sm text-white/70 transition-colors border border-white/8"
-          >
-            <span className={`material-symbols-rounded text-[18px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                const res = await fetch("/api/media/scan_unoptimized", { method: "POST" });
+                if (res.ok) alert("Scan queued successfully!");
+                else {
+                  const res2 = await fetch("/api/media/scan-unoptimized", { method: "POST" });
+                  if (res2.ok) alert("Scan queued successfully!");
+                  else alert("Failed to queue scan.");
+                }
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-400 rounded-xl text-sm transition-colors border border-blue-500/20"
+            >
+              <span className="material-symbols-rounded text-[18px]">search</span>
+              Scan Unoptimized
+            </button>
+            <button
+              onClick={refresh}
+              disabled={refreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/8 active:bg-white/10 disabled:opacity-50 rounded-xl text-sm text-white/70 transition-colors border border-white/8"
+            >
+              <span className={`material-symbols-rounded text-[18px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
 
