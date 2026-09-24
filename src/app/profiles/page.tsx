@@ -988,7 +988,7 @@ export default function AdminProfilesPage() {
         const errData = await res.json().catch(() => null);
         showToast(errData?.error || `Save failed (${res.status})`, true);
       } else {
-        await fetchProfiles();
+        fetchProfiles();
       }
     } catch {
       showToast("Failed to save changes", true);
@@ -1057,7 +1057,7 @@ export default function AdminProfilesPage() {
       showToast(editing ? "Profile updated" : "Profile added");
       setForm(emptyForm);
       setEditing(null);
-      await fetchProfiles();
+      fetchProfiles();
     } catch (err) {
       showToast(`Failed to save: ${err instanceof Error ? err.message : "Network error"}`, true);
     }
@@ -1073,7 +1073,7 @@ export default function AdminProfilesPage() {
         setEditing(null);
         setForm(emptyForm);
       }
-      await fetchProfiles();
+      fetchProfiles();
     } catch {
       showToast("Failed to delete");
     }
@@ -2639,6 +2639,11 @@ export default function AdminProfilesPage() {
                   {p.images.cover && (
                     <div className="mt-3 h-24 rounded-xl overflow-hidden relative ring-1 ring-white/10">
                       <LoadedImage src={toLandingAssetUrl(p.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(p.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                      {p.isSampleProfile && (
+                        <div className="absolute top-2 right-2 z-10 bg-[#5A45F9] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm border border-white/10 backdrop-blur-md">
+                          Sample Profile
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
