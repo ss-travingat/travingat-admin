@@ -213,102 +213,123 @@ export default function MediaEngineDashboard() {
           </div>
         )}
 
-        {/* ── Jobs Table ─────────────────────────────────────────── */}
-        <div className="bg-[#141414] border border-white/5 rounded-2xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+        {/* ── Jobs List ─────────────────────────────────────────── */}
+        <div className="bg-[#141414] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+          <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
             <div>
-              <h2 className="text-base font-semibold">Image Processing Jobs</h2>
-              <p className="text-white/30 text-xs mt-0.5">Click a job to see the full pipeline details.</p>
+              <h2 className="text-lg font-semibold text-white/90">Processing Pipeline</h2>
+              <p className="text-white/40 text-sm mt-1">Recent media jobs and their status.</p>
             </div>
             {!loadingJobs && (
-              <span className="text-white/30 text-xs font-mono">{jobs.length} jobs</span>
+              <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-white/50 text-xs font-medium">
+                {jobs.length} jobs
+              </span>
             )}
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left text-white/70">
-              <thead className="text-white/30 text-xs uppercase tracking-wider border-b border-white/5">
-                <tr>
-                  <th className="px-6 py-3 font-medium">Asset ID</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Started</th>
-                  <th className="px-6 py-3 font-medium">Error</th>
-                  <th className="px-6 py-3 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.04]">
-                {loadingJobs ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}>
-                      {Array.from({ length: 5 }).map((_, j) => (
-                        <td key={j} className="px-6 py-4">
-                          <div className="h-3 bg-white/5 rounded animate-pulse w-24" />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : jobs.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center text-white/30">
-                      <span className="material-symbols-rounded text-4xl block mb-2 opacity-30">image_not_supported</span>
-                      No image processing jobs found.
-                    </td>
-                  </tr>
-                ) : (
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  jobs.map((job: any) => (
-                    <tr
-                      key={job.id}
-                      onClick={() => router.push(`/media-engine/${job.media_id}`)}
-                      className="hover:bg-white/[0.025] transition-colors cursor-pointer group"
-                    >
-                      <td className="px-6 py-4">
-                        <span className="font-mono text-xs text-white/40 group-hover:text-blue-400 transition-colors">
-                          {job.media_id}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={job.status} />
-                      </td>
-                      <td className="px-6 py-4 text-white/40 text-xs whitespace-nowrap">
-                        {new Date(job.created_at).toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4">
-                        {job.error_message ? (
-                          <span className="text-red-400 text-xs truncate max-w-xs block" title={job.error_message}>
-                            {job.error_message}
-                          </span>
-                        ) : (
-                          <span className="text-white/20 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        {["FAILURE", "ERROR", "RETRYING"].includes(job.status) && (
-                          <button
-                            onClick={() => retryJob(job.id)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg text-white/70 transition-colors border border-white/8 text-xs font-medium"
-                          >
-                            <span className="material-symbols-rounded text-[14px]">replay</span>
-                            Retry
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="divide-y divide-white/[0.04]">
+            {loadingJobs ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="p-6 flex items-center gap-6">
+                  <div className="w-16 h-16 bg-white/5 rounded-xl animate-pulse shrink-0" />
+                  <div className="space-y-3 flex-1">
+                    <div className="h-4 bg-white/5 rounded w-1/4 animate-pulse" />
+                    <div className="h-3 bg-white/5 rounded w-1/3 animate-pulse" />
+                  </div>
+                </div>
+              ))
+            ) : jobs.length === 0 ? (
+              <div className="px-6 py-20 text-center flex flex-col items-center justify-center">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                  <span className="material-symbols-rounded text-3xl text-white/20">check_circle</span>
+                </div>
+                <h3 className="text-white/70 font-medium text-lg">No active jobs</h3>
+                <p className="text-white/30 text-sm mt-1">All media has been processed successfully.</p>
+              </div>
+            ) : (
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              jobs.map((job: any) => (
+                <div
+                  key={job.id}
+                  onClick={() => router.push(`/media-engine/${job.media_id}`)}
+                  className="p-6 flex flex-col sm:flex-row sm:items-center gap-6 hover:bg-white/[0.03] transition-all cursor-pointer group"
+                >
+                  {/* Thumbnail */}
+                  <div className="w-20 h-20 bg-[#0f0f0f] border border-white/10 rounded-xl overflow-hidden shrink-0 relative flex items-center justify-center group-hover:border-white/20 transition-colors">
+                    {job.media_url ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img 
+                        src={job.media_url} 
+                        alt={job.media_filename || "Media"} 
+                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                      />
+                    ) : (
+                      <span className="material-symbols-rounded text-white/20 text-2xl">image</span>
+                    )}
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="text-white/90 font-medium truncate text-base group-hover:text-blue-400 transition-colors">
+                        {job.media_filename || "Unknown Filename"}
+                      </h3>
+                      <StatusBadge status={job.status} />
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm mt-2">
+                      <div className="flex items-center gap-1.5 text-white/40">
+                        <span className="material-symbols-rounded text-[16px]">tag</span>
+                        <span className="font-mono text-xs">{job.media_id.split('-')[0]}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-white/40">
+                        <span className="material-symbols-rounded text-[16px]">schedule</span>
+                        <span>{new Date(job.created_at).toLocaleString()}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-white/40">
+                        <span className="material-symbols-rounded text-[16px]">build</span>
+                        <span className="capitalize">{job.job_type.replace('_', ' ').toLowerCase()}</span>
+                      </div>
+                    </div>
+                    
+                    {job.error_message && (
+                      <div className="mt-3 inline-flex items-start gap-2 bg-red-500/10 text-red-400/90 text-xs px-3 py-2 rounded-lg border border-red-500/20 max-w-full">
+                        <span className="material-symbols-rounded text-[16px] shrink-0 mt-0.5">error</span>
+                        <span className="break-words">{job.error_message}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="shrink-0 flex items-center justify-end sm:justify-start" onClick={(e) => e.stopPropagation()}>
+                    {["FAILURE", "ERROR", "RETRYING"].includes(job.status) ? (
+                      <button
+                        onClick={() => retryJob(job.id)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 active:bg-white/15 rounded-xl text-white/80 transition-all border border-white/10 hover:border-white/20 text-sm font-medium"
+                      >
+                        <span className="material-symbols-rounded text-[18px]">replay</span>
+                        Retry
+                      </button>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white/20 group-hover:text-white/50 group-hover:bg-white/5 transition-all">
+                        <span className="material-symbols-rounded">chevron_right</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
+          
           {hasMore && (
-            <div className="p-4 border-t border-white/5 flex justify-center">
+            <div className="p-4 border-t border-white/5 flex justify-center bg-white/[0.01]">
               <button
                 onClick={loadMore}
                 disabled={loadingMore}
-                className="px-6 py-2 bg-white/5 hover:bg-white/10 disabled:opacity-50 rounded-xl text-sm font-medium transition-colors border border-white/8 flex items-center gap-2"
+                className="px-6 py-2.5 bg-white/5 hover:bg-white/10 disabled:opacity-50 rounded-xl text-sm font-medium transition-all border border-white/10 hover:border-white/20 flex items-center gap-2 text-white/70 hover:text-white"
               >
                 {loadingMore ? (
                   <>
-                    <span className="material-symbols-rounded animate-spin text-[16px]">refresh</span>
+                    <span className="material-symbols-rounded animate-spin text-[18px]">refresh</span>
                     Loading...
                   </>
                 ) : (
