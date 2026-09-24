@@ -78,7 +78,8 @@ function StatusBadge({ status }: { status: string }) {
 export default function MediaEngineJobPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const id = params.jobId as string;
+  const username = params.username as string;
 
   const [asset, setAsset] = useState<AssetData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -111,7 +112,7 @@ export default function MediaEngineJobPage() {
         <div className="text-center space-y-4">
           <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
           <p className="text-white/60">Asset not found or failed to load.</p>
-          <button onClick={() => router.push('/media-engine')} className="text-blue-400 hover:underline text-sm">← Back to Dashboard</button>
+          <button onClick={() => router.push(`/media-engine/${username}`)} className="text-blue-400 hover:underline text-sm">← Back to Dashboard</button>
         </div>
       </div>
     );
@@ -133,7 +134,7 @@ export default function MediaEngineJobPage() {
         <div className="max-w-screen-xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 min-w-0">
             <button
-              onClick={() => router.push('/media-engine')}
+              onClick={() => router.push(`/media-engine/${username}`)}
               className="flex items-center gap-2 text-white/40 hover:text-white/80 transition-colors shrink-0"
             >
               <ArrowLeft className="w-4 h-4" />
