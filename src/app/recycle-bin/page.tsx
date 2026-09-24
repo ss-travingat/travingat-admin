@@ -65,6 +65,13 @@ export default function AdminRecycleBinPage() {
     setTimeout(loadRecycleBin, 0);
   },[]);
 
+  const removeFromState = (id: string, type: string) => {
+    if (type === "waitlist") setWaitlistItems(prev => prev.filter(item => item.id !== id));
+    if (type === "users") setUserItems(prev => prev.filter(item => item.id !== id));
+    if (type === "profiles") setProfileItems(prev => prev.filter(item => item.id !== id));
+    if (type === "featured_requests") setFeaturedRequestItems(prev => prev.filter(item => item.id !== id));
+  };
+
   const onRestore = async (id: string, type: string) => {
     setProcessingID(id);
     setError("");
@@ -75,7 +82,7 @@ export default function AdminRecycleBinPage() {
         setError(data.error || "Failed to restore record");
         return;
       }
-      await loadRecycleBin(false);
+      removeFromState(id, type);
     } catch {
       setError("Failed to restore record");
     } finally {
@@ -96,7 +103,7 @@ export default function AdminRecycleBinPage() {
         setError(data.error || "Failed to permanently delete record");
         return;
       }
-      await loadRecycleBin(false);
+      removeFromState(id, type);
     } catch {
       setError("Failed to permanently delete record");
     } finally {
