@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/ws/:path*",
-        destination: `${process.env.BACKEND_URL?.replace("http", "ws") || "ws://127.0.0.1:8000"}/ws/:path*`,
+        destination: `${process.env.BACKEND_URL || "http://127.0.0.1:8000"}/ws/:path*`,
       }
     ];
   },
