@@ -67,19 +67,19 @@ export default function MediaEngineDashboard() {
         const raw = Array.isArray(data) ? data : data.results ?? [];
         const filtered = raw.filter((j: any) => j.job_type === "IMAGE_PROCESSING");
         setJobs(filtered);
-        
+
         if (!Array.isArray(data) && data.count) {
-            // Assuming default page size of DRF is used (e.g. 10 or 20), we can estimate total pages
-            // If the DRF provides `count`, we can approximate.
-            const pageSize = 10; // Default fallback
-            setTotalPages(Math.ceil(data.count / pageSize));
+          // Assuming default page size of DRF is used (e.g. 10 or 20), we can estimate total pages
+          // If the DRF provides `count`, we can approximate.
+          const pageSize = 10; // Default fallback
+          setTotalPages(Math.ceil(data.count / pageSize));
         } else {
-            setTotalPages(data.next ? pageNumber + 1 : pageNumber);
+          setTotalPages(data.next ? pageNumber + 1 : pageNumber);
         }
         setHasMore(!!data.next);
       }
     } catch { }
-    finally { 
+    finally {
       setLoadingJobs(false);
     }
   };
@@ -192,7 +192,7 @@ export default function MediaEngineDashboard() {
             <p className="text-3xl font-bold">
               {loadingStats ? <span className="text-white/20 animate-pulse">—</span> : formatBytes(stats?.optimized_size ?? 0)}
             </p>
-            <p className="text-xs text-white/30 mt-4 pt-4 border-t border-white/5">After WebP conversion</p>
+            <p className="text-xs text-white/30 mt-4 pt-4 border-t border-white/5">After avif conversion</p>
           </div>
 
           {/* Savings */}
@@ -259,9 +259,9 @@ export default function MediaEngineDashboard() {
                   <div className="w-20 h-20 bg-[#0f0f0f] border border-white/10 rounded-xl overflow-hidden shrink-0 relative flex items-center justify-center group-hover:border-white/20 transition-colors">
                     {job.media_url ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
-                      <img 
-                        src={job.media_url} 
-                        alt={job.media_filename || "Media"} 
+                      <img
+                        src={job.media_url}
+                        alt={job.media_filename || "Media"}
                         className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                       />
                     ) : (
@@ -291,7 +291,7 @@ export default function MediaEngineDashboard() {
                         <span className="capitalize">{job.job_type.replace('_', ' ').toLowerCase()}</span>
                       </div>
                     </div>
-                    
+
                     {job.error_message && (
                       <div className="mt-3 inline-flex items-start gap-2 bg-red-500/10 text-red-400/90 text-xs px-3 py-2 rounded-lg border border-red-500/20 max-w-full">
                         <span className="material-symbols-rounded text-[16px] shrink-0 mt-0.5">error</span>
@@ -320,7 +320,7 @@ export default function MediaEngineDashboard() {
               ))
             )}
           </div>
-          
+
           {/* Pagination Controls */}
           <div className="p-4 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
             <div className="text-sm text-white/40">
