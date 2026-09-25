@@ -1,7 +1,4 @@
-import React from "react";
-
-const imgClose = "http://localhost:3845/assets/3a2a667aa09d26841471b163f316ab8704fde500.svg";
-const imgLine = "http://localhost:3845/assets/ff607d6f84970584c05d86f43af1a12c932d7551.svg";
+import { X } from "lucide-react";
 
 type WaitlistEntry = {
   id: number;
@@ -14,12 +11,16 @@ type WaitlistEntry = {
   confirmed: boolean;
   confirmed_at: string | null;
   created_at: string;
+  updated_at: string;
   source: string;
   explorer_card_status: string;
   get_featured_status: string;
   countries_count: number | null;
   card_style: string | null;
   user_uuid?: string;
+  name?: string | null;
+  links?: string[] | null;
+  featured_countries_count?: number | null;
 };
 
 export default function WaitlistDetailsCard({
@@ -66,12 +67,8 @@ export default function WaitlistDetailsCard({
         <p className="[word-break:break-word] font-semibold leading-[normal] not-italic relative shrink-0 text-[20px] text-white whitespace-nowrap" data-node-id="15600:58256">
           View details
         </p>
-        <button onClick={onClose} className="bg-[#111] border border-[#212121] border-solid content-stretch flex gap-[10px] items-center justify-center relative rounded-[8px] shrink-0 size-[36px]" data-node-id="15596:76216" data-name="Menu container">
-          <div className="relative shrink-0 size-[24px]" data-node-id="15596:76223" data-name="X">
-            <div className="absolute right-0 size-[24px] top-0" data-node-id="15596:76224" data-name="close">
-              <img alt="" className="absolute block inset-0 max-w-none size-full" src={imgClose} />
-            </div>
-          </div>
+        <button onClick={onClose} className="bg-[#111] border border-[#212121] border-solid content-stretch flex gap-[10px] items-center justify-center relative rounded-[8px] shrink-0 size-[36px] hover:bg-[#1a1a1a] transition-colors" data-node-id="15596:76216" data-name="Menu container">
+          <X size={20} className="text-white/70 group-hover:text-white transition-colors" />
         </button>
       </div>
       <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-node-id="15600:58259" data-name="Basic Info Section">
@@ -84,7 +81,7 @@ export default function WaitlistDetailsCard({
           </p>
           <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-node-id="15600:58263" data-name="Value Container">
             <p className="[word-break:break-word] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-white w-full" data-node-id="15600:58264">
-              N/A
+              {entry.name || "N/A"}
             </p>
           </div>
         </div>
@@ -149,10 +146,7 @@ export default function WaitlistDetailsCard({
           </div>
         </div>
       </div>
-      <div className="h-0 relative shrink-0 w-full" data-node-id="15600:58290" data-name="Line">
-        <div className="absolute inset-[-1px_0_0_0]">
-          <img alt="" className="block max-w-none size-full" src={imgLine} />
-        </div>
+      <div className="h-[1px] relative shrink-0 w-full bg-[#1e1e1e]" data-node-id="15600:58290" data-name="Line">
       </div>
       <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-node-id="15600:58291" data-name="Explorer Card Section">
         <p className="[word-break:break-word] font-semibold leading-[normal] not-italic relative shrink-0 text-[16px] text-white w-full" data-node-id="15600:58292">
@@ -203,10 +197,7 @@ export default function WaitlistDetailsCard({
           </>
         )}
       </div>
-      <div className="h-0 relative shrink-0 w-full" data-node-id="15600:58310" data-name="Line">
-        <div className="absolute inset-[-1px_0_0_0]">
-          <img alt="" className="block max-w-none size-full" src={imgLine} />
-        </div>
+      <div className="h-[1px] relative shrink-0 w-full bg-[#1e1e1e]" data-node-id="15600:58310" data-name="Line">
       </div>
       <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-node-id="15600:58311" data-name="Featured Application Section">
         <p className="[word-break:break-word] font-semibold leading-[normal] not-italic relative shrink-0 text-[16px] text-white w-full" data-node-id="15600:58312">
@@ -231,7 +222,7 @@ export default function WaitlistDetailsCard({
           </p>
           <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-node-id="15600:58320" data-name="Value Container">
             <p className="[word-break:break-word] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-white w-full" data-node-id="15600:58321">
-              N/A
+              {formatDate(entry.updated_at)}
             </p>
           </div>
         </div>
@@ -241,7 +232,7 @@ export default function WaitlistDetailsCard({
           </p>
           <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-node-id="15600:58324" data-name="Value Container">
             <p className="[word-break:break-word] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-white w-full" data-node-id="15600:58325">
-              N/A
+              {entry.featured_countries_count ?? "N/A"}
             </p>
           </div>
         </div>
@@ -250,8 +241,16 @@ export default function WaitlistDetailsCard({
             Links
           </p>
           <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-node-id="15600:58328" data-name="Value Container">
-            <div className="[word-break:break-word] content-stretch flex flex-col font-medium gap-[6px] items-start leading-[0] not-italic relative shrink-0 text-[#3b82f6] text-[14px] w-full whitespace-nowrap" data-node-id="15600:58329" data-name="Links List">
-              <p className="leading-[normal]">N/A</p>
+            <div className="[word-break:break-word] content-stretch flex flex-col font-medium gap-[6px] items-start leading-[0] not-italic relative shrink-0 text-[14px] w-full" data-node-id="15600:58329" data-name="Links List">
+              {entry.links && entry.links.length > 0 ? (
+                entry.links.map((link, i) => (
+                  <a key={i} href={link} target="_blank" rel="noreferrer" className="text-[#3b82f6] hover:underline leading-[normal] block truncate w-full">
+                    {link}
+                  </a>
+                ))
+              ) : (
+                <p className="text-white leading-[normal]">N/A</p>
+              )}
             </div>
           </div>
         </div>
@@ -271,10 +270,7 @@ export default function WaitlistDetailsCard({
           </div>
         )}
       </div>
-      <div className="h-0 relative shrink-0 w-full" data-node-id="15600:58338" data-name="Line">
-        <div className="absolute inset-[-1px_0_0_0]">
-          <img alt="" className="block max-w-none size-full" src={imgLine} />
-        </div>
+      <div className="h-[1px] relative shrink-0 w-full bg-[#1e1e1e]" data-node-id="15600:58338" data-name="Line">
       </div>
       <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full" data-node-id="15600:58339" data-name="Additional Info Section">
         <p className="[word-break:break-word] font-semibold leading-[normal] not-italic relative shrink-0 text-[16px] text-white w-full" data-node-id="15600:58340">
@@ -326,7 +322,7 @@ export default function WaitlistDetailsCard({
           </p>
           <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-node-id="15600:58359" data-name="Value Container">
             <p className="[word-break:break-word] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-white w-full" data-node-id="15600:58360">
-              {formatDate(entry.created_at)}
+              {formatDate(entry.updated_at)}
             </p>
           </div>
         </div>

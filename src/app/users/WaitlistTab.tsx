@@ -31,6 +31,10 @@ type WaitlistEntry = {
   countries_count: number | null;
   card_style: string | null;
   user_uuid?: string;
+  name?: string | null;
+  links?: string[] | null;
+  featured_countries_count?: number | null;
+  updated_at: string;
 };
 
 type Filter = "all" | "confirmed" | "unconfirmed";
