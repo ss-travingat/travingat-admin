@@ -9,7 +9,7 @@ export default function BatchDetailsPage(props: { params: Promise<{ batchId: str
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/media?upload_batch_id=${params.batchId}`)
+    fetch(`/api/media/?upload_batch_id=${params.batchId}`)
       .then((res) => res.json())
       .then((json) => setAssets(json.results || json))
       .catch((err) => console.error(err))
