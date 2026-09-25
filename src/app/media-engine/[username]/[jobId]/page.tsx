@@ -3,9 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Download, ExternalLink, Image as ImageIcon, CheckCircle2, Clock, AlertCircle, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
-import dynamic from 'next/dynamic';
-
-const ReactPlayer = dynamic(() => import('react-player'), { ssr: false }) as any;
 
 function formatBytes(bytes: number | undefined, decimals = 2) {
   if (!bytes || bytes === 0) return '0 Bytes';
@@ -52,7 +49,6 @@ interface MediaJob {
 interface AssetData {
   id: string;
   status: string;
-  media_type?: string;
   original?: MediaVariant & { filename?: string };
   optimized?: MediaVariant;
   thumbnails?: MediaVariant[];
@@ -208,26 +204,14 @@ export default function MediaEngineJobPage() {
                 <div className="absolute inset-0 opacity-[0.04]"
                   style={{ backgroundImage: 'repeating-conic-gradient(#fff 0% 25%, transparent 0% 50%)', backgroundSize: '16px 16px' }} />
                 {previewUrl ? (
-                  asset.media_type === 'VIDEO' ? (
-                    <div className="relative w-full aspect-video rounded-lg overflow-hidden shadow-2xl z-10">
-                      <ReactPlayer 
-                        url={previewUrl} 
-                        controls 
-                        width="100%" 
-                        height="100%" 
-                        config={({ file: { forceHLS: true } }) as any}
-                      />
-                    </div>
-                  ) : (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="relative max-w-full max-h-[480px] object-contain rounded-lg shadow-2xl"
-                    />
-                  )
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="relative max-w-full max-h-[480px] object-contain rounded-lg shadow-2xl"
+                  />
                 ) : (
-                  <div className="relative flex flex-col items-center gap-3 text-white/20 z-10">
+                  <div className="relative flex flex-col items-center gap-3 text-white/20">
                     <ImageIcon className="w-16 h-16" />
                     <span className="text-sm">No preview available</span>
                   </div>
