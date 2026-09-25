@@ -38,7 +38,7 @@ export default function BatchDetailsPage(props: { params: Promise<{ batchId: str
         
         <div className="flex items-center justify-between border-b border-zinc-800 pb-6">
           <div>
-            <Link href="/media-engine/benchmarks" className="text-sm text-blue-400 hover:text-blue-300 mb-2 inline-block">&larr; Back to Benchmarks</Link>
+            <Link href="/benchmarks" className="text-sm text-blue-400 hover:text-blue-300 mb-2 inline-block">&larr; Back to Benchmarks</Link>
             <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Batch Details</h1>
             <p className="text-zinc-400 font-mono text-sm">{params.batchId}</p>
           </div>

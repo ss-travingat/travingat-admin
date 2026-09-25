@@ -196,6 +196,28 @@ export default function AdminPage() {
             </div>
           </Link>
 
+          {/* Benchmarks */}
+          <Link
+            href="/benchmarks"
+            className="group ds-card p-7 transition-all hover:border-white/20 hover:bg-[#151618] hover:shadow-[0_0_30px_rgba(255,255,255,0.03)] flex flex-col h-full relative"
+          >
+            <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center mb-6 text-white/50 group-hover:text-white group-hover:bg-white/10 group-hover:border-white/10 transition-all">
+              <span className="material-symbols-rounded text-[24px]">speed</span>
+            </div>
+            <h3 className="ds-font-display text-[20px] font-semibold mb-2 text-white transition-colors tracking-tight">
+              Benchmarks
+            </h3>
+            <p className="ds-font-body text-[#798298] text-[14px] leading-relaxed flex-1">
+              Analyze platform compression efficiency and track bulk upload processing speeds per user.
+            </p>
+            <div className="flex items-center justify-between mt-8 pt-5 border-t border-[#20242d] group-hover:border-white/10 transition-colors">
+              <span className="ds-font-body text-white/70 group-hover:text-white text-[13px] font-medium transition-colors">
+                View benchmarks
+              </span>
+              <span className="material-symbols-rounded text-[18px] text-white/50 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1">arrow_forward</span>
+            </div>
+          </Link>
+
           {/* Recycle Bin */}
           <Link
             href="/recycle-bin"

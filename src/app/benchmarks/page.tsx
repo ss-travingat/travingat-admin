@@ -128,7 +128,7 @@ export default function BenchmarksDashboard() {
                         {batch.avg_per_image ? `${(batch.avg_per_image * 1000).toFixed(0)}ms` : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <Link href={`/media-engine/benchmarks/${batch.batch_id}`} className="text-blue-400 hover:text-blue-300 transition-colors">
+                        <Link href={`/benchmarks/${batch.batch_id}`} className="text-blue-400 hover:text-blue-300 transition-colors">
                           View details &rarr;
                         </Link>
                       </td>
