@@ -94,8 +94,8 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
       const next = [...prev];
       const currentlySelected = next.filter(f => f.isSelected).length;
       
-      if (!next[idx].isSelected && currentlySelected >= 5) {
-        alert("You can only select up to 5 folders per batch.");
+      if (!next[idx].isSelected && currentlySelected >= 20) {
+        alert("You can only select up to 20 folders per batch.");
         return prev;
       }
       
@@ -123,8 +123,8 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
     }
 
     const totalImages = selected.reduce((acc, f) => acc + f.files.length, 0);
-    if (totalImages > 500) {
-      alert(`You have selected ${totalImages} files. The maximum per batch is 500.`);
+    if (totalImages > 2000) {
+      alert(`You have selected ${totalImages} files. The maximum per batch is 2000.`);
       return;
     }
 
@@ -138,8 +138,8 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
     for (const folder of selected) {
       const urls: any[] = [];
       
-      // Upload chunking inside the folder (3 at a time)
-      const chunkSize = 3;
+      // Upload chunking inside the folder (20 at a time)
+      const chunkSize = 20;
       for (let i = 0; i < folder.files.length; i += chunkSize) {
         const chunk = folder.files.slice(i, i + chunkSize);
         
@@ -238,7 +238,7 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
             <div className="p-6 border-b border-white/10 flex justify-between items-center">
               <div>
                 <h3 className="text-xl font-bold text-white">Review & Map Folders</h3>
-                <p className="text-sm text-white/50 mt-1">Select up to 5 folders to upload in this batch.</p>
+                <p className="text-sm text-white/50 mt-1">Select up to 20 folders to upload in this batch.</p>
               </div>
               <button 
                 type="button"
