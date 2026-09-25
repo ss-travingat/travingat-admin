@@ -119,9 +119,49 @@ export default function MediaEngineDashboard() {
       fetchStats();
       fetchJobs(1);
     }, 0);
-    const iv = setInterval(() => { fetchStats(); fetchJobs(page, true); }, 15000);
-    return () => clearInterval(iv);
+    // Removed polling interval because we will use WebSockets
   }, [page]);
+
+  useEffect(() => {
+    // Setup WebSocket for live updates
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/media-jobs/`);
+    
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "job_update" && data.job) {
+          setJobs(prevJobs => {
+            const idx = prevJobs.findIndex((j: any) => j.id === data.job.id);
+            if (idx >= 0) {
+              const newJobs = [...prevJobs];
+              newJobs[idx] = data.job;
+              return newJobs;
+            } else {
+              return [data.job, ...prevJobs];
+            }
+          });
+          // Also refresh stats when a job completes or fails
+          if (["SUCCESS", "FAILURE"].includes(data.job.status)) {
+             fetchStats();
+          }
+        }
+      } catch (err) {
+        console.error("WebSocket message error", err);
+      }
+    };
+
+    return () => ws.close();
+  }, []);
+
+  const [activeTab, setActiveTab] = useState<"ALL" | "PROCESSING" | "FAILED">("ALL");
+
+  const filteredJobs = jobs.filter(j => {
+    if (activeTab === "ALL") return true;
+    if (activeTab === "PROCESSING") return j.status === "PROCESSING" || j.status === "PENDING";
+    if (activeTab === "FAILED") return j.status === "FAILURE" || j.status === "ERROR";
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
@@ -221,9 +261,31 @@ export default function MediaEngineDashboard() {
               <h2 className="text-lg font-semibold text-white/90">Processing Pipeline</h2>
               <p className="text-white/40 text-sm mt-1">Recent media jobs and their status.</p>
             </div>
+            
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setActiveTab("ALL")} 
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${activeTab === "ALL" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}
+              >
+                All
+              </button>
+              <button 
+                onClick={() => setActiveTab("PROCESSING")} 
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${activeTab === "PROCESSING" ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}
+              >
+                Processing
+              </button>
+              <button 
+                onClick={() => setActiveTab("FAILED")} 
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${activeTab === "FAILED" ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}
+              >
+                Failed
+              </button>
+            </div>
+
             {!loadingJobs && (
               <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-white/50 text-xs font-medium">
-                {jobs.length} jobs
+                {filteredJobs.length} jobs
               </span>
             )}
           </div>
@@ -239,17 +301,17 @@ export default function MediaEngineDashboard() {
                   </div>
                 </div>
               ))
-            ) : jobs.length === 0 ? (
+            ) : filteredJobs.length === 0 ? (
               <div className="px-6 py-20 text-center flex flex-col items-center justify-center">
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
                   <span className="material-symbols-rounded text-3xl text-white/20">check_circle</span>
                 </div>
                 <h3 className="text-white/70 font-medium text-lg">No active jobs</h3>
-                <p className="text-white/30 text-sm mt-1">All media has been processed successfully.</p>
+                <p className="text-white/30 text-sm mt-1">No jobs match this filter.</p>
               </div>
             ) : (
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              jobs.map((job: any) => (
+              filteredJobs.map((job: any) => (
                 <div
                   key={job.id}
                   onClick={() => router.push(`/media-engine/system/${job.media_id}`)}

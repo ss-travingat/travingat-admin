@@ -24,6 +24,10 @@ const nextConfig: NextConfig = {
         source: "/api/:path*",
         destination: `${process.env.BACKEND_URL || "http://127.0.0.1:8000"}/api/:path*`,
       },
+      {
+        source: "/ws/:path*",
+        destination: `${process.env.BACKEND_URL?.replace("http", "ws") || "ws://127.0.0.1:8000"}/ws/:path*`,
+      }
     ];
   },
 };

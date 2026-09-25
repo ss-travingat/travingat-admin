@@ -91,6 +91,22 @@ export default function BenchmarksDashboard() {
           </div>
         </div>
 
+        {/* FORMAT ANALYTICS */}
+        {global.format_breakdown && global.format_breakdown.length > 0 && (
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Upload Format Analytics</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {global.format_breakdown.map((fmt: any, i: number) => (
+                <div key={i} className="bg-zinc-950 border border-zinc-800 rounded-lg p-4">
+                  <div className="text-sm font-medium text-zinc-400 truncate">{fmt.original_content_type}</div>
+                  <div className="text-2xl font-bold text-white mt-1">{fmt.count}</div>
+                  <div className="text-xs text-zinc-500 mt-1">{formatBytes(fmt.total_size)} total</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* RECENT BATCHES */}
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
           <div className="px-6 py-5 border-b border-zinc-800">
