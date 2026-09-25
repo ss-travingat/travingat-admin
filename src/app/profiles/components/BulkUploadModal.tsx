@@ -128,6 +128,9 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
       return;
     }
 
+    // Generate a unique batch ID for this upload session
+    const uploadBatchId = crypto.randomUUID();
+
     setIsUploading(true);
     setUploadProgress({ current: 0, total: totalImages });
 
@@ -178,7 +181,11 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
             fetch("/api/media-engine/optimize", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ key, mediaType: "IMAGE" }),
+              body: JSON.stringify({
+                key,
+                mediaType: file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE',
+                upload_batch_id: uploadBatchId
+              })
             }).catch(console.warn);
 
             if (dims) {
