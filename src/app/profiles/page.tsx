@@ -28,7 +28,9 @@ interface CollectionImage {
 
 interface Profile {
   id: string;
-  name: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string; // computed by backend
   handle: string;
   country: string;
   flag: string;
@@ -67,6 +69,8 @@ interface Profile {
 }
 
 const emptyForm: Omit<Profile, "id"> = {
+  firstName: "",
+  lastName: "",
   name: "",
   handle: "",
   country: "",
@@ -483,6 +487,8 @@ export default function AdminProfilesPage() {
 
                 setForm(prev => ({
                   ...prev,
+                  firstName: fname || prev.firstName,
+                  lastName: lname || prev.lastName,
                   name: fullName || prev.name,
                   countries: count || prev.countries,
                   country: fetchedCountryName,
@@ -911,7 +917,7 @@ export default function AdminProfilesPage() {
 
     // Scalar fields
     const scalarFields = [
-      'name', 'handle', 'country', 'flag', 'flagCode', 'homelandFlagCode',
+      'firstName', 'lastName', 'handle', 'country', 'flag', 'flagCode', 'homelandFlagCode',
       'currentlyInFlagCode', 'align', 'bio', 'homeland', 'currentlyIn',
       'email', 'isExplorerCard', 'isFeaturedProfile', 'showBadge', 'isSampleProfile',
     ] as const;
@@ -1007,8 +1013,8 @@ export default function AdminProfilesPage() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.handle.trim()) {
-      showToast("Name and handle are required", true);
+    if (!form.firstName?.trim() || !form.handle.trim()) {
+      showToast("First name and handle are required", true);
       return;
     }
 
@@ -1082,6 +1088,8 @@ export default function AdminProfilesPage() {
   const startEdit = (p: Profile) => {
     setEditing(p);
     setForm({
+      firstName: p.firstName || (p as any).first_name || p.name?.split(' ')[0] || "",
+      lastName: p.lastName || (p as any).last_name || p.name?.split(' ').slice(1).join(' ') || "",
       name: p.name,
       handle: p.handle,
       country: p.country,
@@ -2182,19 +2190,35 @@ export default function AdminProfilesPage() {
 
 
                 {/* Name */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-1.5">
-                    Name <span className="text-red-400">*</span>
-                  </label>
-                  <Input
-                    type="text"
-                    value={form.name || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, name: e.target.value }))
-                    }
-                    placeholder="e.g. Michael Thompson"
-                    className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
-                  />
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="text-sm text-white/60 block mb-1.5">
+                      First Name <span className="text-red-400">*</span>
+                    </label>
+                    <Input
+                      type="text"
+                      value={form.firstName || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, firstName: e.target.value }))
+                      }
+                      placeholder="e.g. Michael"
+                      className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm text-white/60 block mb-1.5">
+                      Last Name
+                    </label>
+                    <Input
+                      type="text"
+                      value={form.lastName || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, lastName: e.target.value }))
+                      }
+                      placeholder="e.g. Thompson"
+                      className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
+                    />
+                  </div>
                 </div>
 
                 {/* Handle */}
