@@ -141,8 +141,8 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
     for (const folder of selected) {
       const urls: any[] = [];
       
-      // Upload chunking inside the folder (5 at a time to prevent browser/R2 rate limits dropping images)
-      const chunkSize = 5;
+      // Upload chunking inside the folder (3 at a time to prevent browser/R2 rate limits dropping images)
+      const chunkSize = 3;
       for (let i = 0; i < folder.files.length; i += chunkSize) {
         const chunk = folder.files.slice(i, i + chunkSize);
         
