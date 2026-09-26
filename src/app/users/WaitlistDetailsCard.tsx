@@ -189,7 +189,7 @@ export default function WaitlistDetailsCard({
                 View card
               </p>
               <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-node-id="15600:58308" data-name="Value Container">
-                <a className="[word-break:break-word] block font-medium leading-[0] not-italic relative shrink-0 text-[#3b82f6] text-[14px] whitespace-nowrap" href={`/view/explorercard/${entry.user_uuid}?style=${(entry.card_style || 'adventure').toLowerCase()}`} data-node-id="15600:58309" target="_blank">
+                <a className="[word-break:break-word] block font-medium leading-[0] not-italic relative shrink-0 text-[#3b82f6] text-[14px] whitespace-nowrap" href={`https://app.travingat.com/view/explorercard/${entry.user_uuid}?style=${(entry.card_style || 'adventure').toLowerCase()}`} data-node-id="15600:58309" target="_blank">
                   <p className="cursor-pointer leading-[normal]">Open card</p>
                 </a>
               </div>
@@ -215,7 +215,7 @@ export default function WaitlistDetailsCard({
             </div>
           </div>
         </div>
-        
+
         <div className="content-stretch flex gap-[8px] items-start relative shrink-0 w-full" data-node-id="15600:58318" data-name="Info Row">
           <p className="[word-break:break-word] font-normal leading-[normal] not-italic relative shrink-0 text-[#cecece] text-[14px] w-[160px]" data-node-id="15600:58319">
             Applied on
