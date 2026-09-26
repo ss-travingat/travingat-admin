@@ -764,10 +764,10 @@ export default function AdminProfilesPage() {
         await fetch("/api/media-engine/optimize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            key, 
-            mediaType: "IMAGE", 
-            thumbnails: type === "avatar" || type === "cover" ? [] : [720] 
+          body: JSON.stringify({
+            key,
+            mediaType: "IMAGE",
+            thumbnails: type === "avatar" || type === "cover" ? [] : [720]
           }),
         });
       } catch (err) {
@@ -2237,10 +2237,10 @@ export default function AdminProfilesPage() {
                     }
                     placeholder="e.g. @micheal.th99"
                     className={`bg-white/5 border placeholder:text-white/25 focus:border-[#5A45F9] transition-colors ${handleStatus === 'unavailable'
-                        ? 'border-red-500 focus:border-red-500'
-                        : handleStatus === 'available'
-                          ? 'border-emerald-500 focus:border-emerald-500'
-                          : 'border-white/10'
+                      ? 'border-red-500 focus:border-red-500'
+                      : handleStatus === 'available'
+                        ? 'border-emerald-500 focus:border-emerald-500'
+                        : 'border-white/10'
                       }`}
                   />
                 </div>
@@ -2581,7 +2581,7 @@ export default function AdminProfilesPage() {
                     {/* Avatar */}
                     <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/5 shrink-0 relative">
                       {p.images.avatar ? (
-                        <LoadedImage src={toLandingAssetUrl(p.images.avatar)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(p.images.avatar))} alt={p.name} containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                        <LoadedImage src={toLandingAssetUrl(p.images.avatar)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(p.images.avatar))} alt={p.name || 'Avatar'} containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-white/20 text-lg">
                           👤
