@@ -2663,7 +2663,7 @@ export default function AdminProfilesPage() {
                   {p.images.cover && (
                     <div className="mt-3 h-24 rounded-xl overflow-hidden relative ring-1 ring-white/10">
                       <LoadedImage src={toLandingAssetUrl(p.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(p.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
-                      {p.isSampleProfile && (
+                      {(p.isSampleProfile ?? (p as any).is_sample_profile) && (
                         <div className="absolute top-2 right-2 z-10 bg-[#5A45F9] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm border border-white/10 backdrop-blur-md">
                           Sample Profile
                         </div>
