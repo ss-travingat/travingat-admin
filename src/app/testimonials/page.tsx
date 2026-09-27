@@ -80,13 +80,14 @@ export default function AdminTestimonialsPage() {
     try {
       showToast("Uploading image...");
 
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-      formData.append("prefix", "testimonials");
-
+      // Step 1: Get presigned URL (only send metadata, not the file)
       const uploadRes = await fetch("/api/upload/presign", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentType: file.type,
+          prefix: "testimonials",
+        }),
       });
 
       if (!uploadRes.ok) {
@@ -99,7 +100,18 @@ export default function AdminTestimonialsPage() {
         return;
       }
       
-      const { publicUrl } = await uploadRes.json();
+      const { uploadUrl, publicUrl } = await uploadRes.json();
+
+      // Step 2: Upload the file directly to R2
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putRes.ok) {
+        showToast("Upload to storage failed");
+        return;
+      }
       
       setForm((prev) => ({ ...prev, photo: toLandingAssetUrl(publicUrl) }));
       showToast("Photo uploaded");

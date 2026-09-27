@@ -102,13 +102,14 @@ export default function AdminBlogsPage() {
       showToast("Uploading image...");
       const file = new File([blob], `${prefix}-${Date.now()}.jpg`, { type: "image/jpeg" });
 
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-      formData.append("prefix", "blogs");
-
+      // Step 1: Get presigned URL (only send metadata, not the file)
       const uploadRes = await fetch("/api/upload/presign", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentType: file.type,
+          prefix: "blogs",
+        }),
       });
 
       if (!uploadRes.ok) {
@@ -121,7 +122,19 @@ export default function AdminBlogsPage() {
         return null;
       }
       
-      const { publicUrl } = await uploadRes.json();
+      const { uploadUrl, publicUrl } = await uploadRes.json();
+
+      // Step 2: Upload the file directly to R2
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putRes.ok) {
+        showToast("Upload to storage failed");
+        return null;
+      }
+
       return publicUrl;
     } catch {
       showToast("Upload failed");
