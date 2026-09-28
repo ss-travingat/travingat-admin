@@ -16,6 +16,7 @@ interface CountryImage {
   images: string[];
   coverPhoto?: string;
   about?: string;
+  updated_at?: string;
 }
 
 interface CollectionImage {
@@ -24,6 +25,7 @@ interface CollectionImage {
   coverPhoto?: string;
   about?: string;
   countryCodes?: string[];
+  updated_at?: string;
 }
 
 interface Profile {
@@ -1731,8 +1733,13 @@ export default function AdminProfilesPage() {
                                   className="w-4 h-3 rounded-sm object-cover"
                                 />
                               )}
-                              <span className="text-sm text-white font-medium">{country?.name || ci.countryCode}</span>
-                              <span className="text-xs text-white/40 ml-1">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                              <div className="flex flex-col gap-0.5 ml-2">
+                                <span className="text-sm text-white font-medium leading-none">{country?.name || ci.countryCode}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                                  {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
+                                </div>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <label className="px-2 py-1 bg-white/10 hover:bg-white/15 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
@@ -1939,8 +1946,13 @@ export default function AdminProfilesPage() {
                       <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-sm text-white font-medium">{ci.title}</span>
-                            <span className="text-xs text-white/40 ml-1">({ci.images.filter(u => !u.match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter(u => u.match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                            <div className="flex flex-col gap-0.5 ml-2">
+                              <span className="text-sm text-white font-medium leading-none">{ci.title}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[0.65rem] text-white/40">({ci.images.filter(u => !u.match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter(u => u.match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                                {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
+                              </div>
+                            </div>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <label className="px-2 py-1 bg-white/10 hover:bg-white/15 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
