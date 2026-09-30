@@ -1949,7 +1949,7 @@ export default function AdminProfilesPage() {
                             <div className="flex flex-col gap-0.5 ml-2">
                               <span className="text-sm text-white font-medium leading-none">{ci.title}</span>
                               <div className="flex items-center gap-2">
-                                <span className="text-[0.65rem] text-white/40">({ci.images.filter(u => !u.match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter(u => u.match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                                <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
                                 {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
                               </div>
                             </div>
