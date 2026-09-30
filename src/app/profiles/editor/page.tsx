@@ -1279,7 +1279,7 @@ export default function EditorPage() {
                           aboutImages: isAlreadyAdded ? prev.aboutImages.filter(u => u !== url) : [...prev.aboutImages, url].slice(0, 4),
                         }));
                       }}
-                      className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer hover:ring-2 hover:ring-[#5A45F9]"} ${isAlreadyAdded ? "ring-2 ring-[#5A45F9]" : ""}`}
+                      className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer hover:ring-2 hover:ring-[#5A45F9]"} ${isAlreadyAdded ? "ring-2 ring-warning-500" : ""}`}
                     >
                       {isVid ? (
                         <>
@@ -1295,16 +1295,16 @@ export default function EditorPage() {
                             <source src={getOptimizedMediaUrl(toLandingAssetUrl(url))} type="video/webm" />
                             <source src={toLandingAssetUrl(url)} type="video/mp4" />
                           </video>
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity z-10">
                             <span className="text-white text-[14px] drop-shadow">▶</span>
                           </div>
                         </>
                       ) : (
-                        <LoadedImage src={toLandingAssetUrl(url)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))} alt={`Media ${i + 1}`} containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                        <LoadedImage src={toLandingAssetUrl(url)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))} alt={`Media ${i + 1}`} containerClassName="w-full h-full absolute inset-0 z-0" className="w-full h-full object-cover" />
                       )}
                       {isAlreadyAdded && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                          <span className="text-white text-sm font-bold bg-[#5A45F9] rounded-full w-6 h-6 flex items-center justify-center">✓</span>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                          <span className="material-symbols-rounded text-warning-500 text-[40px] drop-shadow-md">check_circle</span>
                         </div>
                       )}
                       {countryCode && (
