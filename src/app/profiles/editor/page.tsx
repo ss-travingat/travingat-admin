@@ -1038,9 +1038,10 @@ export default function EditorPage() {
     if (!editing) return;
     const cleanCountryImages = newForm.countryImages.filter(c => c.images.length > 0);
     const cleanCollectionImages = newForm.collectionImages.filter(c => c.images.length > 0);
-    const computedMedia =
-      cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
-      cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
+    const computedMedia = new Set([
+      ...cleanCountryImages.flatMap(c => c.images),
+      ...cleanCollectionImages.flatMap(c => c.images)
+    ]).size;
     const patch = buildPatch(newForm, cleanCountryImages, cleanCollectionImages, computedMedia);
     if (Object.keys(patch).length === 0) return; // nothing changed
     try {
@@ -1081,9 +1082,10 @@ export default function EditorPage() {
     try {
       const cleanCountryImages = form.countryImages.filter(c => c.images.length > 0);
       const cleanCollectionImages = form.collectionImages.filter(c => c.images.length > 0);
-      const computedMedia =
-        cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
-        cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
+      const computedMedia = new Set([
+        ...cleanCountryImages.flatMap(c => c.images),
+        ...cleanCollectionImages.flatMap(c => c.images)
+      ]).size;
 
       let res: Response;
       if (editing) {
