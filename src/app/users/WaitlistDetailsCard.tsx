@@ -21,6 +21,7 @@ type WaitlistEntry = {
   name?: string | null;
   links?: string[] | null;
   featured_countries_count?: number | null;
+  explorer_card_show_badge?: boolean;
 };
 
 export default function WaitlistDetailsCard({
@@ -28,11 +29,13 @@ export default function WaitlistDetailsCard({
   onClose,
   onMarkFeatured,
   onReject,
+  onToggleExplorerBadge,
 }: {
   entry: WaitlistEntry;
   onClose: () => void;
   onMarkFeatured?: (entry: WaitlistEntry) => void;
   onReject?: (entry: WaitlistEntry) => void;
+  onToggleExplorerBadge?: (entry: WaitlistEntry, showBadge: boolean) => void;
 }) {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "N/A";
@@ -47,16 +50,6 @@ export default function WaitlistDetailsCard({
     })}`;
   };
 
-  const getStatusStyle = (status: string | undefined | null) => {
-    const s = (status || "").toLowerCase();
-    if (s === "confirmed" || s === "created" || s === "approved") {
-      return "bg-[#e6f4ea] text-[#137333]";
-    }
-    if (s === "pending" || s === "not created") {
-      return "bg-yellow-500/10 text-yellow-500";
-    }
-    return "bg-white/10 text-white/70";
-  };
 
   const hasExplorerCard = entry.explorer_card_status?.toLowerCase() === "created";
   const hasFeaturedApp = entry.get_featured_status?.toLowerCase() === "created" || entry.get_featured_status?.toLowerCase() === "approved";
@@ -196,6 +189,37 @@ export default function WaitlistDetailsCard({
             </div>
           </>
         )}
+      </div>
+      <div className="h-[1px] relative shrink-0 w-full bg-[#1e1e1e]" data-node-id="15600:58310" data-name="Line">
+      </div>
+
+      <div className="content-stretch flex flex-col gap-[12px] items-start relative shrink-0 w-full">
+        <p className="[word-break:break-word] font-semibold leading-[normal] not-italic relative shrink-0 text-[16px] text-white w-full">
+          Badges
+        </p>
+        <div className="content-stretch flex gap-[8px] items-start relative shrink-0 w-full">
+          <p className="[word-break:break-word] font-normal leading-[normal] not-italic relative shrink-0 text-[#cecece] text-[14px] w-[160px]">
+            Founding Explorer Badge
+          </p>
+          <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative">
+            <button
+              onClick={() => onToggleExplorerBadge?.(entry, !entry.explorer_card_show_badge)}
+              disabled={!hasExplorerCard || !onToggleExplorerBadge}
+              className={`w-10 h-6 rounded-full transition-colors relative flex items-center px-1 shrink-0 ${
+                !hasExplorerCard ? 'opacity-50 cursor-not-allowed bg-white/5' : entry.explorer_card_show_badge ? 'bg-[#5952FF]' : 'bg-white/10'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                entry.explorer_card_show_badge ? 'translate-x-4' : 'translate-x-0'
+              }`} />
+            </button>
+            {!hasExplorerCard && (
+              <p className="text-[12px] text-yellow-500/80 mt-1">
+                User must create an Explorer Card to enable this badge.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
       <div className="h-[1px] relative shrink-0 w-full bg-[#1e1e1e]" data-node-id="15600:58310" data-name="Line">
       </div>

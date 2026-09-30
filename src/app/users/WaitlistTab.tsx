@@ -34,6 +34,7 @@ type WaitlistEntry = {
   name?: string | null;
   links?: string[] | null;
   featured_countries_count?: number | null;
+  explorer_card_show_badge?: boolean;
   updated_at: string;
 };
 
@@ -577,6 +578,29 @@ export function WaitlistTab() {
               }}
               onReject={() => {
                 // Reject logic
+              }}
+              onToggleExplorerBadge={async (entry, showBadge) => {
+                if (!entry.user_uuid) return;
+                try {
+                  const res = await fetch(`/api/explorercard/${entry.user_uuid}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ show_badge: showBadge })
+                  });
+                  if (res.ok) {
+                    setDetailsModalEntry({ ...entry, explorer_card_show_badge: showBadge });
+                    // Refresh data in background
+                    fetch("/api/waitlist", { cache: "no-store" })
+                      .then((r) => r.json())
+                      .then((data) => {
+                        setEntries(data.entries ?? []);
+                      }).catch(() => {});
+                  } else {
+                    console.error("Failed to update badge status");
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
               }}
             />
           </div>
