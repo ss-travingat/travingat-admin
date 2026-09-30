@@ -1942,7 +1942,7 @@ export default function AdminProfilesPage() {
                     Collection Images
                   </label>
                   <div className="space-y-2 mb-2">
-                    {form.collectionImages.map((ci, idx) => (
+                    {(form.collectionImages || []).map((ci, idx) => (
                       <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
@@ -2143,7 +2143,7 @@ export default function AdminProfilesPage() {
                             setForm((prev) => ({
                               ...prev,
                               collectionImages: [
-                                ...prev.collectionImages,
+                                ...(prev.collectionImages || []),
                                 { title, images: [], countryCodes: [] },
                               ],
                             }));
@@ -2163,7 +2163,7 @@ export default function AdminProfilesPage() {
                         setForm((prev) => ({
                           ...prev,
                           collectionImages: [
-                            ...prev.collectionImages,
+                            ...(prev.collectionImages || []),
                             { title, images: [], countryCodes: [] },
                           ],
                         }));
