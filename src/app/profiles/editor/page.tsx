@@ -2037,54 +2037,6 @@ export default function EditorPage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <label className="px-2 py-1 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
-                                  {uploading?.field === "collection" && uploading?.idx === idx ? (
-                                    <span className="inline-flex items-center gap-1.5">
-                                      {uploading.stage === "done" ? (
-                                        <span className="text-emerald-400">✓</span>
-                                      ) : (
-                                        <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                                      )}
-                                      {uploading.stage === "processing"
-                                        ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                        : uploading.stage === "uploading"
-                                          ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                          : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
-                                    </span>
-                                  ) : "+ Add Media"}
-                                  <input
-                                    type="file"
-                                    accept="image/jpeg, image/png, image/webp, image/avif, video/*"
-                                    multiple
-                                    className="hidden"
-                                    onChange={async (e) => {
-                                      const files = Array.from(e.target.files ?? []);
-                                      if (files.length === 0) return;
-                                      e.target.value = "";
-                                      const urls: string[] = [];
-                                      for (let fi = 0; fi < files.length; fi++) {
-                                        const file = files[fi];
-                                        const batch = { current: fi + 1, total: files.length };
-                                        if (file.type.startsWith("video/")) {
-                                          const url = await handleVideoUpload(file, "collection", idx, batch);
-                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                        } else {
-                                          const url = await handleImageUpload(file, "collection", idx, batch);
-                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                        }
-                                      }
-                                      if (urls.length > 0) {
-                                        setForm((prev) => ({
-                                          ...prev,
-                                          collectionImages: prev.collectionImages.map((c, i) =>
-                                            i === idx ? { ...c, images: [...c.images, ...urls] } : c
-                                          ),
-                                        }));
-                                      }
-                                    }}
-                                  />
-
-                                </label>
                                 {canPickFromMedia && (
                                   <Button
                                     type="button"
