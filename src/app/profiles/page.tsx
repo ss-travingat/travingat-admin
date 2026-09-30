@@ -143,13 +143,13 @@ function MultiCountrySelect({
 
   return (
     <div ref={ref} className="relative">
-      <label className="text-sm text-white/60 block mb-1.5">
+      <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">
         {label} <span className="text-white/30">({value.length} selected)</span>
       </label>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-left hover:border-white/20 transition-colors cursor-pointer"
+        className="w-full px-4 py-2.5 bg-[#000000] border border-[#20242d] rounded-lg text-sm text-left hover:border-white/20 transition-colors cursor-pointer"
       >
         {value.length > 0 ? (
           <div className="flex flex-wrap gap-1">
@@ -177,14 +177,14 @@ function MultiCountrySelect({
         )}
       </button>
       {open && (
-        <div className="absolute z-40 mt-1 w-full bg-black-700 border border-white/10 rounded-lg shadow-xl max-h-72 overflow-hidden">
-          <div className="p-2 border-b border-white/10">
+        <div className="absolute z-40 mt-1 w-full bg-black-700 border border-[#1c212c] rounded-lg shadow-xl max-h-72 overflow-hidden">
+          <div className="p-2 border-b border-[#1c212c]">
             <Input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search countries..."
-              className="bg-white/5 border border-white/10 text-sm placeholder:text-white/25 focus:border-[#5A45F9]"
+              className="bg-[#000000] border border-[#20242d] text-sm placeholder:text-[#6f798b] focus:border-[#5A45F9]"
               autoFocus
             />
           </div>
@@ -288,7 +288,7 @@ function TagInput({
 
   return (
     <div>
-      <label className="text-sm text-white/60 block mb-1.5">{label}</label>
+      <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">{label}</label>
       <div className="flex flex-wrap gap-1.5 mb-2">
         {value.map((tag) => (
           <span
@@ -318,14 +318,14 @@ function TagInput({
           }}
           onPaste={handlePaste}
           placeholder={placeholder}
-          className="flex-1 bg-white/5 border border-white/10 text-xs placeholder:text-white/25 focus:border-[#5A45F9]"
+          className="flex-1 bg-[#000000] border border-[#20242d] text-xs placeholder:text-[#6f798b] focus:border-[#5A45F9]"
         />
         <Button
           type="button"
           onClick={addTag}
           size="sm"
           variant="ghost"
-          className="px-3 py-2 bg-white/10 hover:bg-white/15 rounded-lg text-xs font-medium"
+          className="px-3 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-xs font-medium"
         >
           Add
         </Button>
@@ -1153,7 +1153,7 @@ export default function AdminProfilesPage() {
       {/* Media Picker Modal */}
       {mediaPickerTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setMediaPickerTarget(null)}>
-          <div className="bg-black-700 border border-white/10 rounded-2xl p-6 max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-black-700 border border-[#1c212c] rounded-2xl p-6 max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold">Select from your media</h3>
               <button onClick={() => setMediaPickerTarget(null)} className="text-white/40 hover:text-white text-lg cursor-pointer">✕</button>
@@ -1251,12 +1251,12 @@ export default function AdminProfilesPage() {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-[#1c212c] bg-[#0a0a0a]/90 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <a
               href="/"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/60 transition hover:border-white/20 hover:text-white"
+              className="inline-flex items-center gap-2 rounded-full border border-[#1c212c] bg-white/5 px-3 py-1.5 text-sm text-white/60 transition hover:border-white/20 hover:text-white"
             >
               <span aria-hidden>←</span>
               <span>Dashboard</span>
@@ -1264,7 +1264,7 @@ export default function AdminProfilesPage() {
             <span className="hidden sm:block text-white/15">/</span>
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold tracking-[-0.02em]">Featured Profiles CMS</h1>
-              <p className="hidden md:block text-xs text-white/35">Design-driven profile editing, media curation, and quick publishing.</p>
+              <p className="hidden md:block text-xs text-[#7e889c]">Design-driven profile editing, media curation, and quick publishing.</p>
             </div>
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -1273,7 +1273,7 @@ export default function AdminProfilesPage() {
               onClick={scanOrphans}
               disabled={orphanScanning}
               variant="ghost"
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-xs text-white/55 hover:text-white transition-colors disabled:opacity-50"
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-[#1c212c] rounded-full text-xs text-white/55 hover:text-white transition-colors disabled:opacity-50"
             >
               {orphanScanning ? (
                 <span className="inline-flex items-center gap-1.5">
@@ -1282,19 +1282,19 @@ export default function AdminProfilesPage() {
                 </span>
               ) : "🧹 Scan Orphans"}
             </Button>
-            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/55">
+            <span className="inline-flex items-center rounded-full border border-[#1c212c] bg-white/5 px-3 py-1.5 text-xs text-white/55">
               {profiles.length} profile{profiles.length !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
       </header>
 
-      <div className="relative overflow-hidden border-b border-white/10 bg-[#0a0a0a]">
+      <div className="relative overflow-hidden border-b border-[#1c212c] bg-[#0a0a0a]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(90,69,249,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_28%)]" />
         <div className="max-w-6xl mx-auto px-6 py-8 lg:py-10 relative z-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-2xl space-y-4">
-              <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/50">
+              <span className="inline-flex items-center rounded-full border border-[#1c212c] bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/50">
                 Profile studio
               </span>
               <div className="space-y-3">
@@ -1304,18 +1304,18 @@ export default function AdminProfilesPage() {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3 sm:max-w-md">
-              <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-4 backdrop-blur-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">Profiles</p>
+              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Profiles</p>
                 <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">{profiles.length}</p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-4 backdrop-blur-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">Media</p>
+              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Media</p>
                 <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
                   {profiles.reduce((sum, profile) => sum + profile.media, 0)}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/10 bg-white/4 px-4 py-4 backdrop-blur-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/35">Published</p>
+              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Published</p>
                 <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Live</p>
               </div>
             </div>
@@ -1326,7 +1326,7 @@ export default function AdminProfilesPage() {
       {/* Orphan Cleanup Panel */}
       {orphanPanelOpen && (
         <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="rounded-2xl border border-white/10 bg-white/4 p-5 backdrop-blur-sm">
+          <div className="rounded-2xl border border-[#1c212c] bg-white/4 p-5 backdrop-blur-sm">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <span className="text-lg">🧹</span>
@@ -1341,7 +1341,7 @@ export default function AdminProfilesPage() {
                   onClick={scanOrphans}
                   disabled={orphanScanning}
                   variant="ghost"
-                  className="px-3 py-1.5 bg-white/10 hover:bg-white/15 rounded-lg text-xs font-medium disabled:opacity-50"
+                  className="px-3 py-1.5 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-xs font-medium disabled:opacity-50"
                 >
                   {orphanScanning ? (
                     <span className="inline-flex items-center gap-1.5">
@@ -1434,1138 +1434,22 @@ export default function AdminProfilesPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)] gap-6 xl:gap-8">
-        {/* Form Panel */}
-        <div className="shrink-0">
-          <div className="sticky top-22 rounded-[28px] border border-white/10 bg-white/4 p-6 shadow-[0_30px_80px_rgba(0,0,0,0.35)] backdrop-blur-xl">
-            <div className="mb-6 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.2em] text-white/35">Editor</p>
-                <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em]">
-                  {editing ? "Edit Profile" : "Add New Profile"}
-                </h2>
-              </div>
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/45">
-                Step 1 of 2
-              </span>
-            </div>
-
-            <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
-              {/* Images Section */}
-              <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <h3 className="text-sm font-medium text-white/80 pb-2 border-b border-white/10">
-                  Images
-                </h3>
-
-                {/* Cover Image */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-2">
-                    Cover Image
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <div className="w-32 h-20 rounded-lg overflow-hidden bg-white/5 shrink-0 relative group">
-                      {form.images.cover ? (
-                        <>
-                          <LoadedImage src={toLandingAssetUrl(form.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, cover: "" } }))}
-                            className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white"
-                          >
-                            ×
-                          </button>
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
-                          No cover
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <Button
-                        type="button"
-                        onClick={() => coverInputRef.current?.click()}
-                        disabled={uploading !== null}
-                        variant="ghost"
-                        className="px-4 py-2 bg-white/10 hover:bg-white/15 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {uploading?.field === "cover" ? (
-                          <span className="inline-flex items-center gap-2">
-                            {uploading.stage === "done" ? (
-                              <span className="text-emerald-400">✓</span>
-                            ) : (
-                              <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                            )}
-                            {uploading.stage === "processing" ? "Processing…" : uploading.stage === "uploading" ? "Uploading…" : "Uploaded!"}
-                          </span>
-                        ) : "Upload Cover"}
-                      </Button>
-                      <input
-                        ref={coverInputRef}
-                        type="file"
-                        accept="image/jpeg, image/png, image/webp, image/avif"
-                        onChange={handleCoverUpload}
-                        className="hidden"
-                      />
-                      <p className="text-xs text-white/30 mt-1">
-                        PNG, JPG up to 20MB
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Avatar Image */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-2">
-                    Avatar
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/5 shrink-0 relative group">
-                      {form.images.avatar ? (
-                        <>
-                          <LoadedImage src={toLandingAssetUrl(form.images.avatar)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.avatar))} alt="Avatar" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
-                          <button
-                            type="button"
-                            onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, avatar: "" } }))}
-                            className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white"
-                          >
-                            ×
-                          </button>
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
-                          No avatar
-                        </div>
-                      )}
-                    </div>
-                    <div>
-                      <Button
-                        type="button"
-                        onClick={() => avatarInputRef.current?.click()}
-                        disabled={uploading !== null}
-                        variant="ghost"
-                        className="px-4 py-2 bg-white/10 hover:bg-white/15 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {uploading?.field === "avatar" ? (
-                          <span className="inline-flex items-center gap-2">
-                            {uploading.stage === "done" ? (
-                              <span className="text-emerald-400">✓</span>
-                            ) : (
-                              <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                            )}
-                            {uploading.stage === "processing" ? "Processing…" : uploading.stage === "uploading" ? "Uploading…" : "Uploaded!"}
-                          </span>
-                        ) : "Upload Avatar"}
-                      </Button>
-                      <input
-                        ref={avatarInputRef}
-                        type="file"
-                        accept="image/jpeg, image/png, image/webp, image/avif"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-
-                {/* About Photos */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-2">
-                    About Photos ({form.aboutImages.length}/4)
-                  </label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {form.aboutImages.map((url, i) => (
-                      <div
-                        key={i}
-                        className="relative w-20 h-16 rounded-lg overflow-hidden bg-white/5 group"
-                      >
-                        <LoadedImage
-                          src={toLandingAssetUrl(url)}
-                          thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))}
-                          alt={`About ${i + 1}`}
-                          containerClassName="w-full h-full absolute inset-0"
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          onClick={() => removeAboutImage(i)}
-                          className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    {Array.from({ length: Math.max(0, 4 - form.aboutImages.length) }).map((_, i) => (
-                      <div
-                        key={`about-placeholder-${i}`}
-                        className="w-20 h-16 rounded-lg border border-dashed border-white/15 bg-white/5 flex items-center justify-center text-[10px] text-white/30"
-                      >
-                        Slot {form.aboutImages.length + i + 1}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 items-center">
-                    <Button
-                      type="button"
-                      onClick={() => aboutInputRef.current?.click()}
-                      disabled={uploading !== null || form.aboutImages.length >= 4}
-                      variant="ghost"
-                      className="px-4 py-2 bg-white/10 hover:bg-white/15 rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {uploading?.field === "about" ? (
-                        <span className="inline-flex items-center gap-2">
-                          {uploading.stage === "done" ? (
-                            <span className="text-emerald-400">✓</span>
-                          ) : (
-                            <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                          )}
-                          {uploading.stage === "processing"
-                            ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                            : uploading.stage === "uploading"
-                              ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                              : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
-                        </span>
-                      ) : "+ Add Media"}
-                    </Button>
-                    <input
-                      ref={aboutInputRef}
-                      type="file"
-                      accept="image/jpeg, image/png, image/webp, image/avif, video/*"
-                      multiple
-                      onChange={async (e) => {
-                        const files = Array.from(e.target.files ?? []);
-                        if (files.length === 0) return;
-                        e.target.value = "";
-
-                        const availableSlots = Math.max(0, 4 - form.aboutImages.length);
-                        if (availableSlots === 0) {
-                          showToast("About section supports up to 4 media items.", true);
-                          return;
-                        }
-
-                        const filesToUpload = files.slice(0, availableSlots);
-                        const uploadedUrls: string[] = [];
-
-                        for (let fi = 0; fi < filesToUpload.length; fi++) {
-                          const file = filesToUpload[fi];
-                          const batch = { current: fi + 1, total: filesToUpload.length };
-                          if (file.type.startsWith("video/")) {
-                            const url = await handleVideoUpload(file, "about", undefined, batch);
-                            if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
-                          } else {
-                            const url = await handleImageUpload(file, "about", undefined, batch);
-                            if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
-                          }
-                        }
-
-                        if (uploadedUrls.length > 0) {
-                          setForm((prev) => ({
-                            ...prev,
-                            aboutImages: [...prev.aboutImages, ...uploadedUrls].slice(0, 4),
-                          }));
-                        }
-
-                        if (files.length > filesToUpload.length) {
-                          showToast("Only the first 4 About media items are kept.");
-                        }
-                      }}
-                      className="hidden"
-                    />
-
-                    {canPickFromMedia && (
-                      <Button
-                        type="button"
-                        onClick={() => setMediaPickerTarget({ type: "about" })}
-                        disabled={form.aboutImages.length >= 4}
-                        variant="ghost"
-                        className="px-4 py-2 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Select from media
-                      </Button>
-                    )}
-                  </div>
-                  <p className="text-xs text-white/30 mt-1">
-                    Only displayed in the About tab. Max 4 photos.
-                  </p>
-                </div>
-
-                {/* Country Images */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm text-white/60 block">
-                      Country Images
-                    </label>
-                    <BulkUploadModal
-                      onUploadComplete={(results) => {
-                        setForm(prev => {
-                          const newCountryImages = [...prev.countryImages];
-                          results.forEach(({ countryCode, urls }) => {
-                            const existingIndex = newCountryImages.findIndex(c => c.countryCode === countryCode);
-                            if (existingIndex >= 0) {
-                              newCountryImages[existingIndex] = {
-                                ...newCountryImages[existingIndex],
-                                images: [...newCountryImages[existingIndex].images, ...urls]
-                              };
-                            } else {
-                              newCountryImages.push({
-                                countryCode,
-                                images: urls
-                              });
-                            }
-                          });
-                          return { ...prev, countryImages: newCountryImages };
-                        });
-                        showToast("Bulk upload completed successfully!");
-                      }}
-                    />
-                  </div>
-                  <div className="space-y-2 mb-2">
-                    {form.countryImages.map((ci, idx) => {
-                      const country = COUNTRY_LIST.find((c) => c.code === ci.countryCode);
-                      return (
-                        <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              {country && (
-                                <img
-                                  src={`/flags/${ci.countryCode}.svg`}
-                                  alt={country.name}
-                                  className="w-4 h-3 rounded-sm object-cover"
-                                />
-                              )}
-                              <div className="flex flex-col gap-0.5 ml-2">
-                                <span className="text-sm text-white font-medium leading-none">{country?.name || ci.countryCode}</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
-                                  {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <label className="px-2 py-1 bg-white/10 hover:bg-white/15 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
-                                {uploading?.field === "country" && uploading?.idx === idx ? (
-                                  <span className="inline-flex items-center gap-1.5">
-                                    {uploading.stage === "done" ? (
-                                      <span className="text-emerald-400">✓</span>
-                                    ) : (
-                                      <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                                    )}
-                                    {uploading.stage === "processing"
-                                      ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                      : uploading.stage === "uploading"
-                                        ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                        : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
-                                  </span>
-                                ) : "+ Add Media"}
-                                <input
-                                  type="file"
-                                  accept="image/jpeg, image/png, image/webp, image/avif, video/*"
-                                  multiple
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const files = Array.from(e.target.files ?? []);
-                                    if (files.length === 0) return;
-                                    e.target.value = "";
-                                    const urls: string[] = [];
-                                    for (let fi = 0; fi < files.length; fi++) {
-                                      const file = files[fi];
-                                      const batch = { current: fi + 1, total: files.length };
-                                      if (file.type.startsWith("video/")) {
-                                        const url = await handleVideoUpload(file, "country", idx, batch);
-                                        if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                      } else {
-                                        const url = await handleImageUpload(file, "country", idx, batch);
-                                        if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                      }
-                                    }
-                                    if (urls.length > 0) {
-                                      const newCountryImages = form.countryImages.map((c, i) =>
-                                        i === idx ? { ...c, images: [...c.images, ...urls] } : c
-                                      );
-                                      const newForm = { ...form, countryImages: newCountryImages };
-                                      setForm(newForm);
-                                      saveFormState(newForm);
-                                    }
-                                  }}
-                                />
-
-                              </label>
-                              {canPickFromMedia && (
-                                <Button
-                                  type="button"
-                                  onClick={() => setMediaPickerTarget({ type: "country", idx })}
-                                  variant="ghost"
-                                  className="px-2 py-1 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-md text-xs font-medium whitespace-nowrap"
-                                >
-                                  Select from media
-                                </Button>
-                              )}
-                              <Button
-                                type="button"
-                                onClick={() =>
-                                  setForm((prev) => ({
-                                    ...prev,
-                                    countryImages: prev.countryImages.filter((_, i) => i !== idx),
-                                  }))
-                                }
-                                variant="ghost"
-                                className="p-1 hover:bg-red-500/20 rounded-md text-white/40 hover:text-red-400 transition-colors cursor-pointer text-xs"
-                              >
-                                ✕
-                              </Button>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {ci.images.map((imgEntry: any, imgIdx: number) => {
-                              const imgUrl = typeof imgEntry === "string" ? imgEntry : imgEntry.url;
-                              const isVid = /\.(mp4|mov|webm|m4v)$/i.test(imgUrl);
-                              return (
-                                <div key={imgIdx} className="relative group w-16 h-12 shrink-0">
-                                  <div className="w-full h-full rounded-md overflow-hidden bg-white/5">
-                                    {isVid ? (
-                                      <>
-                                        <video
-                                          muted
-                                          playsInline
-                                          loop
-                                          preload="metadata"
-                                          className="w-full h-full object-cover"
-                                          onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
-                                          onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                          onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
-                                        >
-                                          <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
-                                          <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
-                                        </video>
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
-                                          <span className="text-white text-[16px] drop-shadow">▶</span>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <LoadedImage
-                                        src={toLandingAssetUrl(imgUrl)}
-                                        thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
-                                        alt={`${country?.name || ci.countryCode} ${imgIdx + 1}`}
-                                        containerClassName="w-full h-full absolute inset-0"
-                                        className="w-full h-full object-cover"
-                                      />
-                                    )}
-                                    {ci.coverPhoto === imgUrl && (
-                                      <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
-                                    )}
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setForm((prev) => ({
-                                            ...prev,
-                                            countryImages: prev.countryImages.map((c, i) =>
-                                              i === idx ? { ...c, coverPhoto: imgUrl } : c
-                                            ),
-                                          }));
-                                        }}
-                                        className="px-2 py-1 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
-                                      >
-                                        Set Cover
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      deleteCountryMedia(idx, imgIdx);
-                                    }}
-                                    className="absolute -top-1.5 -right-1.5 z-20 w-4 h-4 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-white/10"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <Textarea
-                            placeholder={`About ${country?.name || ci.countryCode}...`}
-                            value={ci.about || ""}
-                            onChange={(e) =>
-                              setForm((prev) => ({
-                                ...prev,
-                                countryImages: prev.countryImages.map((c, i) =>
-                                  i === idx ? { ...c, about: e.target.value } : c
-                                ),
-                              }))
-                            }
-                            className="bg-white/5 border-white/10 text-white min-h-[80px]"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1">
-                      <CountrySelect
-                        label=""
-                        value={pendingCountryCode}
-                        onChange={(code) => setPendingCountryCode(code)}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      disabled={!pendingCountryCode}
-                      onClick={() => {
-                        if (!pendingCountryCode) return;
-                        const alreadyExists = form.countryImages.some(
-                          (c) => c.countryCode === pendingCountryCode
-                        );
-                        if (!alreadyExists) {
-                          setForm((prev) => ({
-                            ...prev,
-                            countryImages: [
-                              ...prev.countryImages,
-                              { countryCode: pendingCountryCode, images: [] },
-                            ],
-                          }));
-                        }
-                        setPendingCountryCode("");
-                      }}
-                      className="px-3 py-2.5 bg-white/10 hover:bg-white/15 rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      + Add Country
-                    </button>
-                  </div>
-                </div>
-
-                {/* Collection Images */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-2">
-                    Collection Images
-                  </label>
-                  <div className="space-y-2 mb-2">
-                    {(form.collectionImages || []).map((ci, idx) => (
-                      <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <div className="flex flex-col gap-0.5 ml-2">
-                              <span className="text-sm text-white font-medium leading-none">{ci.title}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
-                                {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <label className="px-2 py-1 bg-white/10 hover:bg-white/15 rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
-                              {uploading?.field === "collection" && uploading?.idx === idx ? (
-                                <span className="inline-flex items-center gap-1.5">
-                                  {uploading.stage === "done" ? (
-                                    <span className="text-emerald-400">✓</span>
-                                  ) : (
-                                    <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                                  )}
-                                  {uploading.stage === "processing"
-                                    ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                    : uploading.stage === "uploading"
-                                      ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                      : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
-                                </span>
-                              ) : "+ Add Media"}
-                              <input
-                                type="file"
-                                accept="image/jpeg, image/png, image/webp, image/avif, video/*"
-                                multiple
-                                className="hidden"
-                                onChange={async (e) => {
-                                  const files = Array.from(e.target.files ?? []);
-                                  if (files.length === 0) return;
-                                  e.target.value = "";
-                                  const urls: string[] = [];
-                                  for (let fi = 0; fi < files.length; fi++) {
-                                    const file = files[fi];
-                                    const batch = { current: fi + 1, total: files.length };
-                                    if (file.type.startsWith("video/")) {
-                                      const url = await handleVideoUpload(file, "collection", idx, batch);
-                                      if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                    } else {
-                                      const url = await handleImageUpload(file, "collection", idx, batch);
-                                      if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                    }
-                                  }
-                                  if (urls.length > 0) {
-                                    setForm((prev) => ({
-                                      ...prev,
-                                      collectionImages: prev.collectionImages.map((c, i) =>
-                                        i === idx ? { ...c, images: [...c.images, ...urls] } : c
-                                      ),
-                                    }));
-                                  }
-                                }}
-                              />
-
-                            </label>
-                            {canPickFromMedia && (
-                              <Button
-                                type="button"
-                                onClick={() => setMediaPickerTarget({ type: "collection", idx })}
-                                variant="ghost"
-                                className="px-2 py-1 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-md text-xs font-medium whitespace-nowrap"
-                              >
-                                Select from media
-                              </Button>
-                            )}
-                            <Button
-                              type="button"
-                              onClick={() =>
-                                setForm((prev) => ({
-                                  ...prev,
-                                  collectionImages: prev.collectionImages.filter((_, i) => i !== idx),
-                                }))
-                              }
-                              variant="ghost"
-                              className="p-1 hover:bg-red-500/20 rounded-md text-white/40 hover:text-red-400 transition-colors cursor-pointer text-xs"
-                            >
-                              ✕
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {ci.images.map((imgEntry: any, imgIdx: number) => {
-                            const imgUrl = typeof imgEntry === "string" ? imgEntry : imgEntry.url;
-                            const isVid = /\.(mp4|mov|webm|m4v)$/i.test(imgUrl);
-                            return (
-                              <div key={imgIdx} className="relative group w-16 h-12 rounded-md overflow-hidden bg-white/5 shrink-0">
-                                {isVid ? (
-                                  <>
-                                    <video
-                                      muted
-                                      playsInline
-                                      loop
-                                      preload="metadata"
-                                      className="w-full h-full object-cover"
-                                      onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
-                                      onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                      onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
-                                    >
-                                      <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
-                                      <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
-                                    </video>
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
-                                      <span className="text-white text-[16px] drop-shadow">▶</span>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <LoadedImage
-                                    src={toLandingAssetUrl(imgUrl)}
-                                    thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
-                                    alt={`${ci.title} ${imgIdx + 1}`}
-                                    containerClassName="w-full h-full absolute inset-0"
-                                    className="w-full h-full object-cover"
-                                  />
-                                )}
-                                {ci.coverPhoto === imgUrl && (
-                                  <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
-                                )}
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-10">
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setForm((prev) => ({
-                                        ...prev,
-                                        collectionImages: prev.collectionImages.map((c, i) =>
-                                          i === idx ? { ...c, coverPhoto: imgUrl } : c
-                                        ),
-                                      }));
-                                    }}
-                                    className="px-1.5 py-0.5 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
-                                  >
-                                    Set Cover
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setForm((prev) => ({
-                                        ...prev,
-                                        collectionImages: prev.collectionImages.map((c, i) =>
-                                          i === idx ? { ...c, images: c.images.filter((_, j) => j !== imgIdx) } : c
-                                        ).filter((c) => c.images.length > 0),
-                                      }));
-                                    }}
-                                    className="w-5 h-5 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-white/10"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <Textarea
-                          placeholder={`About ${ci.title}...`}
-                          value={ci.about || ""}
-                          onChange={(e) =>
-                            setForm((prev) => ({
-                              ...prev,
-                              collectionImages: prev.collectionImages.map((c, i) =>
-                                i === idx ? { ...c, about: e.target.value } : c
-                              ),
-                            }))
-                          }
-                          className="bg-white/5 border-white/10 text-white min-h-[80px]"
-                        />
-                        <MultiCountrySelect
-                          label="Countries for this collection"
-                          value={ci.countryCodes || []}
-                          onChange={(codes) =>
-                            setForm((prev) => ({
-                              ...prev,
-                              collectionImages: prev.collectionImages.map((c, i) =>
-                                i === idx ? { ...c, countryCodes: codes } : c
-                              ),
-                            }))
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 items-end">
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={pendingCollectionTitle}
-                        onChange={(e) => setPendingCollectionTitle(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            const title = pendingCollectionTitle.trim();
-                            if (!title) return;
-                            setForm((prev) => ({
-                              ...prev,
-                              collectionImages: [
-                                ...(prev.collectionImages || []),
-                                { title, images: [], countryCodes: [] },
-                              ],
-                            }));
-                            setPendingCollectionTitle("");
-                          }
-                        }}
-                        placeholder="Collection title..."
-                        className="w-full px-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-[#5A45F9] transition-colors"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      disabled={!pendingCollectionTitle.trim()}
-                      onClick={() => {
-                        const title = pendingCollectionTitle.trim();
-                        if (!title) return;
-                        setForm((prev) => ({
-                          ...prev,
-                          collectionImages: [
-                            ...(prev.collectionImages || []),
-                            { title, images: [], countryCodes: [] },
-                          ],
-                        }));
-                        setPendingCollectionTitle("");
-                      }}
-                      className="px-3 py-2.5 bg-white/10 hover:bg-white/15 rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      + Add Collection
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Basic Info */}
-              <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <h3 className="text-sm font-medium text-white/80 pb-2 border-b border-white/10">
-                  Basic Info
-                </h3>
-
-                {/* Email (Optional) */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-1.5">
-                    User Email <span className="text-white/30 text-xs ml-2">(Optional - creates user account if provided)</span>
-                  </label>
-                  <Input
-                    type="email"
-                    value={form.email || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, email: e.target.value }))
-                    }
-                    placeholder="user@example.com"
-                    className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
-                  />
-                </div>
-
-
-
-                {/* Name */}
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="text-sm text-white/60 block mb-1.5">
-                      First Name <span className="text-red-400">*</span>
-                    </label>
-                    <Input
-                      type="text"
-                      value={form.firstName || ""}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, firstName: e.target.value }))
-                      }
-                      placeholder="e.g. Michael"
-                      className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-sm text-white/60 block mb-1.5">
-                      Last Name
-                    </label>
-                    <Input
-                      type="text"
-                      value={form.lastName || ""}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, lastName: e.target.value }))
-                      }
-                      placeholder="e.g. Thompson"
-                      className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
-                    />
-                  </div>
-                </div>
-
-                {/* Handle */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-1.5 flex justify-between items-center">
-                    <span>Handle <span className="text-red-400">*</span></span>
-                    {handleStatus === 'checking' && <span className="text-white/40 text-xs">Checking...</span>}
-                    {handleStatus === 'available' && <span className="text-emerald-400 text-xs">Available</span>}
-                    {handleStatus === 'unavailable' && <span className="text-red-400 text-xs">Not available</span>}
-                  </label>
-                  <Input
-                    type="text"
-                    value={form.handle || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, handle: e.target.value }))
-                    }
-                    placeholder="e.g. @micheal.th99"
-                    className={`bg-white/5 border placeholder:text-white/25 focus:border-[#5A45F9] transition-colors ${handleStatus === 'unavailable'
-                      ? 'border-red-500 focus:border-red-500'
-                      : handleStatus === 'available'
-                        ? 'border-emerald-500 focus:border-emerald-500'
-                        : 'border-white/10'
-                      }`}
-                  />
-                </div>
-
-                {/* Bio */}
-                <div>
-                  <label className="text-sm text-white/60 block mb-1.5">
-                    Bio
-                  </label>
-                  <Textarea
-                    value={form.bio || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, bio: e.target.value }))
-                    }
-                    placeholder="Short bio about this traveler..."
-                    rows={3}
-                    className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9] resize-none"
-                  />
-                </div>
-
-              </div>
-
-              {/* Country & Location */}
-              <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <h3 className="text-sm font-medium text-white/80 pb-2 border-b border-white/10">
-                  Country & Location
-                </h3>
-
-                {/* Primary Country */}
-                <CountrySelect
-                  label="Primary Country"
-                  value={form.flagCode}
-                  onChange={(code, name, flag) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      flagCode: code,
-                      country: name,
-                      flag,
-                    }))
-                  }
-                />
-
-                {/* Homeland */}
-                <div className="space-y-2">
-                  <CountrySelect
-                    label="Homeland Country"
-                    value={form.homelandFlagCode}
-                    onChange={(code, name) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        homelandFlagCode: code,
-                        // Pre-fill city text if empty, otherwise keep what admin typed
-                        homeland: prev.homeland || name,
-                      }))
-                    }
-                  />
-                  <Input
-                    type="text"
-                    value={form.homeland || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, homeland: e.target.value }))
-                    }
-                    placeholder="City, e.g. Bogota"
-                    className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
-                  />
-                </div>
-
-                {/* Currently In */}
-                <div className="space-y-2">
-                  <CountrySelect
-                    label="Currently In Country"
-                    value={form.currentlyInFlagCode}
-                    onChange={(code, name) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        currentlyInFlagCode: code,
-                        currentlyIn: prev.currentlyIn || name,
-                      }))
-                    }
-                  />
-                  <Input
-                    type="text"
-                    value={form.currentlyIn || ""}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, currentlyIn: e.target.value }))
-                    }
-                    placeholder="City, e.g. Medellin"
-                    className="bg-white/5 border border-white/10 placeholder:text-white/25 focus:border-[#5A45F9]"
-                  />
-                </div>
-
-                {/* Visited Countries */}
-                <MultiCountrySelect
-                  label="Visited Countries"
-                  value={form.visitedCountryCodes}
-                  onChange={(codes) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      visitedCountryCodes: codes,
-                      countries: codes.length,
-                    }))
-                  }
-                />
-              </div>
-
-
-
-              {/* Tags */}
-              <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <h3 className="text-sm font-medium text-white/80 pb-2 border-b border-white/10">
-                  Interests & Languages
-                </h3>
-                <TagInput
-                  label="Interests"
-                  value={form.interests}
-                  onChange={(v) =>
-                    setForm((prev) => ({ ...prev, interests: v }))
-                  }
-                  placeholder="e.g. Photography, Hiking"
-                />
-                <TagInput
-                  label="Languages"
-                  value={form.languages}
-                  onChange={(v) =>
-                    setForm((prev) => ({ ...prev, languages: v }))
-                  }
-                  placeholder="e.g. English, Spanish"
-                />
-              </div>
-
-              {/* Social Links */}
-              <div className="space-y-4 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <h3 className="text-sm font-medium text-white/80 pb-2 border-b border-white/10">
-                  Social Links
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-white/30 text-xs w-16">
-                      Instagram
-                    </span>
-                    <Input
-                      type="text"
-                      value={form.socials.instagram}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          socials: {
-                            ...prev.socials,
-                            instagram: e.target.value,
-                          },
-                        }))
-                      }
-                      placeholder="username"
-                      className="flex-1 bg-white/5 border border-white/10 text-xs placeholder:text-white/25 focus:border-[#5A45F9]"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white/30 text-xs w-16">X</span>
-                    <Input
-                      type="text"
-                      value={form.socials.x}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          socials: { ...prev.socials, x: e.target.value },
-                        }))
-                      }
-                      placeholder="username"
-                      className="flex-1 bg-white/5 border border-white/10 text-xs placeholder:text-white/25 focus:border-[#5A45F9]"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white/30 text-xs w-16">LinkedIn</span>
-                    <Input
-                      type="text"
-                      value={form.socials.linkedin}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          socials: {
-                            ...prev.socials,
-                            linkedin: e.target.value,
-                          },
-                        }))
-                      }
-                      placeholder="username"
-                      className="flex-1 bg-white/5 border border-white/10 text-xs placeholder:text-white/25 focus:border-[#5A45F9]"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-white/30 text-xs w-16">YouTube</span>
-                    <Input
-                      type="text"
-                      value={form.socials.youtube}
-                      onChange={(e) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          socials: {
-                            ...prev.socials,
-                            youtube: e.target.value,
-                          },
-                        }))
-                      }
-                      placeholder="channel"
-                      className="flex-1 bg-white/5 border border-white/10 text-xs placeholder:text-white/25 focus:border-[#5A45F9]"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Badge */}
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <h3 className="text-sm font-medium text-white/80 pb-3 border-b border-white/10 mb-3">
-                  Founding Explorer Badge
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, showBadge: !prev.showBadge }))}
-                  className="w-full flex items-center justify-between gap-3 group"
-                >
-                  <div className="flex items-center gap-3">
-                    <img src="/icons/badge.svg" alt="Badge" className="w-10 h-10 shrink-0 opacity-80" />
-                    <div className="text-left">
-                      <p className="text-sm text-white font-medium leading-snug">Show badge on profile</p>
-                      <p className="text-xs text-white/40 leading-snug mt-0.5">
-                        Displays the Founding Explorer badge on the cover photo
-                      </p>
-                    </div>
-                  </div>
-                  {/* Toggle pill */}
-                  <div
-                    className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${form.showBadge ? "bg-[#5A45F9]" : "bg-white/10"
-                      }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.showBadge ? "translate-x-5" : "translate-x-0"
-                        }`}
-                    />
-                  </div>
-                </button>
-              </div>
-
-              {/* Sample Profile */}
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <h3 className="text-sm font-medium text-white/80 pb-3 border-b border-white/10 mb-3">
-                  Sample Profile Indicator
-                </h3>
-                <button
-                  type="button"
-                  onClick={() => setForm((prev) => ({ ...prev, isSampleProfile: !prev.isSampleProfile }))}
-                  className="w-full flex items-center justify-between gap-3 group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-left">
-                      <p className="text-sm text-white font-medium leading-snug">Mark as Sample Profile</p>
-                      <p className="text-xs text-white/40 leading-snug mt-0.5">
-                        Displays the "Sample Profile" tag on the cover photo
-                      </p>
-                    </div>
-                  </div>
-                  {/* Toggle pill */}
-                  <div
-                    className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${form.isSampleProfile ? "bg-[#5A45F9]" : "bg-white/10"
-                      }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.isSampleProfile ? "translate-x-5" : "translate-x-0"
-                        }`}
-                    />
-                  </div>
-                </button>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-3 pt-2">
-                <Button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={saving}
-                  loading={saving}
-                  className="flex-1 py-2.5 bg-white text-black hover:bg-white/90 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(255,255,255,0.08)]"
-                >
-                  {saving
-                    ? "Saving..."
-                    : editing
-                      ? "Update Profile"
-                      : "Add Profile"}
-                </Button>
-                {editing && (
-                  <Button
-                    type="button"
-                    onClick={cancelEdit}
-                    variant="ghost"
-                    className="py-2.5 px-4 bg-white/10 hover:bg-white/15 rounded-full text-sm font-medium"
-                  >
-                    Cancel
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6 xl:gap-8">
         {/* List Panel */}
         <div className="flex-1 min-w-0">
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-white/35">Directory</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#7e889c]">Directory</p>
               <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em]">All Profiles</h2>
             </div>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/45">
-              {profiles.length} entries
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="rounded-full border border-[#1c212c] bg-white/5 px-3 py-1 text-xs text-[#7e889c]">
+                {profiles.length} entries
+              </span>
+              <Link href="/profiles/editor" className="inline-flex items-center justify-center rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-black transition hover:bg-white/90">
+                + Create Profile
+              </Link>
+            </div>
           </div>
 
           {loading ? (
@@ -2573,7 +1457,7 @@ export default function AdminProfilesPage() {
               Loading...
             </div>
           ) : profiles.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/4 p-12 text-center backdrop-blur-sm">
+            <div className="rounded-2xl border border-[#1c212c] bg-[#0b0d13] p-12 text-center">
               <p className="text-white/40 text-sm">No profiles yet</p>
               <p className="text-white/20 text-xs mt-1">
                 Add your first one using the form
@@ -2584,9 +1468,9 @@ export default function AdminProfilesPage() {
               {profiles.map((p) => (
                 <div
                   key={p.id}
-                  className={`rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/6 ${editing?.id === p.id
-                    ? "border-[#5A45F9]/60 bg-[#5A45F9]/8 shadow-[0_18px_40px_rgba(90,69,249,0.12)]"
-                    : "border-white/10 bg-white/4"
+                  className={`rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#2d2f37] hover:bg-[#12161f] ${editing?.id === p.id
+                    ? "border-[#5A45F9]/60 bg-[#5A45F9]/10 shadow-[0_18px_40px_rgba(90,69,249,0.12)]"
+                    : "border-[#1c212c] bg-[#0b0d13]"
                     }`}
                 >
                   <div className="flex gap-4 items-start">
@@ -2620,9 +1504,9 @@ export default function AdminProfilesPage() {
                         {p.bio}
                       </p>
                       <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/40">
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1">{p.countries} countries</span>
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1">{p.media} media</span>
-                        <span className="rounded-full border border-white/10 bg-black/20 px-2 py-1">{p.collections} collections</span>
+                        <span className="rounded-full border border-[#1c212c] bg-[#000000] px-2 py-1">{p.countries} countries</span>
+                        <span className="rounded-full border border-[#1c212c] bg-[#000000] px-2 py-1">{p.media} media</span>
+                        <span className="rounded-full border border-[#1c212c] bg-[#000000] px-2 py-1">{p.collections} collections</span>
                       </div>
                       {/* Visited flags preview */}
                       {p.visitedCountryCodes && p.visitedCountryCodes.length > 0 && (
@@ -2645,7 +1529,7 @@ export default function AdminProfilesPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0 rounded-full border border-white/10 bg-black/20 p-1">
+                    <div className="flex items-center gap-1 shrink-0 rounded-full border border-[#1c212c] bg-[#000000] p-1">
                       <Link
                         href={`https://app.travingat.com/profiles/${p.handle.replace(/^@/, "")}`}
                         target="_blank"
@@ -2654,13 +1538,13 @@ export default function AdminProfilesPage() {
                       >
                         🔗
                       </Link>
-                      <button
-                        onClick={() => startEdit(p)}
+                      <Link
+                        href={`/profiles/editor?id=${p.id}`}
                         className="p-2 hover:bg-white/10 rounded-full text-xs text-white/60 hover:text-white transition-colors cursor-pointer"
                         title="Edit"
                       >
                         ✏️
-                      </button>
+                      </Link>
                       <button
                         onClick={() => handleDelete(p.id)}
                         className="p-2 hover:bg-red-500/20 rounded-full text-xs text-white/60 hover:text-red-400 transition-colors cursor-pointer"
@@ -2676,7 +1560,7 @@ export default function AdminProfilesPage() {
                     <div className="mt-3 h-24 rounded-xl overflow-hidden relative ring-1 ring-white/10">
                       <LoadedImage src={toLandingAssetUrl(p.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(p.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
                       {(p.isSampleProfile ?? (p as any).is_sample_profile) && (
-                        <div className="absolute top-2 right-2 z-10 bg-[#5A45F9] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm border border-white/10 backdrop-blur-md">
+                        <div className="absolute top-2 right-2 z-10 bg-[#5A45F9] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-sm border border-[#1c212c] backdrop-blur-md">
                           Sample Profile
                         </div>
                       )}

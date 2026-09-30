@@ -1,0 +1,2675 @@
+"use client";
+
+import { useState, useEffect, useRef, Suspense } from "react";
+import LoadedImage from "@/components/ui/LoadedImage";
+import { toLandingAssetUrl, getOptimizedMediaUrl } from "@/lib/landing-assets";
+import { COUNTRY_LIST } from "@/lib/countries";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Textarea } from "@/components/ui/Textarea";
+import BulkUploadModal from "../components/BulkUploadModal";
+import CountrySelect from "../components/CountrySelect";
+
+interface CountryImage {
+  countryCode: string;
+  images: string[];
+  coverPhoto?: string;
+  about?: string;
+  updated_at?: string;
+}
+
+interface CollectionImage {
+  title: string;
+  images: string[];
+  coverPhoto?: string;
+  about?: string;
+  countryCodes?: string[];
+  updated_at?: string;
+}
+
+interface Profile {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string; // computed by backend
+  handle: string;
+  country: string;
+  flag: string;
+  flagCode: string;
+  homelandFlagCode: string;
+  currentlyInFlagCode: string;
+  countries: number;
+  media: number;
+  collections: number;
+  images: {
+    cover: string;
+    avatar: string;
+    gallery: string[];
+  };
+  align: "start" | "end";
+  bio: string;
+  interests: string[];
+  languages: string[];
+  homeland: string;
+  currentlyIn: string;
+  socials: {
+    x: string;
+    instagram: string;
+    linkedin: string;
+    youtube: string;
+  };
+  aboutImages: string[];
+  visitedCountryCodes: string[];
+  countryImages: CountryImage[];
+  collectionImages: CollectionImage[];
+  email?: string;
+  isExplorerCard?: boolean;
+  isFeaturedProfile?: boolean;
+  showBadge?: boolean;
+  isSampleProfile?: boolean;
+}
+
+const emptyForm: Omit<Profile, "id"> = {
+  firstName: "",
+  lastName: "",
+  name: "",
+  handle: "",
+  country: "",
+  flag: "",
+  flagCode: "",
+  homelandFlagCode: "",
+  currentlyInFlagCode: "",
+  countries: 0,
+  media: 0,
+  collections: 0,
+  images: { cover: "", avatar: "", gallery: [] },
+  align: "end",
+  bio: "",
+  interests: [],
+  languages: [],
+  homeland: "",
+  currentlyIn: "",
+  socials: { x: "", instagram: "", linkedin: "", youtube: "" },
+  aboutImages: [],
+  visitedCountryCodes: [],
+  countryImages: [],
+  collectionImages: [],
+  email: "",
+  isExplorerCard: false,
+  isFeaturedProfile: true,
+  showBadge: false,
+  isSampleProfile: false,
+};
+
+
+
+function MultiCountrySelect({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string[];
+  onChange: (codes: string[]) => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = COUNTRY_LIST.filter(
+    (c) =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.code.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggle = (code: string) => {
+    if (value.includes(code)) {
+      onChange(value.filter((c) => c !== code));
+    } else {
+      onChange([...value, code]);
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">
+        {label} <span className="text-white/30">({value.length} selected)</span>
+      </label>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full px-4 py-2.5 bg-[#000000] border border-[#20242d] rounded-lg text-sm text-left hover:border-white/20 transition-colors cursor-pointer"
+      >
+        {value.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {value.slice(0, 10).map((code) => (
+              <span
+                key={code}
+                className="inline-flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded text-xs"
+              >
+                <img
+                  src={`/flags/${code}.svg`}
+                  alt={code}
+                  className="w-3.5 h-2.5 rounded-sm object-cover"
+                />
+                {code}
+              </span>
+            ))}
+            {value.length > 10 && (
+              <span className="text-white/30 text-xs py-0.5">
+                +{value.length - 10} more
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-white/25">Select visited countries...</span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute z-40 mt-1 w-full bg-black-700 border border-[#1c212c] rounded-lg shadow-xl max-h-72 overflow-hidden">
+          <div className="p-2 border-b border-[#1c212c]">
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search countries..."
+              className="bg-[#000000] border border-[#20242d] text-sm placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+              autoFocus
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            {filtered.map((c) => (
+              <button
+                key={c.code}
+                type="button"
+                onClick={() => toggle(c.code)}
+                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${value.includes(c.code)
+                  ? "bg-[#5A45F9]/20 text-white"
+                  : "text-white/70"
+                  }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${value.includes(c.code)
+                    ? "bg-[#5A45F9] border-[#5A45F9]"
+                    : "border-white/20"
+                    }`}
+                >
+                  {value.includes(c.code) && (
+                    <span className="text-white text-xs">✓</span>
+                  )}
+                </div>
+                <img
+                  src={`/flags/${c.code}.svg`}
+                  alt={c.name}
+                  className="w-5 h-3.5 rounded-sm object-cover"
+                />
+                <span>{c.name}</span>
+                <span className="text-white/30 ml-auto text-xs">{c.code}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TagInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder: string;
+}) {
+  const [input, setInput] = useState("");
+
+  const appendUniqueTags = (nextTags: string[]) => {
+    if (nextTags.length === 0) return;
+    const existing = new Set(value);
+    const unique = nextTags.filter((tag) => !existing.has(tag));
+    if (unique.length === 0) return;
+    onChange([...value, ...unique]);
+  };
+
+  const parseTags = (raw: string) =>
+    raw
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+  const addTag = () => {
+    const tags = parseTags(input);
+    appendUniqueTags(tags);
+    if (tags.length > 0) setInput("");
+  };
+
+  const handleInputChange = (nextValue: string) => {
+    if (!nextValue.includes(",")) {
+      setInput(nextValue);
+      return;
+    }
+
+    const pieces = nextValue.split(",");
+    const completed = pieces.slice(0, -1);
+    const remaining = pieces[pieces.length - 1] ?? "";
+    appendUniqueTags(
+      completed
+        .map((tag) => tag.trim())
+        .filter(Boolean)
+    );
+    setInput(remaining.trimStart());
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    const pastedText = event.clipboardData.getData("text");
+    if (!pastedText) return;
+    if (!pastedText.includes(",")) return;
+
+    event.preventDefault();
+    const tags = parseTags(pastedText);
+    appendUniqueTags(tags);
+    setInput("");
+  };
+
+  return (
+    <div>
+      <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">{label}</label>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {value.map((tag) => (
+          <span
+            key={tag}
+            className="inline-flex items-center gap-1 bg-[#5A45F9]/20 text-[#5A45F9] px-2 py-1 rounded-md text-xs"
+          >
+            {tag}
+            <button
+              onClick={() => onChange(value.filter((t) => t !== tag))}
+              className="hover:text-white transition-colors cursor-pointer"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          value={input}
+          onChange={(e) => handleInputChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addTag();
+            }
+          }}
+          onPaste={handlePaste}
+          placeholder={placeholder}
+          className="flex-1 bg-[#000000] border border-[#20242d] text-xs placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+        />
+        <Button
+          type="button"
+          onClick={addTag}
+          size="sm"
+          variant="ghost"
+          className="px-3 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-xs font-medium"
+        >
+          Add
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default function EditorPage() {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [editing, setEditing] = useState<Profile | null>(null);
+  const [form, setForm] = useState<Omit<Profile, "id">>(emptyForm);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [toast, setToast] = useState<{ msg: string; error?: boolean } | null>(null);
+  const [uploading, setUploading] = useState<{ field: "cover" | "avatar" | "gallery" | "about" | "country" | "collection"; stage: "processing" | "uploading" | "done"; idx?: number; current?: number; total?: number } | null>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const aboutInputRef = useRef<HTMLInputElement>(null);
+  const [pendingCountryCode, setPendingCountryCode] = useState<string>("");
+  const [pendingCollectionTitle, setPendingCollectionTitle] = useState<string>("");
+  const [mediaPickerTarget, setMediaPickerTarget] = useState<{ type: "country" | "collection" | "about"; idx?: number } | null>(null);
+  const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
+
+  // Orphan cleanup state
+  const [orphanScanning, setOrphanScanning] = useState(false);
+  const [orphanResult, setOrphanResult] = useState<{
+    orphans: { key: string; url: string; size: number; lastModified: string }[];
+    totalR2: number;
+    totalReferenced: number;
+    totalOrphaned: number;
+    totalOrphanedBytes: number;
+  } | null>(null);
+  const [orphanDeleting, setOrphanDeleting] = useState(false);
+  const [orphanPanelOpen, setOrphanPanelOpen] = useState(false);
+
+  const showToast = (msg: string, error = false) => {
+    setToast({ msg, error });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const fetchProfiles = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/profiles", { cache: "no-store" });
+      const data = await res.json();
+      const normalizedProfiles = (Array.isArray(data) ? data : []).map((profile) => {
+        const aboutImages = Array.isArray(profile.aboutImages) ? profile.aboutImages : (Array.isArray(profile.about_images) ? profile.about_images : []);
+        const countryImages = Array.isArray(profile.countryImages) ? profile.countryImages : (Array.isArray(profile.country_images) ? profile.country_images : []);
+        const rawCollectionImages = Array.isArray(profile.collectionImages) ? profile.collectionImages : (Array.isArray(profile.collection_images) ? profile.collection_images : []);
+        const collectionImages = rawCollectionImages.map((collection: any) => ({
+          ...collection,
+          countryCodes: Array.isArray(collection.countryCodes) ? collection.countryCodes : (Array.isArray(collection.country_codes) ? collection.country_codes : []),
+        }));
+        return {
+          ...profile,
+          aboutImages,
+          countryImages,
+          collectionImages,
+        };
+      }) as Profile[];
+      setProfiles([...normalizedProfiles].reverse());
+    } catch {
+      showToast("Failed to load profiles");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    setTimeout(fetchProfiles, 0);
+
+    // Check if we are navigated here to create or edit a profile
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const editId = params.get("id");
+
+      if (editId) {
+        fetch(`/api/profiles/${editId}`)
+          .then(res => res.ok ? res.json() : Promise.reject())
+          .then(data => {
+            setEditing(data);
+            setForm({
+              firstName: data.firstName || (data as any).first_name || data.name?.split(' ')[0] || "",
+              lastName: data.lastName || (data as any).last_name || data.name?.split(' ').slice(1).join(' ') || "",
+              name: data.name || "",
+              handle: data.handle || "",
+              country: data.country || "",
+              flag: data.flag || "",
+              flagCode: data.flagCode || (data as any).flag_code || "",
+              homelandFlagCode: data.homelandFlagCode || (data as any).homeland_flag_code || "",
+              currentlyInFlagCode: data.currentlyInFlagCode || (data as any).currently_in_flag_code || "",
+              countries: data.countries || 0,
+              media: data.media || 0,
+              collections: data.collections || 0,
+              images: { ...emptyForm.images, ...data.images, gallery: data.images?.gallery ? [...data.images.gallery] : [] },
+              align: data.align || "end",
+              bio: data.bio || "",
+              interests: data.interests ? [...data.interests] : [],
+              languages: data.languages ? [...data.languages] : [],
+              homeland: data.homeland || "",
+              currentlyIn: data.currentlyIn || "",
+              socials: { ...emptyForm.socials, ...data.socials, x: data.socials?.x || "", instagram: data.socials?.instagram || "", linkedin: data.socials?.linkedin || "", youtube: data.socials?.youtube || "" },
+              aboutImages: data.aboutImages || (data as any).about_images ? [...(data.aboutImages || (data as any).about_images)] : [],
+              visitedCountryCodes: data.visitedCountryCodes || (data as any).visited_country_codes ? [...(data.visitedCountryCodes || (data as any).visited_country_codes)] : [],
+              countryImages: data.countryImages || (data as any).country_images ? [...(data.countryImages || (data as any).country_images)] : [],
+              collectionImages: data.collectionImages || (data as any).collection_images
+                ? (data.collectionImages || (data as any).collection_images).map((collection: any) => ({
+                  ...collection,
+                  countryCodes: Array.isArray(collection.countryCodes || collection.country_codes) ? [...(collection.countryCodes || collection.country_codes)] : [],
+                }))
+                : [],
+              email: data.email || "",
+              isExplorerCard: data.isExplorerCard ?? (data as any).is_explorer_card ?? false,
+              isFeaturedProfile: data.isFeaturedProfile ?? (data as any).is_featured_profile ?? true,
+              isSampleProfile: data.isSampleProfile ?? (data as any).is_sample_profile ?? false,
+              showBadge: data.showBadge ?? (data as any).show_badge ?? false,
+            });
+          })
+          .catch(err => {
+            console.error("Failed to load profile for edit", err);
+            showToast("Failed to load profile for edit", true);
+          })
+          .finally(() => setLoading(false));
+
+        // Clean the URL visually
+        window.history.replaceState({}, '', '/profiles/editor');
+      } else if (params.get("create") === "true") {
+        const email = params.get("email") || "";
+        const waitlistId = params.get("waitlistId") || "";
+        const countryName = params.get("country") || "";
+
+        let flagCode = "";
+        let flag = "";
+        let finalCountryName = countryName;
+
+        if (countryName) {
+          const matchedCountry = COUNTRY_LIST.find(
+            (c) => c.name.toLowerCase() === countryName.toLowerCase() || c.code.toLowerCase() === countryName.toLowerCase()
+          );
+          if (matchedCountry) {
+            finalCountryName = matchedCountry.name;
+            flagCode = matchedCountry.code;
+            flag = matchedCountry.flag;
+          }
+        }
+
+        // Initially open the form with whatever basic info we have
+        setForm((prev) => ({
+          ...prev,
+          email,
+          country: finalCountryName,
+          flagCode,
+          flag,
+        }));
+
+        // Remove the search params from URL so it doesn't stay there on refresh
+        window.history.replaceState({}, '', '/profiles');
+
+        // Fetch detailed user info if email exists
+        if (email) {
+          fetch(`/api/admin/users/by-email?email=${encodeURIComponent(email)}`)
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(user => {
+              if (user && !user.error) {
+                const ec = user.explorerCard || {};
+
+                let fname = user.first_name;
+                let lname = user.last_name;
+                if (!fname && !lname && ec.name) {
+                  const parts = ec.name.split(' ');
+                  fname = parts[0];
+                  lname = parts.slice(1).join(' ');
+                }
+                const fullName = [fname, lname].filter(Boolean).join(" ");
+
+                // Extract socials from links jsonb array if it exists
+                const newSocials = { x: "", instagram: "", linkedin: "", youtube: "" };
+                if (Array.isArray(user.links)) {
+                  user.links.forEach((link: string) => {
+                    const lc = link.toLowerCase();
+                    if (lc.includes("instagram.com")) newSocials.instagram = link;
+                    else if (lc.includes("twitter.com") || lc.includes("x.com")) newSocials.x = link;
+                    else if (lc.includes("youtube.com")) newSocials.youtube = link;
+                    else if (lc.includes("linkedin.com")) newSocials.linkedin = link;
+                  });
+                }
+
+                let fetchedFlagCode = flagCode;
+                let fetchedFlag = flag;
+                let fetchedCountryName = finalCountryName;
+                const bestCountry = user.country || ec.country;
+                if (bestCountry && bestCountry !== finalCountryName) {
+                  const matchedCountry = COUNTRY_LIST.find(
+                    (c) => c.name.toLowerCase() === bestCountry.toLowerCase() || c.code.toLowerCase() === bestCountry.toLowerCase()
+                  );
+                  if (matchedCountry) {
+                    fetchedCountryName = matchedCountry.name;
+                    fetchedFlagCode = matchedCountry.code;
+                    fetchedFlag = matchedCountry.flag;
+                  } else {
+                    fetchedCountryName = bestCountry;
+                  }
+                }
+
+                let count = user.visited_count;
+                if (!count && ec.visited_countries) {
+                  if (Array.isArray(ec.visited_countries)) count = ec.visited_countries.length;
+                  else if (typeof ec.visited_countries === 'string') {
+                    try { count = JSON.parse(ec.visited_countries).length; } catch { count = 0; }
+                  }
+                }
+
+                setForm(prev => ({
+                  ...prev,
+                  firstName: fname || prev.firstName,
+                  lastName: lname || prev.lastName,
+                  name: fullName || prev.name,
+                  countries: count || prev.countries,
+                  country: fetchedCountryName,
+                  flagCode: fetchedFlagCode,
+                  flag: fetchedFlag,
+                  images: {
+                    ...prev.images,
+                    avatar: user.avatar_url || user.profile_image_url || ec.profile_image_url || prev.images.avatar,
+                    cover: user.cover_photo_url || user.cover_image_url || ec.cover_image_url || prev.images.cover,
+                  },
+                  socials: { ...prev.socials, ...newSocials },
+                }));
+              }
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+        } else {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (form.handle.length < 3) {
+      setTimeout(() => setHandleStatus('idle'), 0);
+      return;
+    }
+
+    setTimeout(() => setHandleStatus('checking'), 0);
+    const timer = setTimeout(async () => {
+      try {
+        let url = `/api/profiles/check-handle?handle=${encodeURIComponent(form.handle)}`;
+        if (editing) {
+          url += `&current_handle=${encodeURIComponent(editing.handle)}`;
+        }
+        const res = await fetch(url);
+        const data = await res.json();
+        if (active) {
+          if (res.ok) {
+            setHandleStatus(data.available ? 'available' : 'unavailable');
+          } else {
+            setHandleStatus('idle');
+          }
+        }
+      } catch (e) {
+        if (active) setHandleStatus('idle');
+      }
+    }, 500);
+
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [form.handle, editing]);
+
+  const scanOrphans = async () => {
+    setOrphanScanning(true);
+    setOrphanPanelOpen(true);
+    try {
+      const res = await fetch("/api/profiles/orphans");
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Scan failed", true);
+        return;
+      }
+      setOrphanResult(data);
+      if (data.totalOrphaned === 0) {
+        showToast("No orphaned files found! ✨");
+      } else {
+        showToast(`Found ${data.totalOrphaned} orphaned file${data.totalOrphaned !== 1 ? "s" : ""}`);
+      }
+    } catch {
+      showToast("Failed to scan orphans", true);
+    } finally {
+      setOrphanScanning(false);
+    }
+  };
+
+  const deleteOrphans = async (keys: string[]) => {
+    if (keys.length === 0) return;
+    setOrphanDeleting(true);
+    try {
+      const res = await fetch("/api/profiles/orphans", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keys }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.error || "Delete failed", true);
+        return;
+      }
+      showToast(`Deleted ${data.deleted} orphaned file${data.deleted !== 1 ? "s" : ""}`);
+      // Re-scan to update the list
+      await scanOrphans();
+    } catch {
+      showToast("Failed to delete orphans", true);
+    } finally {
+      setOrphanDeleting(false);
+    }
+  };
+
+  const handleVideoUpload = async (
+    file: File,
+    type: "country" | "collection" | "gallery" | "about",
+    idx?: number,
+    batch?: { current: number; total: number }
+  ) => {
+    if (file.size > 50 * 1024 * 1024) {
+      showToast("Video too large. Max 50MB.", true);
+      return null;
+    }
+    if (!file.type.startsWith("video/")) {
+      showToast("Please upload a video file", true);
+      return null;
+    }
+
+    // Check duration client-side via a temporary object URL
+    const duration = await new Promise<number>((resolve) => {
+      const vid = document.createElement("video");
+      vid.preload = "metadata";
+      const objUrl = URL.createObjectURL(file);
+      vid.src = objUrl;
+      vid.onloadedmetadata = () => {
+        URL.revokeObjectURL(objUrl);
+        resolve(vid.duration);
+      };
+      vid.onerror = () => {
+        URL.revokeObjectURL(objUrl);
+        resolve(0);
+      };
+    });
+
+    if (duration > 30) {
+      showToast("Video must be 30 seconds or less.", true);
+      return null;
+    }
+
+    setUploading({ field: type, stage: "uploading", idx, current: batch?.current, total: batch?.total });
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+
+    try {
+      // 1. Request presigned URL
+      const presignRes = await fetch("/api/upload/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`,
+          fileType: file.type,
+          prefix: "profiles",
+        }),
+      });
+      const presignData = await presignRes.json();
+      if (!presignRes.ok) {
+        showToast(presignData.error || "Failed to get upload URL", true);
+        return null;
+      }
+
+      const { uploadUrl, publicUrl } = presignData;
+
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      if (!putRes.ok) {
+        showToast("Direct upload to R2 failed", true);
+        return null;
+      }
+
+      try {
+        const urlObj = new URL(publicUrl);
+        const key = urlObj.pathname.substring(1);
+        await fetch("/api/media-engine/optimize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, mediaType: "VIDEO" }),
+        });
+      } catch (err) {
+        console.warn("Media engine optimization trigger failed", err);
+      }
+
+      const isLastInBatch = !batch || batch.current === batch.total;
+      if (isLastInBatch) {
+        setUploading((prev) => prev ? { ...prev, stage: "done" } : null);
+        await new Promise((r) => setTimeout(r, 800));
+      }
+      showToast("Video uploaded");
+      return publicUrl;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      showToast(`Upload failed: ${msg}`, true);
+      return null;
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const handleImageUpload = async (
+    file: File,
+    type: "avatar" | "cover" | "gallery" | "about" | "country" | "collection",
+    idx?: number,
+    batch?: { current: number; total: number }
+  ) => {
+    if (file.size > 20 * 1024 * 1024) {
+      showToast("File too large. Max 20MB.", true);
+      return null;
+    }
+    if (!file.type.startsWith("image/")) {
+      showToast("Please upload an image file", true);
+      return null;
+    }
+    if (file.type === "image/svg+xml") {
+      showToast("SVG uploads are not supported here. Please upload a photo image.", true);
+      return null;
+    }
+    if (file.type === "image/gif") {
+      showToast("GIF uploads are not supported for profile images. Please upload a static image.", true);
+      return null;
+    }
+
+    setUploading({ field: type, stage: "uploading", idx, current: batch?.current, total: batch?.total });
+    try {
+      let dims = null;
+      if (file.type.startsWith("image/")) {
+        dims = await new Promise<{ width: number; height: number } | null>((resolve) => {
+          const img = new Image();
+          const objectUrl = URL.createObjectURL(file);
+          img.onload = () => {
+            resolve({ width: img.naturalWidth, height: img.naturalHeight });
+            URL.revokeObjectURL(objectUrl);
+          };
+          img.onerror = () => {
+            resolve(null);
+            URL.revokeObjectURL(objectUrl);
+          };
+          img.src = objectUrl;
+        });
+      }
+
+      const presignRes = await fetch("/api/upload/presign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileType: file.type,
+          prefix: type,
+          fileName: `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+        }),
+      });
+
+      if (!presignRes.ok) {
+        let err = "Failed to get upload URL";
+        try { err = (await presignRes.json()).error || err; } catch { }
+        throw new Error(err);
+      }
+
+      const { uploadUrl, publicUrl } = await presignRes.json();
+
+      const putRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+
+      if (!putRes.ok) throw new Error("Upload to storage failed");
+
+      console.info(`[profiles-upload] ✅ Done: ${file.name} → ${publicUrl}`);
+
+      try {
+        const urlObj = new URL(publicUrl);
+        const key = urlObj.pathname.substring(1);
+        await fetch("/api/media-engine/optimize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            key,
+            mediaType: "IMAGE",
+            thumbnails: type === "avatar" || type === "cover" ? [] : [720]
+          }),
+        });
+      } catch (err) {
+        console.warn("Media engine optimization trigger failed", err);
+      }
+
+      const isLastInBatch = !batch || batch.current === batch.total;
+      if (isLastInBatch) {
+        setUploading((prev) => prev ? { ...prev, stage: "done" } : null);
+        await new Promise((r) => setTimeout(r, 800));
+      }
+      showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} image uploaded`);
+      if (dims) {
+        return { url: String(publicUrl), width: dims.width, height: dims.height };
+      }
+      return String(publicUrl);
+
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Network error";
+      showToast(`Upload failed: ${msg}`, true);
+      return null;
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const urlOrObj = await handleImageUpload(file, "cover");
+    if (urlOrObj) {
+      setForm((prev) => ({
+        ...prev,
+        images: { ...prev.images, cover: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
+      }));
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const urlOrObj = await handleImageUpload(file, "avatar");
+    if (urlOrObj) {
+      setForm((prev) => ({
+        ...prev,
+        images: { ...prev.images, avatar: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
+      }));
+    }
+  };
+
+  const handleGalleryUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    // Reset input so the same files can be re-selected if needed
+    e.target.value = "";
+    for (let fi = 0; fi < files.length; fi++) {
+      const file = files[fi];
+      const batch = { current: fi + 1, total: files.length };
+      const url = await handleImageUpload(file, "gallery", undefined, batch);
+      if (url) {
+        setForm((prev) => ({
+          ...prev,
+          images: { ...prev.images, gallery: [...prev.images.gallery, typeof url === 'string' ? url : url.url] },
+        }));
+      }
+    }
+  };
+
+  const handleGalleryVideoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    e.target.value = "";
+    for (let fi = 0; fi < files.length; fi++) {
+      const file = files[fi];
+      const batch = { current: fi + 1, total: files.length };
+      const url = await handleVideoUpload(file, "gallery", undefined, batch);
+      if (url) {
+        setForm((prev) => ({
+          ...prev,
+          images: { ...prev.images, gallery: [...prev.images.gallery, typeof url === 'string' ? url : url.url] },
+        }));
+      }
+    }
+  };
+
+  const handleAboutUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    e.target.value = "";
+
+    const availableSlots = Math.max(0, 4 - form.aboutImages.length);
+    if (availableSlots === 0) {
+      showToast("About section supports up to 4 photos.", true);
+      return;
+    }
+
+    const filesToUpload = files.slice(0, availableSlots);
+    const uploadedUrls: string[] = [];
+
+    for (const file of filesToUpload) {
+      const url = await handleImageUpload(file, "about");
+      if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
+    }
+
+    if (uploadedUrls.length > 0) {
+      setForm((prev) => ({
+        ...prev,
+        aboutImages: [...prev.aboutImages, ...uploadedUrls].slice(0, 4),
+      }));
+    }
+
+    if (files.length > filesToUpload.length) {
+      showToast("Only the first 4 About photos are kept.");
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      images: {
+        ...prev.images,
+        gallery: prev.images.gallery.filter((_, i) => i !== index),
+      },
+    }));
+  };
+
+  const removeAboutImage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      aboutImages: prev.aboutImages.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Returns only the fields that differ from the original editing profile.
+  // For a new profile (no editing) this is a no-op — we always send the full form on POST.
+  const buildPatch = (newForm: typeof form, cleanCountryImages: typeof form.countryImages, cleanCollectionImages: typeof form.collectionImages, computedMedia: number) => {
+    if (!editing) return { ...newForm, countryImages: cleanCountryImages, collectionImages: cleanCollectionImages, media: computedMedia };
+
+    const patch: Record<string, any> = {};
+    const orig = editing;
+
+    // Scalar fields
+    const scalarFields = [
+      'firstName', 'lastName', 'handle', 'country', 'flag', 'flagCode', 'homelandFlagCode',
+      'currentlyInFlagCode', 'align', 'bio', 'homeland', 'currentlyIn',
+      'email', 'isExplorerCard', 'isFeaturedProfile', 'showBadge', 'isSampleProfile',
+    ] as const;
+    for (const key of scalarFields) {
+      const formVal = (newForm as any)[key];
+      const origVal = (orig as any)[key] ?? (orig as any)[key.replace(/([A-Z])/g, (m) => `_${m.toLowerCase()}`)];
+      if (formVal !== origVal) patch[key] = formVal;
+    }
+
+    // Arrays compared by JSON serialization
+    const origAbout = orig.aboutImages || (orig as any).about_images || [];
+    if (JSON.stringify(newForm.aboutImages) !== JSON.stringify(origAbout)) {
+      patch.aboutImages = newForm.aboutImages;
+    }
+
+    const origVisited = orig.visitedCountryCodes || (orig as any).visited_country_codes || [];
+    if (JSON.stringify(newForm.visitedCountryCodes) !== JSON.stringify(origVisited)) {
+      patch.visitedCountryCodes = newForm.visitedCountryCodes;
+    }
+
+    const origInterests = orig.interests || [];
+    if (JSON.stringify(newForm.interests) !== JSON.stringify(origInterests)) {
+      patch.interests = newForm.interests;
+    }
+
+    const origLanguages = orig.languages || [];
+    if (JSON.stringify(newForm.languages) !== JSON.stringify(origLanguages)) {
+      patch.languages = newForm.languages;
+    }
+
+    // Nested objects
+    const origImages = orig.images || { cover: '', avatar: '', gallery: [] };
+    if (JSON.stringify(newForm.images) !== JSON.stringify(origImages)) {
+      patch.images = newForm.images;
+    }
+
+    const origSocials = orig.socials || { x: '', instagram: '', linkedin: '', youtube: '' };
+    if (JSON.stringify(newForm.socials) !== JSON.stringify(origSocials)) {
+      patch.socials = newForm.socials;
+    }
+
+    // Country / collection images — always send cleaned versions if they changed
+    const origCountry = orig.countryImages || (orig as any).country_images || [];
+    if (JSON.stringify(cleanCountryImages) !== JSON.stringify(origCountry)) {
+      patch.countryImages = cleanCountryImages;
+      patch.media = computedMedia; // media must be recalculated whenever images change
+    }
+
+    const origCollection = orig.collectionImages || (orig as any).collection_images || [];
+    if (JSON.stringify(cleanCollectionImages) !== JSON.stringify(origCollection)) {
+      patch.collectionImages = cleanCollectionImages;
+      patch.media = computedMedia;
+    }
+
+    return patch;
+  };
+
+  const saveFormState = async (newForm: typeof form) => {
+    if (!editing) return;
+    const cleanCountryImages = newForm.countryImages.filter(c => c.images.length > 0);
+    const cleanCollectionImages = newForm.collectionImages.filter(c => c.images.length > 0);
+    const computedMedia =
+      cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
+      cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
+    const patch = buildPatch(newForm, cleanCountryImages, cleanCollectionImages, computedMedia);
+    if (Object.keys(patch).length === 0) return; // nothing changed
+    try {
+      const res = await fetch(`/api/profiles/${editing.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        showToast(errData?.error || `Save failed (${res.status})`, true);
+      } else {
+        fetchProfiles();
+      }
+    } catch {
+      showToast("Failed to save changes", true);
+    }
+  };
+
+  const deleteCountryMedia = (countryIdx: number, imageIdx: number) => {
+    const newCountryImages = form.countryImages
+      .map((c, i) =>
+        i === countryIdx ? { ...c, images: c.images.filter((_, j) => j !== imageIdx) } : c
+      )
+      .filter((c) => c.images.length > 0);
+    const newForm = { ...form, countryImages: newCountryImages };
+    setForm(newForm);
+    saveFormState(newForm);
+  };
+
+  const handleSave = async () => {
+    if (!form.firstName?.trim() || !form.handle.trim()) {
+      showToast("First name and handle are required", true);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const cleanCountryImages = form.countryImages.filter(c => c.images.length > 0);
+      const cleanCollectionImages = form.collectionImages.filter(c => c.images.length > 0);
+      const computedMedia =
+        cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
+        cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
+
+      let res: Response;
+      if (editing) {
+        // Only send fields that actually changed
+        const patch = buildPatch(form, cleanCountryImages, cleanCollectionImages, computedMedia);
+        if (Object.keys(patch).length === 0) {
+          showToast("No changes to save");
+          setSaving(false);
+          return;
+        }
+        res = await fetch(`/api/profiles/${editing.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        });
+      } else {
+        // New profile — send everything
+        const payload = {
+          ...form,
+          countryImages: cleanCountryImages,
+          collectionImages: cleanCollectionImages,
+          media: computedMedia,
+        };
+        res = await fetch("/api/profiles", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        showToast(errData?.error || `Save failed (${res.status})`, true);
+        setSaving(false);
+        return;
+      }
+      showToast(editing ? "Profile updated" : "Profile added");
+      window.location.href = "/profiles";
+    } catch (err) {
+      showToast(`Failed to save: ${err instanceof Error ? err.message : "Network error"}`, true);
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete this profile?")) return;
+    try {
+      await fetch(`/api/profiles/${id}`, { method: "DELETE" });
+      showToast("Profile deleted");
+      if (editing?.id === id) {
+        setEditing(null);
+        setForm(emptyForm);
+      }
+      fetchProfiles();
+    } catch {
+      showToast("Failed to delete");
+    }
+  };
+
+  const startEdit = (p: Profile) => {
+    setEditing(p);
+    setForm({
+      firstName: p.firstName || (p as any).first_name || p.name?.split(' ')[0] || "",
+      lastName: p.lastName || (p as any).last_name || p.name?.split(' ').slice(1).join(' ') || "",
+      name: p.name,
+      handle: p.handle,
+      country: p.country,
+      flag: p.flag,
+      flagCode: p.flagCode || (p as any).flag_code || "",
+      homelandFlagCode: p.homelandFlagCode || (p as any).homeland_flag_code || "",
+      currentlyInFlagCode: p.currentlyInFlagCode || (p as any).currently_in_flag_code || "",
+      countries: p.countries,
+      media: p.media,
+      collections: p.collections,
+      images: { ...p.images, gallery: p.images?.gallery ? [...p.images.gallery] : [] },
+      align: p.align,
+      bio: p.bio,
+      interests: p.interests ? [...p.interests] : [],
+      languages: p.languages ? [...p.languages] : [],
+      homeland: p.homeland,
+      currentlyIn: p.currentlyIn,
+      socials: { ...p.socials, x: p.socials?.x || "", instagram: p.socials?.instagram || "", linkedin: p.socials?.linkedin || "", youtube: p.socials?.youtube || "" },
+      aboutImages: p.aboutImages || (p as any).about_images ? [...(p.aboutImages || (p as any).about_images)] : [],
+      visitedCountryCodes: p.visitedCountryCodes || (p as any).visited_country_codes ? [...(p.visitedCountryCodes || (p as any).visited_country_codes)] : [],
+      countryImages: p.countryImages || (p as any).country_images ? [...(p.countryImages || (p as any).country_images)] : [],
+      collectionImages: p.collectionImages || (p as any).collection_images
+        ? (p.collectionImages || (p as any).collection_images).map((collection: any) => ({
+          ...collection,
+          countryCodes: Array.isArray(collection.countryCodes || collection.country_codes) ? [...(collection.countryCodes || collection.country_codes)] : [],
+        }))
+        : [],
+      email: p.email || "",
+      isExplorerCard: p.isExplorerCard ?? (p as any).is_explorer_card ?? false,
+      isFeaturedProfile: p.isFeaturedProfile ?? (p as any).is_featured_profile ?? true,
+      showBadge: p.showBadge ?? (p as any).show_badge ?? false,
+      isSampleProfile: p.isSampleProfile ?? (p as any).is_sample_profile ?? false,
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    window.location.href = "/profiles";
+  };
+
+  const selectableMediaUrls = Array.from(
+    new Set([
+      ...(form.countryImages || []).flatMap((c) => c.images || []),
+      ...(form.collectionImages || []).flatMap((c) => c.images || []),
+    ])
+  );
+  const canPickFromMedia = selectableMediaUrls.length > 0;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center text-white">
+        <div className="w-8 h-8 border-2 border-[#5A45F9] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-[#b3bccf] text-sm">Loading profile data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      {/* Toast */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 text-white px-5 py-3 rounded-xl text-sm font-medium shadow-lg animate-[fadeIn_0.2s_ease-out] ${toast.error ? "bg-red-500" : "bg-[#5A45F9]"}`}>
+          {toast.msg}
+        </div>
+      )}
+
+      {/* Media Picker Modal */}
+      {mediaPickerTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setMediaPickerTarget(null)}>
+          <div className="bg-black-700 border border-[#1c212c] rounded-2xl p-6 max-w-3xl w-full mx-4 max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-semibold">Select from your media</h3>
+              <button onClick={() => setMediaPickerTarget(null)} className="text-white/40 hover:text-white text-lg cursor-pointer">✕</button>
+            </div>
+            <p className="text-xs text-white/40 mb-3">
+              {mediaPickerTarget.type === "about"
+                ? `Tap photos to add them to About (${form.aboutImages.length}/4 selected).`
+                : "Tap items to add them. Already added items are dimmed."}
+            </p>
+            <div className="overflow-y-auto flex-1 -mx-1">
+              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 px-1">
+                {selectableMediaUrls.map((url, i) => {
+                  const existing = mediaPickerTarget.type === "country"
+                    ? form.countryImages[mediaPickerTarget.idx ?? -1]?.images ?? []
+                    : mediaPickerTarget.type === "collection"
+                      ? form.collectionImages[mediaPickerTarget.idx ?? -1]?.images ?? []
+                      : form.aboutImages;
+                  const isAlreadyAdded = existing.includes(url);
+                  const isVid = /\.(mp4|mov|webm|m4v)$/i.test(url);
+                  const aboutLimitReached = mediaPickerTarget.type === "about" && form.aboutImages.length >= 4;
+                  const videoBlockedForAbout = mediaPickerTarget.type === "about" && isVid;
+                  const disabled = isAlreadyAdded || aboutLimitReached || videoBlockedForAbout;
+
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => {
+                        if (disabled) return;
+                        const { type, idx } = mediaPickerTarget;
+                        if (type === "country" && typeof idx === "number") {
+                          setForm((prev) => ({
+                            ...prev,
+                            countryImages: prev.countryImages.map((c, ci) =>
+                              ci === idx ? { ...c, images: [...c.images, url] } : c
+                            ),
+                          }));
+                          return;
+                        }
+
+                        if (type === "collection" && typeof idx === "number") {
+                          setForm((prev) => ({
+                            ...prev,
+                            collectionImages: prev.collectionImages.map((c, ci) =>
+                              ci === idx ? { ...c, images: [...c.images, url] } : c
+                            ),
+                          }));
+                          return;
+                        }
+
+                        setForm((prev) => ({
+                          ...prev,
+                          aboutImages: [...prev.aboutImages, url].slice(0, 4),
+                        }));
+                      }}
+                      className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "hover:ring-2 hover:ring-[#5A45F9] cursor-pointer"}`}
+                    >
+                      {isVid ? (
+                        <>
+                          <video
+                            muted
+                            playsInline
+                            loop
+                            preload="metadata"
+                            className="w-full h-full object-cover"
+                            onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
+                            onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                          >
+                            <source src={getOptimizedMediaUrl(toLandingAssetUrl(url))} type="video/webm" />
+                            <source src={toLandingAssetUrl(url)} type="video/mp4" />
+                          </video>
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
+                            <span className="text-white text-[14px] drop-shadow">▶</span>
+                          </div>
+                        </>
+                      ) : (
+                        <LoadedImage src={toLandingAssetUrl(url)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))} alt={`Media ${i + 1}`} containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                      )}
+                      {isAlreadyAdded && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">✓</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <button onClick={() => { setMediaPickerTarget(null); saveFormState(form); }} className="mt-4 w-full py-2.5 bg-[#5A45F9] hover:bg-[#4a35e9] rounded-lg text-sm font-medium transition-colors cursor-pointer">
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b border-[#1c212c] bg-[#0a0a0a]/90 backdrop-blur-xl">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <a
+              href="/profiles"
+              className="inline-flex items-center gap-2 rounded-full border border-[#1c212c] bg-white/5 px-3 py-1.5 text-sm text-white/60 transition hover:border-white/20 hover:text-white"
+            >
+              <span aria-hidden>←</span>
+              <span>Back</span>
+            </a>
+            <span className="hidden sm:block text-white/15">/</span>
+            <div className="min-w-0">
+              <h1 className="truncate text-lg font-semibold tracking-[-0.02em]">Featured Profiles CMS</h1>
+              <p className="hidden md:block text-xs text-[#7e889c]">Design-driven profile editing, media curation, and quick publishing.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Button
+              type="button"
+              onClick={scanOrphans}
+              disabled={orphanScanning}
+              variant="ghost"
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-[#1c212c] rounded-full text-xs text-white/55 hover:text-white transition-colors disabled:opacity-50"
+            >
+              {orphanScanning ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                  Scanning…
+                </span>
+              ) : "🧹 Scan Orphans"}
+            </Button>
+            <span className="inline-flex items-center rounded-full border border-[#1c212c] bg-white/5 px-3 py-1.5 text-xs text-white/55">
+              {profiles.length} profile{profiles.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative overflow-hidden border-b border-[#1c212c] bg-[#0a0a0a]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(90,69,249,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_28%)]" />
+        <div className="max-w-6xl mx-auto px-6 py-8 lg:py-10 relative z-10">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-4">
+              <span className="inline-flex items-center rounded-full border border-[#1c212c] bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/50">
+                Profile studio
+              </span>
+              <div className="space-y-3">
+                <h2 className="text-[30px] leading-[1.05] tracking-[-0.04em] font-semibold text-white md:text-[42px] lg:text-[48px]">
+                  Polish and publish profiles
+                </h2>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 sm:max-w-md">
+              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Profiles</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">{profiles.length}</p>
+              </div>
+              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Media</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
+                  {profiles.reduce((sum, profile) => sum + profile.media, 0)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Published</p>
+                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Live</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Orphan Cleanup Panel */}
+      {orphanPanelOpen && (
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="rounded-2xl border border-[#1c212c] bg-white/4 p-5 backdrop-blur-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🧹</span>
+                <div>
+                  <h3 className="text-sm font-semibold">Orphaned Files Cleanup</h3>
+                  <p className="text-xs text-white/40">Images uploaded but never saved to a profile</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  onClick={scanOrphans}
+                  disabled={orphanScanning}
+                  variant="ghost"
+                  className="px-3 py-1.5 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-xs font-medium disabled:opacity-50"
+                >
+                  {orphanScanning ? (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                      Scanning…
+                    </span>
+                  ) : "Re-scan"}
+                </Button>
+                <button
+                  onClick={() => { setOrphanPanelOpen(false); setOrphanResult(null); }}
+                  className="text-white/30 hover:text-white/60 text-sm cursor-pointer p-1"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {orphanResult && orphanResult.totalOrphaned === 0 && (
+              <div className="text-center py-6">
+                <span className="text-3xl">✨</span>
+                <p className="text-sm text-white/50 mt-2">No orphaned files found. Everything is clean!</p>
+                <p className="text-xs text-white/30 mt-1">{orphanResult.totalR2} files in R2 · {orphanResult.totalReferenced} referenced by profiles</p>
+              </div>
+            )}
+
+            {orphanResult && orphanResult.totalOrphaned > 0 && (
+              <>
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <p className="text-xs text-white/50">
+                    {orphanResult.totalOrphaned} orphaned file{orphanResult.totalOrphaned !== 1 ? "s" : ""} · {(orphanResult.totalOrphanedBytes / 1024 / 1024).toFixed(1)}MB wasted
+                    <span className="text-white/30 ml-2">({orphanResult.totalR2} total in R2 · {orphanResult.totalReferenced} referenced)</span>
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (confirm(`Delete ${orphanResult.totalOrphaned} orphaned file${orphanResult.totalOrphaned !== 1 ? "s" : ""}? This cannot be undone.`)) {
+                        deleteOrphans(orphanResult.orphans.map((o) => o.key));
+                      }
+                    }}
+                    disabled={orphanDeleting}
+                    variant="ghost"
+                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium disabled:opacity-50"
+                  >
+                    {orphanDeleting ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="w-3 h-3 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin inline-block" />
+                        Deleting…
+                      </span>
+                    ) : `Delete All (${orphanResult.totalOrphaned})`}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-64 overflow-y-auto">
+                  {orphanResult.orphans.map((orphan) => {
+                    const isVid = /\.(mp4|mov|webm|m4v)$/i.test(orphan.url);
+                    return (
+                      <div key={orphan.key} className="group relative rounded-lg overflow-hidden bg-white/5 aspect-square">
+                        {isVid ? (
+                          <div className="w-full h-full flex items-center justify-center text-white/20">
+                            <span className="text-2xl">▶</span>
+                          </div>
+                        ) : (
+                          <img
+                            src={orphan.url}
+                            alt="Orphaned"
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        )}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5">
+                          <p className="text-[10px] text-white/50 truncate">{orphan.key.split("/").pop()}</p>
+                          <p className="text-[9px] text-white/30">{(orphan.size / 1024).toFixed(0)}KB</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            if (confirm("Delete this file?")) {
+                              deleteOrphans([orphan.key]);
+                            }
+                          }}
+                          className="absolute top-1 right-1 w-5 h-5 bg-black/70 rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white/70 hover:text-white"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6 xl:gap-8">
+        {/* Form Panel */}
+        <div className="shrink-0">
+          <div className="sticky top-22 rounded-[24px] border border-[#2d2f37] bg-[#0b0d13] p-6 shadow-2xl">
+            <div className="mb-6 flex flex-col gap-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#7e889c]">Editor</p>
+                  <h2 className="mt-2 text-lg font-semibold tracking-[-0.02em]">
+                    {editing ? "Edit Profile" : "Add New Profile"}
+                  </h2>
+                </div>
+                <span className="rounded-full border border-[#1c212c] bg-white/5 px-3 py-1 text-xs text-[#7e889c]">
+                  Step {currentStep} of 6
+                </span>
+              </div>
+
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none' }}>
+                {["Basic Info", "Images", "Country & Location", "Interests & Languages", "Social Links", "Status"].map((s, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setCurrentStep(i + 1)}
+                    className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors ${currentStep === i + 1
+                      ? "bg-[#5A45F9] text-white"
+                      : "bg-[#1c212c] text-[#7e889c] hover:bg-white/5 hover:text-white"
+                      }`}
+                  >
+                    {i + 1}. {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
+              {currentStep === 2 && (
+                <div className="space-y-6">
+                  <div className="space-y-4 rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                    <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c]">
+                      Images
+                    </h3>
+
+                    {/* Cover Image */}
+                    <div>
+                      <label className="text-sm text-white/60 block mb-2">
+                        Cover Image
+                      </label>
+                      <div className="flex items-center gap-4">
+                        <div className="w-32 h-20 rounded-lg overflow-hidden bg-white/5 shrink-0 relative group">
+                          {form.images.cover ? (
+                            <>
+                              <LoadedImage src={toLandingAssetUrl(form.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, cover: "" } }))}
+                                className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white"
+                              >
+                                ×
+                              </button>
+                            </>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
+                              No cover
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <Button
+                            type="button"
+                            onClick={() => coverInputRef.current?.click()}
+                            disabled={uploading !== null}
+                            variant="ghost"
+                            className="px-4 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {uploading?.field === "cover" ? (
+                              <span className="inline-flex items-center gap-2">
+                                {uploading.stage === "done" ? (
+                                  <span className="text-emerald-400">✓</span>
+                                ) : (
+                                  <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                                )}
+                                {uploading.stage === "processing" ? "Processing…" : uploading.stage === "uploading" ? "Uploading…" : "Uploaded!"}
+                              </span>
+                            ) : "Upload Cover"}
+                          </Button>
+                          <input
+                            ref={coverInputRef}
+                            type="file"
+                            accept="image/jpeg, image/png, image/webp, image/avif"
+                            onChange={handleCoverUpload}
+                            className="hidden"
+                          />
+                          <p className="text-xs text-white/30 mt-1">
+                            PNG, JPG up to 20MB
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Avatar Image */}
+                    <div>
+                      <label className="text-sm text-white/60 block mb-2">
+                        Avatar
+                      </label>
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/5 shrink-0 relative group">
+                          {form.images.avatar ? (
+                            <>
+                              <LoadedImage src={toLandingAssetUrl(form.images.avatar)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.avatar))} alt="Avatar" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, avatar: "" } }))}
+                                className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white"
+                              >
+                                ×
+                              </button>
+                            </>
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
+                              No avatar
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <Button
+                            type="button"
+                            onClick={() => avatarInputRef.current?.click()}
+                            disabled={uploading !== null}
+                            variant="ghost"
+                            className="px-4 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {uploading?.field === "avatar" ? (
+                              <span className="inline-flex items-center gap-2">
+                                {uploading.stage === "done" ? (
+                                  <span className="text-emerald-400">✓</span>
+                                ) : (
+                                  <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                                )}
+                                {uploading.stage === "processing" ? "Processing…" : uploading.stage === "uploading" ? "Uploading…" : "Uploaded!"}
+                              </span>
+                            ) : "Upload Avatar"}
+                          </Button>
+                          <input
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg, image/png, image/webp, image/avif"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+
+                    {/* About Photos */}
+                    <div>
+                      <label className="text-sm text-white/60 block mb-2">
+                        About Photos ({form.aboutImages.length}/4)
+                      </label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {form.aboutImages.map((url, i) => (
+                          <div
+                            key={i}
+                            className="relative w-20 h-16 rounded-lg overflow-hidden bg-white/5 group"
+                          >
+                            <LoadedImage
+                              src={toLandingAssetUrl(url)}
+                              thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))}
+                              alt={`About ${i + 1}`}
+                              containerClassName="w-full h-full absolute inset-0"
+                              className="w-full h-full object-cover"
+                            />
+                            <button
+                              onClick={() => removeAboutImage(i)}
+                              className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        {Array.from({ length: Math.max(0, 4 - form.aboutImages.length) }).map((_, i) => (
+                          <div
+                            key={`about-placeholder-${i}`}
+                            className="w-20 h-16 rounded-lg border border-dashed border-[#20242d] bg-white/5 flex items-center justify-center text-[10px] text-white/30"
+                          >
+                            Slot {form.aboutImages.length + i + 1}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 items-center">
+                        <Button
+                          type="button"
+                          onClick={() => aboutInputRef.current?.click()}
+                          disabled={uploading !== null || form.aboutImages.length >= 4}
+                          variant="ghost"
+                          className="px-4 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {uploading?.field === "about" ? (
+                            <span className="inline-flex items-center gap-2">
+                              {uploading.stage === "done" ? (
+                                <span className="text-emerald-400">✓</span>
+                              ) : (
+                                <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                              )}
+                              {uploading.stage === "processing"
+                                ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                : uploading.stage === "uploading"
+                                  ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                  : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                            </span>
+                          ) : "+ Add Media"}
+                        </Button>
+                        <input
+                          ref={aboutInputRef}
+                          type="file"
+                          accept="image/jpeg, image/png, image/webp, image/avif, video/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files ?? []);
+                            if (files.length === 0) return;
+                            e.target.value = "";
+
+                            const availableSlots = Math.max(0, 4 - form.aboutImages.length);
+                            if (availableSlots === 0) {
+                              showToast("About section supports up to 4 media items.", true);
+                              return;
+                            }
+
+                            const filesToUpload = files.slice(0, availableSlots);
+                            const uploadedUrls: string[] = [];
+
+                            for (let fi = 0; fi < filesToUpload.length; fi++) {
+                              const file = filesToUpload[fi];
+                              const batch = { current: fi + 1, total: filesToUpload.length };
+                              if (file.type.startsWith("video/")) {
+                                const url = await handleVideoUpload(file, "about", undefined, batch);
+                                if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
+                              } else {
+                                const url = await handleImageUpload(file, "about", undefined, batch);
+                                if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
+                              }
+                            }
+
+                            if (uploadedUrls.length > 0) {
+                              setForm((prev) => ({
+                                ...prev,
+                                aboutImages: [...prev.aboutImages, ...uploadedUrls].slice(0, 4),
+                              }));
+                            }
+
+                            if (files.length > filesToUpload.length) {
+                              showToast("Only the first 4 About media items are kept.");
+                            }
+                          }}
+                          className="hidden"
+                        />
+
+                        {canPickFromMedia && (
+                          <Button
+                            type="button"
+                            onClick={() => setMediaPickerTarget({ type: "about" })}
+                            disabled={form.aboutImages.length >= 4}
+                            variant="ghost"
+                            className="px-4 py-2 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Select from media
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-white/30 mt-1">
+                        Only displayed in the About tab. Max 4 photos.
+                      </p>
+                    </div>
+
+                    {/* Country Images */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm text-white/60 block">
+                          Country Images
+                        </label>
+                        <BulkUploadModal
+                          onUploadComplete={(results) => {
+                            setForm(prev => {
+                              const newCountryImages = [...prev.countryImages];
+                              results.forEach(({ countryCode, urls }) => {
+                                const existingIndex = newCountryImages.findIndex(c => c.countryCode === countryCode);
+                                if (existingIndex >= 0) {
+                                  newCountryImages[existingIndex] = {
+                                    ...newCountryImages[existingIndex],
+                                    images: [...newCountryImages[existingIndex].images, ...urls]
+                                  };
+                                } else {
+                                  newCountryImages.push({
+                                    countryCode,
+                                    images: urls
+                                  });
+                                }
+                              });
+                              return { ...prev, countryImages: newCountryImages };
+                            });
+                            showToast("Bulk upload completed successfully!");
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-2 mb-2">
+                        {form.countryImages.map((ci, idx) => {
+                          const country = COUNTRY_LIST.find((c) => c.code === ci.countryCode);
+                          return (
+                            <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  {country && (
+                                    <img
+                                      src={`/flags/${ci.countryCode}.svg`}
+                                      alt={country.name}
+                                      className="w-4 h-3 rounded-sm object-cover"
+                                    />
+                                  )}
+                                  <div className="flex flex-col gap-0.5 ml-2">
+                                    <span className="text-sm text-white font-medium leading-none">{country?.name || ci.countryCode}</span>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                                      {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <label className="px-2 py-1 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
+                                    {uploading?.field === "country" && uploading?.idx === idx ? (
+                                      <span className="inline-flex items-center gap-1.5">
+                                        {uploading.stage === "done" ? (
+                                          <span className="text-emerald-400">✓</span>
+                                        ) : (
+                                          <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                                        )}
+                                        {uploading.stage === "processing"
+                                          ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                          : uploading.stage === "uploading"
+                                            ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                            : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                                      </span>
+                                    ) : "+ Add Media"}
+                                    <input
+                                      type="file"
+                                      accept="image/jpeg, image/png, image/webp, image/avif, video/*"
+                                      multiple
+                                      className="hidden"
+                                      onChange={async (e) => {
+                                        const files = Array.from(e.target.files ?? []);
+                                        if (files.length === 0) return;
+                                        e.target.value = "";
+                                        const urls: string[] = [];
+                                        for (let fi = 0; fi < files.length; fi++) {
+                                          const file = files[fi];
+                                          const batch = { current: fi + 1, total: files.length };
+                                          if (file.type.startsWith("video/")) {
+                                            const url = await handleVideoUpload(file, "country", idx, batch);
+                                            if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                          } else {
+                                            const url = await handleImageUpload(file, "country", idx, batch);
+                                            if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                          }
+                                        }
+                                        if (urls.length > 0) {
+                                          const newCountryImages = form.countryImages.map((c, i) =>
+                                            i === idx ? { ...c, images: [...c.images, ...urls] } : c
+                                          );
+                                          const newForm = { ...form, countryImages: newCountryImages };
+                                          setForm(newForm);
+                                          saveFormState(newForm);
+                                        }
+                                      }}
+                                    />
+
+                                  </label>
+                                  {canPickFromMedia && (
+                                    <Button
+                                      type="button"
+                                      onClick={() => setMediaPickerTarget({ type: "country", idx })}
+                                      variant="ghost"
+                                      className="px-2 py-1 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-md text-xs font-medium whitespace-nowrap"
+                                    >
+                                      Select from media
+                                    </Button>
+                                  )}
+                                  <Button
+                                    type="button"
+                                    onClick={() =>
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        countryImages: prev.countryImages.filter((_, i) => i !== idx),
+                                      }))
+                                    }
+                                    variant="ghost"
+                                    className="p-1 hover:bg-red-500/20 rounded-md text-white/40 hover:text-red-400 transition-colors cursor-pointer text-xs"
+                                  >
+                                    ✕
+                                  </Button>
+                                </div>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {ci.images.map((imgEntry: any, imgIdx: number) => {
+                                  const imgUrl = typeof imgEntry === "string" ? imgEntry : imgEntry.url;
+                                  const isVid = /\.(mp4|mov|webm|m4v)$/i.test(imgUrl);
+                                  return (
+                                    <div key={imgIdx} className="relative group w-16 h-12 shrink-0">
+                                      <div className="w-full h-full rounded-md overflow-hidden bg-white/5">
+                                        {isVid ? (
+                                          <>
+                                            <video
+                                              muted
+                                              playsInline
+                                              loop
+                                              preload="metadata"
+                                              className="w-full h-full object-cover"
+                                              onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
+                                              onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                              onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
+                                            >
+                                              <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
+                                              <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
+                                            </video>
+                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
+                                              <span className="text-white text-[16px] drop-shadow">▶</span>
+                                            </div>
+                                          </>
+                                        ) : (
+                                          <LoadedImage
+                                            src={toLandingAssetUrl(imgUrl)}
+                                            thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
+                                            alt={`${country?.name || ci.countryCode} ${imgIdx + 1}`}
+                                            containerClassName="w-full h-full absolute inset-0"
+                                            className="w-full h-full object-cover"
+                                          />
+                                        )}
+                                        {ci.coverPhoto === imgUrl && (
+                                          <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
+                                        )}
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setForm((prev) => ({
+                                                ...prev,
+                                                countryImages: prev.countryImages.map((c, i) =>
+                                                  i === idx ? { ...c, coverPhoto: imgUrl } : c
+                                                ),
+                                              }));
+                                            }}
+                                            className="px-2 py-1 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
+                                          >
+                                            Set Cover
+                                          </button>
+                                        </div>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteCountryMedia(idx, imgIdx);
+                                        }}
+                                        className="absolute -top-1.5 -right-1.5 z-20 w-4 h-4 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-[#1c212c]"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <Textarea
+                                placeholder={`About ${country?.name || ci.countryCode}...`}
+                                value={ci.about || ""}
+                                onChange={(e) =>
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    countryImages: prev.countryImages.map((c, i) =>
+                                      i === idx ? { ...c, about: e.target.value } : c
+                                    ),
+                                  }))
+                                }
+                                className="bg-[#000000] border border-[#20242d] text-white min-h-[80px]"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <CountrySelect
+                            label=""
+                            value={pendingCountryCode}
+                            onChange={(code) => setPendingCountryCode(code)}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          disabled={!pendingCountryCode}
+                          onClick={() => {
+                            if (!pendingCountryCode) return;
+                            const alreadyExists = form.countryImages.some(
+                              (c) => c.countryCode === pendingCountryCode
+                            );
+                            if (!alreadyExists) {
+                              setForm((prev) => ({
+                                ...prev,
+                                countryImages: [
+                                  ...prev.countryImages,
+                                  { countryCode: pendingCountryCode, images: [] },
+                                ],
+                              }));
+                            }
+                            setPendingCountryCode("");
+                          }}
+                          className="px-3 py-2.5 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          + Add Country
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Collection Images */}
+                    <div>
+                      <label className="text-sm text-white/60 block mb-2">
+                        Collection Images
+                      </label>
+                      <div className="space-y-2 mb-2">
+                        {(form.collectionImages || []).map((ci, idx) => (
+                          <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <div className="flex flex-col gap-0.5 ml-2">
+                                  <span className="text-sm text-white font-medium leading-none">{ci.title}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
+                                    {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <label className="px-2 py-1 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
+                                  {uploading?.field === "collection" && uploading?.idx === idx ? (
+                                    <span className="inline-flex items-center gap-1.5">
+                                      {uploading.stage === "done" ? (
+                                        <span className="text-emerald-400">✓</span>
+                                      ) : (
+                                        <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                                      )}
+                                      {uploading.stage === "processing"
+                                        ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                        : uploading.stage === "uploading"
+                                          ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                          : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                                    </span>
+                                  ) : "+ Add Media"}
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg, image/png, image/webp, image/avif, video/*"
+                                    multiple
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const files = Array.from(e.target.files ?? []);
+                                      if (files.length === 0) return;
+                                      e.target.value = "";
+                                      const urls: string[] = [];
+                                      for (let fi = 0; fi < files.length; fi++) {
+                                        const file = files[fi];
+                                        const batch = { current: fi + 1, total: files.length };
+                                        if (file.type.startsWith("video/")) {
+                                          const url = await handleVideoUpload(file, "collection", idx, batch);
+                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                        } else {
+                                          const url = await handleImageUpload(file, "collection", idx, batch);
+                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                        }
+                                      }
+                                      if (urls.length > 0) {
+                                        setForm((prev) => ({
+                                          ...prev,
+                                          collectionImages: prev.collectionImages.map((c, i) =>
+                                            i === idx ? { ...c, images: [...c.images, ...urls] } : c
+                                          ),
+                                        }));
+                                      }
+                                    }}
+                                  />
+
+                                </label>
+                                {canPickFromMedia && (
+                                  <Button
+                                    type="button"
+                                    onClick={() => setMediaPickerTarget({ type: "collection", idx })}
+                                    variant="ghost"
+                                    className="px-2 py-1 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-md text-xs font-medium whitespace-nowrap"
+                                  >
+                                    Select from media
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  onClick={() =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      collectionImages: prev.collectionImages.filter((_, i) => i !== idx),
+                                    }))
+                                  }
+                                  variant="ghost"
+                                  className="p-1 hover:bg-red-500/20 rounded-md text-white/40 hover:text-red-400 transition-colors cursor-pointer text-xs"
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {ci.images.map((imgEntry: any, imgIdx: number) => {
+                                const imgUrl = typeof imgEntry === "string" ? imgEntry : imgEntry.url;
+                                const isVid = /\.(mp4|mov|webm|m4v)$/i.test(imgUrl);
+                                return (
+                                  <div key={imgIdx} className="relative group w-16 h-12 rounded-md overflow-hidden bg-white/5 shrink-0">
+                                    {isVid ? (
+                                      <>
+                                        <video
+                                          muted
+                                          playsInline
+                                          loop
+                                          preload="metadata"
+                                          className="w-full h-full object-cover"
+                                          onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
+                                          onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                                          onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
+                                        >
+                                          <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
+                                          <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
+                                        </video>
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
+                                          <span className="text-white text-[16px] drop-shadow">▶</span>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <LoadedImage
+                                        src={toLandingAssetUrl(imgUrl)}
+                                        thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
+                                        alt={`${ci.title} ${imgIdx + 1}`}
+                                        containerClassName="w-full h-full absolute inset-0"
+                                        className="w-full h-full object-cover"
+                                      />
+                                    )}
+                                    {ci.coverPhoto === imgUrl && (
+                                      <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
+                                    )}
+                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-10">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setForm((prev) => ({
+                                            ...prev,
+                                            collectionImages: prev.collectionImages.map((c, i) =>
+                                              i === idx ? { ...c, coverPhoto: imgUrl } : c
+                                            ),
+                                          }));
+                                        }}
+                                        className="px-1.5 py-0.5 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
+                                      >
+                                        Set Cover
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setForm((prev) => ({
+                                            ...prev,
+                                            collectionImages: prev.collectionImages.map((c, i) =>
+                                              i === idx ? { ...c, images: c.images.filter((_, j) => j !== imgIdx) } : c
+                                            ).filter((c) => c.images.length > 0),
+                                          }));
+                                        }}
+                                        className="w-5 h-5 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-[#1c212c]"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <Textarea
+                              placeholder={`About ${ci.title}...`}
+                              value={ci.about || ""}
+                              onChange={(e) =>
+                                setForm((prev) => ({
+                                  ...prev,
+                                  collectionImages: prev.collectionImages.map((c, i) =>
+                                    i === idx ? { ...c, about: e.target.value } : c
+                                  ),
+                                }))
+                              }
+                              className="bg-[#000000] border border-[#20242d] text-white min-h-[80px]"
+                            />
+                            <MultiCountrySelect
+                              label="Countries for this collection"
+                              value={ci.countryCodes || []}
+                              onChange={(codes) =>
+                                setForm((prev) => ({
+                                  ...prev,
+                                  collectionImages: prev.collectionImages.map((c, i) =>
+                                    i === idx ? { ...c, countryCodes: codes } : c
+                                  ),
+                                }))
+                              }
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 items-end">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={pendingCollectionTitle}
+                            onChange={(e) => setPendingCollectionTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                const title = pendingCollectionTitle.trim();
+                                if (!title) return;
+                                setForm((prev) => ({
+                                  ...prev,
+                                  collectionImages: [
+                                    ...(prev.collectionImages || []),
+                                    { title, images: [], countryCodes: [] },
+                                  ],
+                                }));
+                                setPendingCollectionTitle("");
+                              }
+                            }}
+                            placeholder="Collection title..."
+                            className="w-full px-3 py-2.5 bg-[#000000] border border-[#20242d] rounded-lg text-sm text-white placeholder:text-[#6f798b] focus:outline-none focus:border-[#5A45F9] transition-colors"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          disabled={!pendingCollectionTitle.trim()}
+                          onClick={() => {
+                            const title = pendingCollectionTitle.trim();
+                            if (!title) return;
+                            setForm((prev) => ({
+                              ...prev,
+                              collectionImages: [
+                                ...(prev.collectionImages || []),
+                                { title, images: [], countryCodes: [] },
+                              ],
+                            }));
+                            setPendingCollectionTitle("");
+                          }}
+                          className="px-3 py-2.5 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                        >
+                          + Add Collection
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+
+              {currentStep === 1 && (
+                <div className="space-y-4 rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                  <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c]">
+                    Basic Info
+                  </h3>
+
+                  {/* Email (Optional) */}
+                  <div>
+                    <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">
+                      User Email <span className="text-white/30 text-xs ml-2">(Optional - creates user account if provided)</span>
+                    </label>
+                    <Input
+                      type="email"
+                      value={form.email || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, email: e.target.value }))
+                      }
+                      placeholder="user@example.com"
+                      className="bg-[#000000] border border-[#20242d] placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                    />
+                  </div>
+
+
+
+                  {/* Name */}
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">
+                        First Name <span className="text-red-400">*</span>
+                      </label>
+                      <Input
+                        type="text"
+                        value={form.firstName || ""}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, firstName: e.target.value }))
+                        }
+                        placeholder="e.g. Michael"
+                        className="bg-[#000000] border border-[#20242d] placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">
+                        Last Name
+                      </label>
+                      <Input
+                        type="text"
+                        value={form.lastName || ""}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, lastName: e.target.value }))
+                        }
+                        placeholder="e.g. Thompson"
+                        className="bg-[#000000] border border-[#20242d] placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Handle */}
+                  <div>
+                    <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5 flex justify-between items-center">
+                      <span>Handle <span className="text-red-400">*</span></span>
+                      {handleStatus === 'checking' && <span className="text-white/40 text-xs">Checking...</span>}
+                      {handleStatus === 'available' && <span className="text-emerald-400 text-xs">Available</span>}
+                      {handleStatus === 'unavailable' && <span className="text-red-400 text-xs">Not available</span>}
+                    </label>
+                    <Input
+                      type="text"
+                      value={form.handle || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, handle: e.target.value }))
+                      }
+                      placeholder="e.g. @micheal.th99"
+                      className={`bg-[#000000] border placeholder:text-[#6f798b] focus:border-[#5A45F9] transition-colors ${handleStatus === 'unavailable'
+                        ? 'border-red-500 focus:border-red-500'
+                        : handleStatus === 'available'
+                          ? 'border-emerald-500 focus:border-emerald-500'
+                          : 'border-[#1c212c]'
+                        }`}
+                    />
+                  </div>
+
+                  {/* Bio */}
+                  <div>
+                    <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">
+                      Bio
+                    </label>
+                    <Textarea
+                      value={form.bio || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, bio: e.target.value }))
+                      }
+                      placeholder="Short bio about this traveler..."
+                      rows={3}
+                      className="bg-[#000000] border border-[#20242d] placeholder:text-[#6f798b] focus:border-[#5A45F9] resize-none"
+                    />
+                  </div>
+
+                </div>
+
+              )}
+
+              {currentStep === 3 && (
+                <div className="space-y-4 rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                  <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c]">
+                    Country & Location
+                  </h3>
+
+                  {/* Primary Country */}
+                  <CountrySelect
+                    label="Primary Country"
+                    value={form.flagCode}
+                    onChange={(code, name, flag) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        flagCode: code,
+                        country: name,
+                        flag,
+                      }))
+                    }
+                  />
+
+                  {/* Homeland */}
+                  <div className="space-y-2">
+                    <CountrySelect
+                      label="Homeland Country"
+                      value={form.homelandFlagCode}
+                      onChange={(code, name) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          homelandFlagCode: code,
+                          // Pre-fill city text if empty, otherwise keep what admin typed
+                          homeland: prev.homeland || name,
+                        }))
+                      }
+                    />
+                    <Input
+                      type="text"
+                      value={form.homeland || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, homeland: e.target.value }))
+                      }
+                      placeholder="City, e.g. Bogota"
+                      className="bg-[#000000] border border-[#20242d] placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                    />
+                  </div>
+
+                  {/* Currently In */}
+                  <div className="space-y-2">
+                    <CountrySelect
+                      label="Currently In Country"
+                      value={form.currentlyInFlagCode}
+                      onChange={(code, name) =>
+                        setForm((prev) => ({
+                          ...prev,
+                          currentlyInFlagCode: code,
+                          currentlyIn: prev.currentlyIn || name,
+                        }))
+                      }
+                    />
+                    <Input
+                      type="text"
+                      value={form.currentlyIn || ""}
+                      onChange={(e) =>
+                        setForm((prev) => ({ ...prev, currentlyIn: e.target.value }))
+                      }
+                      placeholder="City, e.g. Medellin"
+                      className="bg-[#000000] border border-[#20242d] placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                    />
+                  </div>
+
+                  {/* Visited Countries */}
+                  <MultiCountrySelect
+                    label="Visited Countries"
+                    value={form.visitedCountryCodes}
+                    onChange={(codes) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        visitedCountryCodes: codes,
+                        countries: codes.length,
+                      }))
+                    }
+                  />
+                </div>
+
+
+
+              )}
+
+              {currentStep === 4 && (
+                <div className="space-y-4 rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                  <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c]">
+                    Interests & Languages
+                  </h3>
+                  <TagInput
+                    label="Interests"
+                    value={form.interests}
+                    onChange={(v) =>
+                      setForm((prev) => ({ ...prev, interests: v }))
+                    }
+                    placeholder="e.g. Photography, Hiking"
+                  />
+                  <TagInput
+                    label="Languages"
+                    value={form.languages}
+                    onChange={(v) =>
+                      setForm((prev) => ({ ...prev, languages: v }))
+                    }
+                    placeholder="e.g. English, Spanish"
+                  />
+                </div>
+
+              )}
+
+              {currentStep === 5 && (
+                <div className="space-y-4 rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                  <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c]">
+                    Social Links
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/30 text-xs w-16">
+                        Instagram
+                      </span>
+                      <Input
+                        type="text"
+                        value={form.socials.instagram}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            socials: {
+                              ...prev.socials,
+                              instagram: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="username"
+                        className="flex-1 bg-[#000000] border border-[#20242d] text-xs placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/30 text-xs w-16">X</span>
+                      <Input
+                        type="text"
+                        value={form.socials.x}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            socials: { ...prev.socials, x: e.target.value },
+                          }))
+                        }
+                        placeholder="username"
+                        className="flex-1 bg-[#000000] border border-[#20242d] text-xs placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/30 text-xs w-16">LinkedIn</span>
+                      <Input
+                        type="text"
+                        value={form.socials.linkedin}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            socials: {
+                              ...prev.socials,
+                              linkedin: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="username"
+                        className="flex-1 bg-[#000000] border border-[#20242d] text-xs placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-white/30 text-xs w-16">YouTube</span>
+                      <Input
+                        type="text"
+                        value={form.socials.youtube}
+                        onChange={(e) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            socials: {
+                              ...prev.socials,
+                              youtube: e.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="channel"
+                        className="flex-1 bg-[#000000] border border-[#20242d] text-xs placeholder:text-[#6f798b] focus:border-[#5A45F9]"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+              )}
+
+              {currentStep === 6 && (
+                <div className="space-y-6">
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                    <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c] mb-3">
+                      Founding Explorer Badge
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, showBadge: !prev.showBadge }))}
+                      className="w-full flex items-center justify-between gap-3 group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src="/icons/badge.svg" alt="Badge" className="w-10 h-10 shrink-0 opacity-80" />
+                        <div className="text-left">
+                          <p className="text-sm text-white font-medium leading-snug">Show badge on profile</p>
+                          <p className="text-xs text-white/40 leading-snug mt-0.5">
+                            Displays the Founding Explorer badge on the cover photo
+                          </p>
+                        </div>
+                      </div>
+                      {/* Toggle pill */}
+                      <div
+                        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${form.showBadge ? "bg-[#5A45F9]" : "bg-white/10"
+                          }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.showBadge ? "translate-x-5" : "translate-x-0"
+                            }`}
+                        />
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Sample Profile */}
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                    <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c] mb-3">
+                      Sample Profile Indicator
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, isSampleProfile: !prev.isSampleProfile }))}
+                      className="w-full flex items-center justify-between gap-3 group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="text-left">
+                          <p className="text-sm text-white font-medium leading-snug">Mark as Sample Profile</p>
+                          <p className="text-xs text-white/40 leading-snug mt-0.5">
+                            Displays the "Sample Profile" tag on the cover photo
+                          </p>
+                        </div>
+                      </div>
+                      {/* Toggle pill */}
+                      <div
+                        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${form.isSampleProfile ? "bg-[#5A45F9]" : "bg-white/10"
+                          }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.isSampleProfile ? "translate-x-5" : "translate-x-0"
+                            }`}
+                        />
+                      </div>
+                    </button>
+                  </div>
+
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4 sticky bottom-0 bg-[#0b0d13] pb-2 z-10 border-t border-[#1c212c] mt-4 pt-4 justify-between">
+                <div>
+                  {currentStep > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(c => c - 1)}
+                      className="py-2.5 px-6 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-full text-sm font-medium transition-colors"
+                    >
+                      Previous
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  {currentStep < 6 && (
+                    <button
+                      type="button"
+                      onClick={() => setCurrentStep(c => c + 1)}
+                      className="py-2.5 px-6 bg-[#5A45F9] text-white hover:bg-[#5A45F9]/90 rounded-full text-sm font-medium shadow-[0_12px_30px_rgba(90,69,249,0.12)] transition-colors"
+                    >
+                      Next Step
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving || uploading !== null}
+                    className={`py-2.5 px-6 rounded-full text-sm font-semibold shadow-[0_12px_30px_rgba(255,255,255,0.08)] transition-colors ${currentStep === 6 ? "bg-[#5A45F9] text-white hover:bg-[#5A45F9]/90 shadow-[0_12px_30px_rgba(90,69,249,0.12)]" : "bg-white text-black hover:bg-white/90"} disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {saving ? "Saving..." : editing ? "Update Profile" : "Add Profile"}
+                  </button>
+                  {editing && (
+                    <Button
+                      type="button"
+                      onClick={cancelEdit}
+                      variant="ghost"
+                      className="py-2.5 px-4 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-full text-sm font-medium"
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
