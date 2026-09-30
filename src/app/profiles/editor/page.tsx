@@ -66,6 +66,7 @@ interface Profile {
   isExplorerCard?: boolean;
   isFeaturedProfile?: boolean;
   showBadge?: boolean;
+  explorerCardShowBadge?: boolean;
   isSampleProfile?: boolean;
 }
 
@@ -98,6 +99,7 @@ const emptyForm: Omit<Profile, "id"> = {
   isExplorerCard: false,
   isFeaturedProfile: true,
   showBadge: false,
+  explorerCardShowBadge: false,
   isSampleProfile: false,
 };
 
@@ -1101,6 +1103,19 @@ export default function EditorPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(patch),
         });
+
+        // Also update explorer card badge if changed
+        if (form.explorerCardShowBadge !== editing.explorerCardShowBadge) {
+          try {
+            await fetch(`/api/explorercard/${editing.id}`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ show_badge: form.explorerCardShowBadge }),
+            });
+          } catch (e) {
+            console.error("Failed to update explorer card badge", e);
+          }
+        }
       } else {
         // New profile — send everything
         const payload = {
@@ -1180,6 +1195,7 @@ export default function EditorPage() {
       isExplorerCard: p.isExplorerCard ?? (p as any).is_explorer_card ?? false,
       isFeaturedProfile: p.isFeaturedProfile ?? (p as any).is_featured_profile ?? true,
       showBadge: p.showBadge ?? (p as any).show_badge ?? false,
+      explorerCardShowBadge: p.explorerCardShowBadge ?? (p as any).explorer_card_show_badge ?? false,
       isSampleProfile: p.isSampleProfile ?? (p as any).is_sample_profile ?? false,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2557,6 +2573,36 @@ export default function EditorPage() {
                       >
                         <span
                           className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.showBadge ? "translate-x-5" : "translate-x-0"
+                            }`}
+                        />
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                    <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c] mb-3">
+                      Explorer Card Badge
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setForm((prev) => ({ ...prev, explorerCardShowBadge: !prev.explorerCardShowBadge }))}
+                      className="w-full flex items-center justify-between gap-3 group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <img src="/icons/badge.svg" alt="Badge" className="w-10 h-10 shrink-0 opacity-80" />
+                        <div className="text-left">
+                          <p className="text-sm text-white font-medium leading-snug">Show badge on Explorer Card</p>
+                          <p className="text-xs text-white/40 leading-snug mt-0.5">
+                            Displays the Founding Explorer badge on their Explorer Card
+                          </p>
+                        </div>
+                      </div>
+                      <div
+                        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors duration-200 ${form.explorerCardShowBadge ? "bg-[#5A45F9]" : "bg-white/10"
+                          }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.explorerCardShowBadge ? "translate-x-5" : "translate-x-0"
                             }`}
                         />
                       </div>
