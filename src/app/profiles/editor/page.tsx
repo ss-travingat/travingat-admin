@@ -1238,7 +1238,13 @@ export default function EditorPage() {
                   const isVid = /\.(mp4|mov|webm|m4v)$/i.test(url);
                   const aboutLimitReached = mediaPickerTarget.type === "about" && form.aboutImages.length >= 4;
                   const videoBlockedForAbout = mediaPickerTarget.type === "about" && isVid;
-                  const disabled = isAlreadyAdded || aboutLimitReached || videoBlockedForAbout;
+                  const disabled = (!isAlreadyAdded && aboutLimitReached) || videoBlockedForAbout;
+                  
+                  const getCountryForUrl = (mediaUrl: string) => {
+                    const match = form.countryImages.find(c => c.images.includes(mediaUrl));
+                    return match?.countryCode;
+                  };
+                  const countryCode = getCountryForUrl(url);
 
                   return (
                     <button
@@ -1252,7 +1258,7 @@ export default function EditorPage() {
                           setForm((prev) => ({
                             ...prev,
                             countryImages: prev.countryImages.map((c, ci) =>
-                              ci === idx ? { ...c, images: [...c.images, url] } : c
+                              ci === idx ? { ...c, images: isAlreadyAdded ? c.images.filter(u => u !== url) : [...c.images, url] } : c
                             ),
                           }));
                           return;
@@ -1262,7 +1268,7 @@ export default function EditorPage() {
                           setForm((prev) => ({
                             ...prev,
                             collectionImages: prev.collectionImages.map((c, ci) =>
-                              ci === idx ? { ...c, images: [...c.images, url] } : c
+                              ci === idx ? { ...c, images: isAlreadyAdded ? c.images.filter(u => u !== url) : [...c.images, url] } : c
                             ),
                           }));
                           return;
@@ -1270,10 +1276,10 @@ export default function EditorPage() {
 
                         setForm((prev) => ({
                           ...prev,
-                          aboutImages: [...prev.aboutImages, url].slice(0, 4),
+                          aboutImages: isAlreadyAdded ? prev.aboutImages.filter(u => u !== url) : [...prev.aboutImages, url].slice(0, 4),
                         }));
                       }}
-                      className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "hover:ring-2 hover:ring-[#5A45F9] cursor-pointer"}`}
+                      className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer hover:ring-2 hover:ring-[#5A45F9]"} ${isAlreadyAdded ? "ring-2 ring-[#5A45F9]" : ""}`}
                     >
                       {isVid ? (
                         <>
@@ -1297,8 +1303,17 @@ export default function EditorPage() {
                         <LoadedImage src={toLandingAssetUrl(url)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))} alt={`Media ${i + 1}`} containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
                       )}
                       {isAlreadyAdded && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-white text-sm font-bold">✓</span>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                          <span className="text-white text-sm font-bold bg-[#5A45F9] rounded-full w-6 h-6 flex items-center justify-center">✓</span>
+                        </div>
+                      )}
+                      {countryCode && (
+                        <div className="absolute top-2 right-2 z-20">
+                          <img
+                            src={`/flags/${countryCode.toUpperCase()}.svg`}
+                            alt={countryCode}
+                            className="h-3.5 w-5 rounded-sm object-cover drop-shadow-md"
+                          />
                         </div>
                       )}
                     </button>
