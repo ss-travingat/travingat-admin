@@ -1037,7 +1037,7 @@ export default function EditorPage() {
   const saveFormState = async (newForm: typeof form) => {
     if (!editing) return;
     const cleanCountryImages = newForm.countryImages.filter(c => c.images.length > 0);
-    const cleanCollectionImages = newForm.collectionImages;
+    const cleanCollectionImages = newForm.collectionImages.filter(c => c.images.length > 0);
     const computedMedia = new Set([
       ...cleanCountryImages.flatMap(c => c.images),
       ...cleanCollectionImages.flatMap(c => c.images)
@@ -1081,7 +1081,7 @@ export default function EditorPage() {
     setSaving(true);
     try {
       const cleanCountryImages = form.countryImages.filter(c => c.images.length > 0);
-      const cleanCollectionImages = form.collectionImages;
+      const cleanCollectionImages = form.collectionImages.filter(c => c.images.length > 0);
       const computedMedia = new Set([
         ...cleanCountryImages.flatMap(c => c.images),
         ...cleanCollectionImages.flatMap(c => c.images)
