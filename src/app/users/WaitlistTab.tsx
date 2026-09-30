@@ -397,22 +397,20 @@ export function WaitlistTab() {
                                 Delete
                               </button>
 
-                              {/* ── Resend waitlist confirmation (only if explorer card) ── */}
-                              {entry.explorer_card_status?.toLowerCase() === "created" && (
-                                <>
-                                  <div className="mx-5 my-2 h-px bg-[#303030]" />
-                                  <button
-                                    className="w-full px-5 py-2 text-[12px] text-white/70 hover:text-white hover:bg-white/5 text-left transition-colors"
-                                    onClick={() => {
-                                      setResendEntry(entry);
-                                      setResendType('waitlist');
-                                      setOpenDropdownId(null);
-                                    }}
-                                  >
-                                    Resend waitlist confirmation email
-                                  </button>
-                                </>
-                              )}
+                              {/* ── Resend waitlist confirmation ── */}
+                              <>
+                                <div className="mx-5 my-2 h-px bg-[#303030]" />
+                                <button
+                                  className="w-full px-5 py-2 text-[12px] text-white/70 hover:text-white hover:bg-white/5 text-left transition-colors"
+                                  onClick={() => {
+                                    setResendEntry(entry);
+                                    setResendType('waitlist');
+                                    setOpenDropdownId(null);
+                                  }}
+                                >
+                                  Resend waitlist confirmation email
+                                </button>
+                              </>
 
                               {/* ── Separator + Delete everything ── */}
                               <div className="mx-5 my-2 h-px bg-[#303030]" />

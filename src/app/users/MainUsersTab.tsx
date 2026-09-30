@@ -200,23 +200,21 @@ function UserActionsDropdown({
               Delete
             </button>
 
-            {hasExplorerCard && (
-              <>
-                {/* Separator */}
-                <div className="mx-5 my-2 h-px bg-[#303030]" />
+            <>
+              {/* Separator */}
+              <div className="mx-5 my-2 h-px bg-[#303030]" />
 
-                {/* Resend waitlist confirmation email */}
-                <button
-                  className="w-full px-5 py-2 text-[12px] text-white/70 hover:text-white hover:bg-white/5 text-left transition-colors"
-                  onClick={() => {
-                    onResendEmail(user.email, 'waitlist');
-                    close();
-                  }}
-                >
-                  Resend waitlist confirmation email
-                </button>
-              </>
-            )}
+              {/* Resend waitlist confirmation email */}
+              <button
+                className="w-full px-5 py-2 text-[12px] text-white/70 hover:text-white hover:bg-white/5 text-left transition-colors"
+                onClick={() => {
+                  onResendEmail(user.email, 'waitlist');
+                  close();
+                }}
+              >
+                Resend waitlist confirmation email
+              </button>
+            </>
 
             {/* Separator */}
             <div className="mx-5 my-2 h-px bg-[#303030]" />
