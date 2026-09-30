@@ -1037,7 +1037,7 @@ export default function EditorPage() {
   const saveFormState = async (newForm: typeof form) => {
     if (!editing) return;
     const cleanCountryImages = newForm.countryImages.filter(c => c.images.length > 0);
-    const cleanCollectionImages = newForm.collectionImages.filter(c => c.images.length > 0);
+    const cleanCollectionImages = newForm.collectionImages;
     const computedMedia = new Set([
       ...cleanCountryImages.flatMap(c => c.images),
       ...cleanCollectionImages.flatMap(c => c.images)
@@ -1081,7 +1081,7 @@ export default function EditorPage() {
     setSaving(true);
     try {
       const cleanCountryImages = form.countryImages.filter(c => c.images.length > 0);
-      const cleanCollectionImages = form.collectionImages.filter(c => c.images.length > 0);
+      const cleanCollectionImages = form.collectionImages;
       const computedMedia = new Set([
         ...cleanCountryImages.flatMap(c => c.images),
         ...cleanCollectionImages.flatMap(c => c.images)
@@ -1231,19 +1231,24 @@ export default function EditorPage() {
             <div className="overflow-y-auto flex-1 -mx-1">
               <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 px-1">
                 {selectableMediaUrls.map((url, i) => {
+                  const extractUrl = (img: any) => typeof img === "string" ? img : (img as any).url;
+                  
                   const existing = mediaPickerTarget.type === "country"
                     ? form.countryImages[mediaPickerTarget.idx ?? -1]?.images ?? []
                     : mediaPickerTarget.type === "collection"
                       ? form.collectionImages[mediaPickerTarget.idx ?? -1]?.images ?? []
                       : form.aboutImages;
-                  const isAlreadyAdded = existing.includes(url);
-                  const isVid = /\.(mp4|mov|webm|m4v)$/i.test(url);
+                  const existingUrls = existing.map(extractUrl);
+                  
+                  const isAlreadyAdded = existingUrls.includes(extractUrl(url));
+                  const isVid = /\.(mp4|mov|webm|m4v)$/i.test(extractUrl(url));
                   const aboutLimitReached = mediaPickerTarget.type === "about" && form.aboutImages.length >= 4;
                   const videoBlockedForAbout = mediaPickerTarget.type === "about" && isVid;
                   const disabled = (!isAlreadyAdded && aboutLimitReached) || videoBlockedForAbout;
                   
-                  const getCountryForUrl = (mediaUrl: string) => {
-                    const match = form.countryImages.find(c => c.images.includes(mediaUrl));
+                  const getCountryForUrl = (mediaUrl: any) => {
+                    const strUrl = extractUrl(mediaUrl);
+                    const match = form.countryImages.find(c => c.images.map(extractUrl).includes(strUrl));
                     return match?.countryCode;
                   };
                   const countryCode = getCountryForUrl(url);
