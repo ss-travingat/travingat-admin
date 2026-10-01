@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import BulkUploadModal from "../components/BulkUploadModal";
 import CountrySelect from "../components/CountrySelect";
+import ProfileCropModal from "@/components/ProfileCropModal";
 
 interface CountryImage {
   countryCode: string;
@@ -858,28 +859,40 @@ export default function EditorPage() {
     }
   };
 
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const urlOrObj = await handleImageUpload(file, "cover");
+  const [cropConfig, setCropConfig] = useState<{ src: string; type: "cover" | "avatar"; file?: File } | null>(null);
+
+  const handleCropSave = async (croppedFile: File, cropData: any) => {
+    if (!cropConfig) return;
+    const urlOrObj = await handleImageUpload(croppedFile, cropConfig.type);
     if (urlOrObj) {
       setForm((prev) => ({
         ...prev,
-        images: { ...prev.images, cover: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
+        images: { ...prev.images, [cropConfig.type]: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
       }));
     }
+    setCropConfig(null);
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropConfig({ src: String(reader.result), type: "cover", file });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const urlOrObj = await handleImageUpload(file, "avatar");
-    if (urlOrObj) {
-      setForm((prev) => ({
-        ...prev,
-        images: { ...prev.images, avatar: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
-      }));
-    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropConfig({ src: String(reader.result), type: "avatar", file });
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   const handleGalleryUpload = async (
@@ -1234,6 +1247,24 @@ export default function EditorPage() {
         </div>
       )}
 
+      {cropConfig && (
+        <ProfileCropModal
+          imageSrc={cropConfig.src}
+          type={cropConfig.type}
+          title={cropConfig.type === "cover" ? "Crop Cover Image" : "Crop Avatar"}
+          onSave={handleCropSave}
+          onCancel={() => setCropConfig(null)}
+          onReplace={() => {
+            if (cropConfig.type === "cover") coverInputRef.current?.click();
+            else avatarInputRef.current?.click();
+          }}
+          onDelete={() => {
+            setForm(prev => ({ ...prev, images: { ...prev.images, [cropConfig.type]: "" } }));
+            setCropConfig(null);
+          }}
+        />
+      )}
+
       {/* Media Picker Modal */}
       {mediaPickerTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={() => setMediaPickerTarget(null)}>
@@ -1586,16 +1617,21 @@ export default function EditorPage() {
                         Cover Image
                       </label>
                       <div className="flex items-center gap-4">
-                        <div className="w-32 h-20 rounded-lg overflow-hidden bg-white/5 shrink-0 relative group">
+                        <div className="w-32 h-20 rounded-lg bg-white/5 shrink-0 relative group">
                           {form.images.cover ? (
                             <>
-                              <LoadedImage src={toLandingAssetUrl(form.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 rounded-lg overflow-hidden">
+                                <LoadedImage src={toLandingAssetUrl(form.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                              </div>
                               <button
                                 type="button"
-                                onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, cover: "" } }))}
-                                className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white"
+                                onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.cover), type: "cover" })}
+                                className="absolute -top-2.5 -right-2.5 w-8 h-8 bg-[#0a0a0a] border border-[#2d2f37] rounded-full flex items-center justify-center cursor-pointer text-white shadow-md z-10 transition-colors hover:bg-[#1a1a1a]"
+                                title="Edit"
                               >
-                                ×
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
                               </button>
                             </>
                           ) : (
@@ -1643,16 +1679,21 @@ export default function EditorPage() {
                         Avatar
                       </label>
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-xl overflow-hidden bg-white/5 shrink-0 relative group">
+                        <div className="w-16 h-16 rounded-xl bg-white/5 shrink-0 relative group">
                           {form.images.avatar ? (
                             <>
-                              <LoadedImage src={toLandingAssetUrl(form.images.avatar)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.avatar))} alt="Avatar" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 rounded-xl overflow-hidden">
+                                <LoadedImage src={toLandingAssetUrl(form.images.avatar)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.avatar))} alt="Avatar" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                              </div>
                               <button
                                 type="button"
-                                onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, avatar: "" } }))}
-                                className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white"
+                                onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.avatar), type: "avatar" })}
+                                className="absolute -top-2.5 -right-2.5 w-8 h-8 bg-[#0a0a0a] border border-[#2d2f37] rounded-full flex items-center justify-center cursor-pointer text-white shadow-md z-10 transition-colors hover:bg-[#1a1a1a]"
+                                title="Edit"
                               >
-                                ×
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                </svg>
                               </button>
                             </>
                           ) : (
