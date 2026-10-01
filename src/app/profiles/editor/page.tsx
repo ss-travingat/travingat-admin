@@ -68,6 +68,7 @@ interface Profile {
   showBadge?: boolean;
   explorerCardShowBadge?: boolean;
   isSampleProfile?: boolean;
+  explorerCardVariant?: 'classic' | 'minimal' | 'adventure';
 }
 
 const emptyForm: Omit<Profile, "id"> = {
@@ -101,6 +102,7 @@ const emptyForm: Omit<Profile, "id"> = {
   showBadge: false,
   explorerCardShowBadge: false,
   isSampleProfile: false,
+  explorerCardVariant: "adventure",
 };
 
 
@@ -444,6 +446,7 @@ export default function EditorPage() {
               isExplorerCard: data.isExplorerCard ?? (data as any).is_explorer_card ?? false,
               isFeaturedProfile: data.isFeaturedProfile ?? (data as any).is_featured_profile ?? true,
               isSampleProfile: data.isSampleProfile ?? (data as any).is_sample_profile ?? false,
+              explorerCardVariant: data.explorerCardVariant ?? (data as any).explorer_card_variant ?? "adventure",
               showBadge: data.showBadge ?? (data as any).show_badge ?? false,
             });
           })
@@ -980,7 +983,7 @@ export default function EditorPage() {
     const scalarFields = [
       'firstName', 'lastName', 'handle', 'country', 'flag', 'flagCode', 'homelandFlagCode',
       'currentlyInFlagCode', 'align', 'bio', 'homeland', 'currentlyIn',
-      'email', 'isExplorerCard', 'isFeaturedProfile', 'showBadge', 'isSampleProfile',
+      'email', 'isExplorerCard', 'isFeaturedProfile', 'showBadge', 'isSampleProfile', 'explorerCardVariant',
     ] as const;
     for (const key of scalarFields) {
       const formVal = (newForm as any)[key];
@@ -1248,20 +1251,20 @@ export default function EditorPage() {
               <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 px-1">
                 {selectableMediaUrls.map((url, i) => {
                   const extractUrl = (img: any) => typeof img === "string" ? img : (img as any).url;
-                  
+
                   const existing = mediaPickerTarget.type === "country"
                     ? form.countryImages[mediaPickerTarget.idx ?? -1]?.images ?? []
                     : mediaPickerTarget.type === "collection"
                       ? form.collectionImages[mediaPickerTarget.idx ?? -1]?.images ?? []
                       : form.aboutImages;
                   const existingUrls = existing.map(extractUrl);
-                  
+
                   const isAlreadyAdded = existingUrls.includes(extractUrl(url));
                   const isVid = /\.(mp4|mov|webm|m4v)$/i.test(extractUrl(url));
                   const aboutLimitReached = mediaPickerTarget.type === "about" && form.aboutImages.length >= 4;
                   const videoBlockedForAbout = mediaPickerTarget.type === "about" && isVid;
                   const disabled = (!isAlreadyAdded && aboutLimitReached) || videoBlockedForAbout;
-                  
+
                   const getCountryForUrl = (mediaUrl: any) => {
                     const strUrl = extractUrl(mediaUrl);
                     const match = form.countryImages.find(c => c.images.map(extractUrl).includes(strUrl));
@@ -2607,6 +2610,28 @@ export default function EditorPage() {
                         />
                       </div>
                     </button>
+                  </div>
+
+                  {/* Explorer Card Variant */}
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
+                    <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c] mb-3">
+                      Explorer Card Variant
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      <p className="text-sm text-white font-medium leading-snug">Card Style</p>
+                      <p className="text-xs text-white/40 leading-snug mb-2">
+                        Select which card style should be shown on the user's profile about section.
+                      </p>
+                      <select
+                        value={form.explorerCardVariant || "adventure"}
+                        onChange={(e) => setForm({ ...form, explorerCardVariant: e.target.value as any })}
+                        className="w-full bg-[#0b0d13] border border-[#1c212c] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#5A45F9] transition-colors"
+                      >
+                        <option value="classic">Classic</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="adventure">Adventure</option>
+                      </select>
+                    </div>
                   </div>
 
                   {/* Sample Profile */}
