@@ -60,7 +60,9 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
       if (file.type === "image/svg+xml" || file.type === "image/gif") return;
       
       const pathParts = (file as any).webkitRelativePath?.split("/") || [];
-      if (pathParts.length >= 2) {
+      // Only accept files within subfolders (length >= 3). 
+      // Files directly in the root selected folder (length === 2) will be ignored.
+      if (pathParts.length >= 3) {
         // e.g. ["MyPhotos", "France", "img.jpg"] -> index 1 is "France"
         const folderName = pathParts[1];
         if (!folderMap.has(folderName)) folderMap.set(folderName, []);
@@ -240,66 +242,111 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
       />
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1C1C1C] rounded-xl border border-white/10 w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="p-6 border-b border-white/10 flex justify-between items-center">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4 sm:p-6 opacity-100 transition-opacity">
+          <div className="bg-[#0f0f11]/95 backdrop-blur-3xl rounded-[24px] border border-white/[0.08] w-full max-w-3xl overflow-hidden flex flex-col max-h-[85vh] shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
+            <div className="px-8 py-6 border-b border-white/[0.06] flex justify-between items-start bg-gradient-to-b from-white/[0.03] to-transparent">
               <div>
-                <h3 className="text-xl font-bold text-white">Review & Map Folders</h3>
-                <p className="text-sm text-white/50 mt-1">Select up to 20 folders to upload in this batch.</p>
+                <h3 className="text-[22px] font-bold tracking-tight text-white flex items-center gap-2.5">
+                  <span className="material-symbols-rounded text-[#8B7BFF] text-[28px]">create_new_folder</span>
+                  Review & Map Folders
+                </h3>
+                <p className="text-[15px] text-white/50 mt-1.5 font-medium">Select up to 20 folders to upload in this batch.</p>
               </div>
               <button 
                 type="button"
                 onClick={() => !isUploading && setIsOpen(false)}
-                className="text-white/40 hover:text-white"
+                className="h-9 w-9 rounded-full bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
                 disabled={isUploading}
               >
-                ✕
+                <span className="material-symbols-rounded text-[20px]">close</span>
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+            <div className="p-8 overflow-y-auto flex-1 space-y-3.5 custom-scrollbar">
               {detectedFolders.map((folder, idx) => (
-                <div key={idx} className={`p-4 rounded-lg border transition-colors ${folder.isSelected ? 'bg-white/10 border-white/20' : 'bg-white/5 border-white/5 hover:border-white/10'}`}>
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="checkbox"
-                      checked={folder.isSelected}
-                      onChange={() => handleCheckbox(idx)}
-                      disabled={isUploading}
-                      className="w-5 h-5 rounded border-white/20 bg-black/50 text-[#5A45F9] focus:ring-[#5A45F9] focus:ring-offset-black"
-                    />
-                    
-                    <div className="flex-1">
-                      <div className="font-medium text-white">{folder.originalName}</div>
-                      <div className="text-xs text-white/50">{folder.files.length} valid media files</div>
+                <div 
+                  key={idx} 
+                  className={`group relative p-4 rounded-xl border transition-all duration-300 ${
+                    folder.isSelected 
+                      ? 'bg-[#5A45F9]/[0.08] border-[#5A45F9]/40 shadow-[0_0_20px_rgba(90,69,249,0.1)]' 
+                      : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <div className="flex items-center gap-5 relative z-10">
+                    <div className="flex items-center justify-center">
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={folder.isSelected}
+                          onChange={() => handleCheckbox(idx)}
+                          disabled={isUploading}
+                          className="peer appearance-none w-[22px] h-[22px] rounded-md border-2 border-white/20 bg-black/40 checked:bg-[#8B7BFF] checked:border-[#8B7BFF] focus:outline-none focus:ring-2 focus:ring-[#8B7BFF]/30 focus:ring-offset-2 focus:ring-offset-[#0f0f11] transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                        />
+                        <span className="material-symbols-rounded absolute text-white text-[16px] pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity drop-shadow-md">check</span>
+                      </div>
                     </div>
                     
-                    <div className="w-56">
-                      <CountrySelect
-                        label=""
-                        value={folder.selectedCountryCode}
-                        onChange={(code) => handleCountryChange(idx, code)}
-                        disabled={!folder.isSelected || isUploading}
-                      />
+                    <div className="flex-1 flex flex-col justify-center min-w-0">
+                      <div className="font-semibold text-[16px] text-white/90 truncate flex items-center gap-2">
+                        <span className={`material-symbols-rounded text-[20px] ${folder.isSelected ? 'text-[#8B7BFF]' : 'text-white/40'}`}>folder</span>
+                        {folder.originalName}
+                      </div>
+                      <div className="text-[13px] text-white/40 font-medium mt-0.5 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80"></span>
+                        {folder.files.length} valid media files
+                      </div>
+                    </div>
+                    
+                    <div className="w-[280px] shrink-0">
+                      <div className={`transition-opacity duration-300 ${!folder.isSelected ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
+                        <CountrySelect
+                          label=""
+                          value={folder.selectedCountryCode}
+                          onChange={(code) => handleCountryChange(idx, code)}
+                          disabled={!folder.isSelected || isUploading}
+                        />
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Subtle highlight effect on hover */}
+                  {!folder.isSelected && (
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  )}
                 </div>
               ))}
               
               {detectedFolders.length === 0 && (
-                <div className="text-center text-white/40 py-8">No valid media folders found.</div>
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="h-20 w-20 rounded-full bg-white/[0.03] border border-white/[0.05] flex items-center justify-center mb-4">
+                    <span className="material-symbols-rounded text-[40px] text-white/20">search_off</span>
+                  </div>
+                  <h4 className="text-[17px] font-semibold text-white/70 mb-1">No valid media folders found</h4>
+                  <p className="text-[14px] text-white/40 max-w-sm">Folders must contain images or videos. Single files at the root level are ignored.</p>
+                </div>
               )}
             </div>
 
-            <div className="p-6 border-t border-white/10 bg-black/20 flex items-center justify-between">
-              <div className="text-sm text-white/60">
+            <div className="px-8 py-5 border-t border-white/[0.06] bg-[#0a0a0c]/80 flex items-center justify-between">
+              <div className="text-[14px] font-medium text-white/60 flex items-center gap-3">
                 {isUploading ? (
-                  <span>Uploading {uploadProgress.current} / {uploadProgress.total} files...</span>
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#8B7BFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-white/90">Uploading {uploadProgress.current} / {uploadProgress.total} files...</span>
+                  </>
                 ) : (
-                  <span>
-                    Selected {detectedFolders.filter(f => f.isSelected).length} folders
-                    ({detectedFolders.filter(f => f.isSelected).reduce((acc, f) => acc + f.files.length, 0)} files)
-                  </span>
+                  <>
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-white">{detectedFolders.filter(f => f.isSelected).length}</span> folders selected
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-white/20"></span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-white">{detectedFolders.filter(f => f.isSelected).reduce((acc, f) => acc + f.files.length, 0)}</span> files total
+                    </span>
+                  </>
                 )}
               </div>
               
@@ -309,7 +356,7 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
                   variant="ghost"
                   onClick={() => setIsOpen(false)}
                   disabled={isUploading}
-                  className="text-white/60 hover:text-white"
+                  className="text-white/60 hover:text-white hover:bg-white/10"
                 >
                   Cancel
                 </Button>
@@ -317,7 +364,7 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
                   type="button"
                   onClick={startUpload}
                   disabled={isUploading || detectedFolders.filter(f => f.isSelected).length === 0}
-                  className="bg-white hover:bg-white/90 text-black font-medium"
+                  className="bg-[#8B7BFF] hover:bg-[#7262ff] text-white border-none disabled:bg-white/10 disabled:text-white/30"
                 >
                   {isUploading ? "Uploading..." : "Confirm & Upload"}
                 </Button>
