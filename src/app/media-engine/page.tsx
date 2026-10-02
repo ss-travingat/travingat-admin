@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -15,7 +15,6 @@ function formatBytes(bytes: number, decimals = 2) {
   return `${isNegative ? "-" : ""}${value} ${sizes[i]}`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function StatusBadge({ status }: { status: any }) {
   const s = String(status).toUpperCase();
   const cfg: Record<string, string> = {
@@ -30,17 +29,15 @@ function StatusBadge({ status }: { status: any }) {
     FAILED: "bg-red-500/10 text-red-400 border-red-500/20",
   };
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${cfg[s] ?? cfg["FAILED"]}`}>
+    <div className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide border ${cfg[s] ?? cfg["FAILED"]} backdrop-blur-md`}>
       {status}
-    </span>
+    </div>
   );
 }
 
 export default function MediaEngineDashboard() {
   const router = useRouter();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [stats, setStats] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [jobs, setJobs] = useState<any[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingJobs, setLoadingJobs] = useState(true);
@@ -49,6 +46,8 @@ export default function MediaEngineDashboard() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"ALL" | "PROCESSING" | "FAILED">("ALL");
 
   const fetchStats = async () => {
     try {
@@ -69,8 +68,6 @@ export default function MediaEngineDashboard() {
         setJobs(filtered);
 
         if (!Array.isArray(data) && data.count) {
-          // Assuming default page size of DRF is used (e.g. 10 or 20), we can estimate total pages
-          // If the DRF provides `count`, we can approximate.
           const pageSize = 10; // Default fallback
           setTotalPages(Math.ceil(data.count / pageSize));
         } else {
@@ -119,13 +116,12 @@ export default function MediaEngineDashboard() {
       fetchStats();
       fetchJobs(1);
     }, 0);
-    // Removed polling interval because we will use WebSockets
   }, [page]);
 
   useEffect(() => {
-    // Setup WebSocket for live updates
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const ws = new WebSocket(`${protocol}//${window.location.host}/ws/media-jobs/`);
+    const defaultWsUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
+    const baseUrl = process.env.NEXT_PUBLIC_WS_URL || defaultWsUrl;
+    const ws = new WebSocket(`${baseUrl}/ws/media-jobs/`);
     
     ws.onmessage = (event) => {
       try {
@@ -141,7 +137,6 @@ export default function MediaEngineDashboard() {
               return [data.job, ...prevJobs];
             }
           });
-          // Also refresh stats when a job completes or fails
           if (["SUCCESS", "FAILURE"].includes(data.job.status)) {
              fetchStats();
           }
@@ -154,26 +149,44 @@ export default function MediaEngineDashboard() {
     return () => ws.close();
   }, []);
 
-  const [activeTab, setActiveTab] = useState<"ALL" | "PROCESSING" | "FAILED">("ALL");
-
-  const filteredJobs = jobs.filter(j => {
-    if (activeTab === "ALL") return true;
-    if (activeTab === "PROCESSING") return j.status === "PROCESSING" || j.status === "PENDING";
-    if (activeTab === "FAILED") return j.status === "FAILURE" || j.status === "ERROR";
-    return true;
-  });
+  const filteredJobs = useMemo(() => {
+    return jobs.filter(j => {
+      // Tab filtering
+      if (activeTab === "PROCESSING" && !(j.status === "PROCESSING" || j.status === "PENDING")) return false;
+      if (activeTab === "FAILED" && !(j.status === "FAILURE" || j.status === "ERROR")) return false;
+      
+      // Search filtering
+      if (searchQuery) {
+        const filename = (j.media_filename || "").toLowerCase();
+        const id = (j.media_id || "").toLowerCase();
+        const search = searchQuery.toLowerCase();
+        if (!filename.includes(search) && !id.includes(search)) return false;
+      }
+      return true;
+    });
+  }, [jobs, activeTab, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
-
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-500/30">
+      
       {/* ── Header ─────────────────────────────────────────────── */}
-      <div className="border-b border-white/5 bg-[#0f0f0f]">
-        <div className="max-w-screen-xl mx-auto px-8 py-6 flex items-center justify-between">
+      <div className="sticky top-0 z-40 bg-[#050505]/80 backdrop-blur-xl border-b border-white/5">
+        <div className="max-w-[1600px] mx-auto px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Media Engine</h1>
-            <p className="text-white/40 text-sm mt-1">Image processing pipeline &amp; optimization dashboard.</p>
+            <h1 className="text-2xl font-bold tracking-tight text-white/90">Media Engine</h1>
+            <p className="text-white/40 text-sm mt-0.5">Manage and monitor your image processing pipeline.</p>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative group">
+              <span className="material-symbols-rounded absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-[18px] group-focus-within:text-blue-400 transition-colors">search</span>
+              <input 
+                type="text" 
+                placeholder="Find image..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 hover:border-white/20 focus:border-blue-500/50 focus:bg-blue-500/5 rounded-xl text-sm text-white placeholder-white/30 outline-none transition-all w-full md:w-64"
+              />
+            </div>
             <button
               onClick={async () => {
                 const res = await fetch("/api/media/scan_unoptimized", { method: "POST" });
@@ -184,227 +197,220 @@ export default function MediaEngineDashboard() {
                   else alert("Failed to queue scan.");
                 }
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-400 rounded-xl text-sm transition-colors border border-blue-500/20"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-500/20 shrink-0"
             >
-              <span className="material-symbols-rounded text-[18px]">search</span>
-              Scan Unoptimized
+              <span className="material-symbols-rounded text-[18px]">document_scanner</span>
+              <span className="hidden sm:inline">Scan Unoptimized</span>
             </button>
             <button
               onClick={refresh}
               disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/8 active:bg-white/10 disabled:opacity-50 rounded-xl text-sm text-white/70 transition-colors border border-white/8"
+              className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 active:bg-white/5 disabled:opacity-50 rounded-xl text-white/70 transition-colors border border-white/10 shrink-0"
             >
               <span className={`material-symbols-rounded text-[18px] ${refreshing ? "animate-spin" : ""}`}>refresh</span>
-              Refresh
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-screen-xl mx-auto px-8 py-8 space-y-8">
+      <div className="max-w-[1600px] mx-auto px-6 py-8 space-y-10">
 
         {/* ── Stats Grid ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Total Assets */}
-          <div className="bg-[#141414] border border-white/5 rounded-2xl p-6">
-            <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-3">Total Assets</p>
-            <p className="text-3xl font-bold">
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:bg-white/[0.03] transition-colors relative overflow-hidden group">
+            <div className="absolute -inset-20 bg-blue-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity rounded-full pointer-events-none" />
+            <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">Total Assets</p>
+            <p className="text-3xl font-bold tracking-tight text-white/90">
               {loadingStats ? <span className="text-white/20 animate-pulse">—</span> : (stats?.total_media ?? 0).toLocaleString()}
             </p>
-            <div className="flex items-center gap-4 mt-4 pt-4 border-t border-white/5 text-xs text-white/40">
-              <span><span className="text-white/60 font-medium">{stats?.images_count ?? 0}</span> images</span>
-              <span><span className="text-white/60 font-medium">{stats?.videos_count ?? 0}</span> videos</span>
+            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-white/5 text-xs text-white/40 font-medium">
+              <span><span className="text-white/70">{stats?.images_count ?? 0}</span> imgs</span>
+              <span><span className="text-white/70">{stats?.videos_count ?? 0}</span> vids</span>
             </div>
           </div>
 
-          {/* Raw Storage */}
-          <div className="bg-[#141414] border border-white/5 rounded-2xl p-6">
-            <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-3">Raw Storage</p>
-            <p className="text-3xl font-bold">
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:bg-white/[0.03] transition-colors">
+            <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">Raw Storage</p>
+            <p className="text-3xl font-bold tracking-tight text-white/90">
               {loadingStats ? <span className="text-white/20 animate-pulse">—</span> : formatBytes(stats?.original_size ?? 0)}
             </p>
-            <p className="text-xs text-white/30 mt-4 pt-4 border-t border-white/5">Total unprocessed upload size</p>
+            <p className="text-xs text-white/40 mt-3 pt-3 border-t border-white/5 font-medium">Unprocessed size</p>
           </div>
 
-          {/* Optimized Size */}
-          <div className="bg-[#141414] border border-white/5 rounded-2xl p-6">
-            <p className="text-white/40 text-xs font-medium uppercase tracking-wider mb-3">Optimized Size</p>
-            <p className="text-3xl font-bold">
+          <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5 hover:bg-white/[0.03] transition-colors">
+            <p className="text-white/40 text-xs font-semibold uppercase tracking-wider mb-2">Optimized Size</p>
+            <p className="text-3xl font-bold tracking-tight text-white/90">
               {loadingStats ? <span className="text-white/20 animate-pulse">—</span> : formatBytes(stats?.optimized_size ?? 0)}
             </p>
-            <p className="text-xs text-white/30 mt-4 pt-4 border-t border-white/5">After avif conversion</p>
+            <p className="text-xs text-white/40 mt-3 pt-3 border-t border-white/5 font-medium">Converted size</p>
           </div>
 
-          {/* Savings */}
-          <div className="relative bg-[#141414] border border-green-500/10 rounded-2xl p-6 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
-            <p className="text-green-400/70 text-xs font-medium uppercase tracking-wider mb-3 relative z-10">Saved</p>
-            <p className="text-3xl font-bold text-green-400 relative z-10">
+          <div className="bg-gradient-to-br from-green-500/10 to-transparent border border-green-500/20 rounded-2xl p-5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-4 opacity-20">
+              <span className="material-symbols-rounded text-6xl text-green-500">savings</span>
+            </div>
+            <p className="text-green-400/80 text-xs font-semibold uppercase tracking-wider mb-2 relative z-10">Total Savings</p>
+            <p className="text-3xl font-bold tracking-tight text-green-400 relative z-10">
               {loadingStats ? <span className="text-white/20 animate-pulse">—</span> : formatBytes(stats?.saved_bytes ?? 0)}
             </p>
-            <p className="text-xs text-white/30 mt-4 pt-4 border-t border-white/5 relative z-10">Bytes saved via optimization</p>
+            <p className="text-xs text-green-400/50 mt-3 pt-3 border-t border-green-500/10 font-medium relative z-10">Optimization efficiency</p>
           </div>
         </div>
 
         {/* ── Alert ──────────────────────────────────────────────── */}
         {retryMessage && (
-          <div className={`p-4 rounded-xl border flex items-center gap-3 text-sm ${retryMessage.includes("queued") ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
-            <span className="material-symbols-rounded text-[18px]">{retryMessage.includes("queued") ? "check_circle" : "error"}</span>
+          <div className={`p-4 rounded-xl border flex items-center gap-3 text-sm font-medium animate-in fade-in slide-in-from-top-2 ${retryMessage.includes("queued") ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"}`}>
+            <span className="material-symbols-rounded text-[20px]">{retryMessage.includes("queued") ? "check_circle" : "error"}</span>
             {retryMessage}
           </div>
         )}
 
-        {/* ── Jobs List ─────────────────────────────────────────── */}
-        <div className="bg-[#141414] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
-          <div className="px-6 py-5 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-            <div>
-              <h2 className="text-lg font-semibold text-white/90">Processing Pipeline</h2>
-              <p className="text-white/40 text-sm mt-1">Recent media jobs and their status.</p>
-            </div>
-            
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setActiveTab("ALL")} 
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${activeTab === "ALL" ? "bg-white/10 text-white" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}
-              >
-                All
-              </button>
-              <button 
-                onClick={() => setActiveTab("PROCESSING")} 
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${activeTab === "PROCESSING" ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}
-              >
-                Processing
-              </button>
-              <button 
-                onClick={() => setActiveTab("FAILED")} 
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${activeTab === "FAILED" ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}
-              >
-                Failed
-              </button>
+        {/* ── Jobs Grid ─────────────────────────────────────────── */}
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex p-1 bg-white/[0.03] border border-white/5 rounded-xl w-fit">
+              {(["ALL", "PROCESSING", "FAILED"] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                    activeTab === tab 
+                      ? "bg-white/10 text-white shadow-sm" 
+                      : "text-white/40 hover:text-white/70 hover:bg-white/5"
+                  }`}
+                >
+                  {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                </button>
+              ))}
             </div>
 
             {!loadingJobs && (
-              <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-full text-white/50 text-xs font-medium">
-                {filteredJobs.length} jobs
-              </span>
+              <div className="text-sm font-medium text-white/40">
+                Showing <span className="text-white/80">{filteredJobs.length}</span> images
+              </div>
             )}
           </div>
 
-          <div className="divide-y divide-white/[0.04]">
-            {loadingJobs ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="p-6 flex items-center gap-6">
-                  <div className="w-16 h-16 bg-white/5 rounded-xl animate-pulse shrink-0" />
-                  <div className="space-y-3 flex-1">
-                    <div className="h-4 bg-white/5 rounded w-1/4 animate-pulse" />
-                    <div className="h-3 bg-white/5 rounded w-1/3 animate-pulse" />
-                  </div>
-                </div>
-              ))
-            ) : filteredJobs.length === 0 ? (
-              <div className="px-6 py-20 text-center flex flex-col items-center justify-center">
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                  <span className="material-symbols-rounded text-3xl text-white/20">check_circle</span>
-                </div>
-                <h3 className="text-white/70 font-medium text-lg">No active jobs</h3>
-                <p className="text-white/30 text-sm mt-1">No jobs match this filter.</p>
+          {loadingJobs ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="aspect-square bg-white/[0.02] border border-white/5 rounded-2xl animate-pulse" />
+              ))}
+            </div>
+          ) : filteredJobs.length === 0 ? (
+            <div className="py-32 text-center flex flex-col items-center justify-center bg-white/[0.01] border border-white/5 rounded-3xl border-dashed">
+              <div className="w-16 h-16 bg-white/[0.03] border border-white/5 rounded-full flex items-center justify-center mb-4">
+                <span className="material-symbols-rounded text-3xl text-white/20">image_not_supported</span>
               </div>
-            ) : (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              filteredJobs.map((job: any) => (
+              <h3 className="text-white/80 font-semibold text-lg">No images found</h3>
+              <p className="text-white/40 text-sm mt-1 max-w-sm">
+                {searchQuery ? "Try adjusting your search terms to find what you're looking for." : "No jobs match this filter criteria."}
+              </p>
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery("")}
+                  className="mt-4 px-4 py-2 bg-white/5 hover:bg-white/10 text-white/80 text-sm font-medium rounded-xl transition-colors"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredJobs.map((job: any) => (
                 <div
                   key={job.id}
                   onClick={() => router.push(`/media-engine/system/${job.media_id}`)}
-                  className="p-6 flex flex-col sm:flex-row sm:items-center gap-6 hover:bg-white/[0.03] transition-all cursor-pointer group"
+                  className="group relative flex flex-col bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden hover:bg-white/[0.04] hover:border-white/10 transition-all cursor-pointer shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
-                  {/* Thumbnail */}
-                  <div className="w-20 h-20 bg-[#0f0f0f] border border-white/10 rounded-xl overflow-hidden shrink-0 relative flex items-center justify-center group-hover:border-white/20 transition-colors">
+                  {/* Thumbnail Container */}
+                  <div className="relative aspect-square bg-[#0f0f0f] w-full overflow-hidden flex items-center justify-center">
                     {job.media_url ? (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={job.media_url}
                         alt={job.media_filename || "Media"}
-                        className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        loading="lazy"
                       />
                     ) : (
-                      <span className="material-symbols-rounded text-white/20 text-2xl">image</span>
+                      <span className="material-symbols-rounded text-white/10 text-5xl">image</span>
                     )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="text-white/90 font-medium truncate text-base group-hover:text-blue-400 transition-colors">
-                        {job.media_filename || "Unknown Filename"}
-                      </h3>
+                    
+                    {/* Status Badge overlay */}
+                    <div className="absolute top-3 left-3 z-10 shadow-lg">
                       <StatusBadge status={job.status} />
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm mt-2">
-                      <div className="flex items-center gap-1.5 text-white/40">
-                        <span className="material-symbols-rounded text-[16px]">tag</span>
-                        <span className="font-mono text-xs">{job.media_id.split('-')[0]}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-white/40">
-                        <span className="material-symbols-rounded text-[16px]">schedule</span>
-                        <span>{new Date(job.created_at).toLocaleString()}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-white/40">
-                        <span className="material-symbols-rounded text-[16px]">build</span>
-                        <span className="capitalize">{job.job_type.replace('_', ' ').toLowerCase()}</span>
+
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur-md shadow-xl border border-white/20 transform scale-75 group-hover:scale-100 transition-all duration-300">
+                        <span className="material-symbols-rounded text-[20px]">open_in_new</span>
                       </div>
                     </div>
+                  </div>
 
+                  {/* Info Section */}
+                  <div className="p-4 flex flex-col gap-2 flex-1 border-t border-white/5">
+                    <h3 className="text-white/90 font-medium text-sm truncate w-full" title={job.media_filename}>
+                      {job.media_filename || "Unknown File"}
+                    </h3>
+                    
+                    <div className="flex items-center justify-between text-[11px] text-white/40 font-medium mt-auto">
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-rounded text-[14px]">schedule</span>
+                        {new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                    
                     {job.error_message && (
-                      <div className="mt-3 inline-flex items-start gap-2 bg-red-500/10 text-red-400/90 text-xs px-3 py-2 rounded-lg border border-red-500/20 max-w-full">
-                        <span className="material-symbols-rounded text-[16px] shrink-0 mt-0.5">error</span>
-                        <span className="break-words">{job.error_message}</span>
+                      <div className="mt-2 text-[10px] text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1.5 rounded bg-clip-padding truncate" title={job.error_message}>
+                        {job.error_message}
                       </div>
                     )}
                   </div>
-
-                  {/* Actions */}
-                  <div className="shrink-0 flex items-center justify-end sm:justify-start" onClick={(e) => e.stopPropagation()}>
-                    {["FAILURE", "ERROR", "RETRYING"].includes(job.status) ? (
-                      <button
-                        onClick={() => retryJob(job.id)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 active:bg-white/15 rounded-xl text-white/80 transition-all border border-white/10 hover:border-white/20 text-sm font-medium"
-                      >
-                        <span className="material-symbols-rounded text-[18px]">replay</span>
-                        Retry
-                      </button>
-                    ) : (
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white/20 group-hover:text-white/50 group-hover:bg-white/5 transition-all">
-                        <span className="material-symbols-rounded">chevron_right</span>
-                      </div>
-                    )}
-                  </div>
+                  
+                  {/* Quick Action (Retry) */}
+                  {["FAILURE", "ERROR", "RETRYING"].includes(job.status) && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); retryJob(job.id); }}
+                      className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center shadow-lg backdrop-blur-md transition-colors"
+                      title="Retry processing"
+                    >
+                      <span className="material-symbols-rounded text-[16px]">replay</span>
+                    </button>
+                  )}
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Pagination Controls */}
-          <div className="p-4 border-t border-white/5 flex items-center justify-between bg-white/[0.01]">
-            <div className="text-sm text-white/40">
-              Page <span className="text-white/80 font-medium">{page}</span> of <span className="text-white/80 font-medium">{totalPages}</span>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-6 border-t border-white/5">
+              <div className="text-sm font-medium text-white/40">
+                Page <span className="text-white/80">{page}</span> of <span className="text-white/80">{totalPages}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => goToPage(page - 1)}
+                  disabled={page <= 1 || loadingJobs}
+                  className="px-4 py-2 bg-white/[0.03] hover:bg-white/[0.06] disabled:opacity-30 disabled:hover:bg-white/[0.03] rounded-xl transition-colors border border-white/5 font-medium text-sm text-white/70 hover:text-white flex items-center gap-1"
+                >
+                  <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+                  Prev
+                </button>
+                <button
+                  onClick={() => goToPage(page + 1)}
+                  disabled={(!hasMore && page >= totalPages) || loadingJobs}
+                  className="px-4 py-2 bg-white/[0.03] hover:bg-white/[0.06] disabled:opacity-30 disabled:hover:bg-white/[0.03] rounded-xl transition-colors border border-white/5 font-medium text-sm text-white/70 hover:text-white flex items-center gap-1"
+                >
+                  Next
+                  <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => goToPage(page - 1)}
-                disabled={page <= 1 || loadingJobs}
-                className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center text-white/70 hover:text-white"
-              >
-                <span className="material-symbols-rounded text-[20px]">chevron_left</span>
-              </button>
-              <button
-                onClick={() => goToPage(page + 1)}
-                disabled={(!hasMore && page >= totalPages) || loadingJobs}
-                className="p-2 bg-white/5 hover:bg-white/10 disabled:opacity-30 rounded-xl transition-all border border-white/10 hover:border-white/20 flex items-center justify-center text-white/70 hover:text-white"
-              >
-                <span className="material-symbols-rounded text-[20px]">chevron_right</span>
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
       </div>
