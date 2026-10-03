@@ -661,10 +661,8 @@ export default function EditorPage() {
     idx?: number,
     batch?: { current: number; total: number }
   ) => {
-    if (file.size > 50 * 1024 * 1024) {
-      showToast("Video too large. Max 50MB.", true);
-      return null;
-    }
+    showToast("Video uploads are currently disabled. Please upload an image.", true);
+    return null;
     if (!file.type.startsWith("video/")) {
       showToast("Please upload a video file", true);
       return null;
@@ -1793,7 +1791,7 @@ export default function EditorPage() {
                         <input
                           ref={aboutInputRef}
                           type="file"
-                          accept="image/jpeg, image/png, image/webp, image/avif, video/*"
+                          accept="image/jpeg, image/png, image/webp, image/avif"
                           multiple
                           onChange={async (e) => {
                             const files = Array.from(e.target.files ?? []);
@@ -1922,7 +1920,7 @@ export default function EditorPage() {
                                     ) : "+ Add Media"}
                                     <input
                                       type="file"
-                                      accept="image/jpeg, image/png, image/webp, image/avif, video/*"
+                                      accept="image/jpeg, image/png, image/webp, image/avif"
                                       multiple
                                       className="hidden"
                                       onChange={async (e) => {

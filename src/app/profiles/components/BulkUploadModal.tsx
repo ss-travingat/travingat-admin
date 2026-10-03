@@ -56,7 +56,7 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
     
     files.forEach(file => {
       // Validate file type
-      if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) return;
+      if (!file.type.startsWith("image/")) return;
       if (file.type === "image/svg+xml" || file.type === "image/gif") return;
       
       const pathParts = (file as any).webkitRelativePath?.split("/") || [];
