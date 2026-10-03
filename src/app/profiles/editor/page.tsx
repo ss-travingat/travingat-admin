@@ -1054,8 +1054,8 @@ export default function EditorPage() {
 
   const saveFormState = async (newForm: typeof form) => {
     if (!editing) return;
-    const cleanCountryImages = newForm.countryImages.filter(c => c.images.length > 0);
-    const cleanCollectionImages = newForm.collectionImages.filter(c => c.images.length > 0);
+    const cleanCountryImages = newForm.countryImages;
+    const cleanCollectionImages = newForm.collectionImages;
     const computedMedia = new Set([
       ...cleanCountryImages.flatMap(c => c.images),
       ...cleanCollectionImages.flatMap(c => c.images)
@@ -1083,8 +1083,7 @@ export default function EditorPage() {
     const newCountryImages = form.countryImages
       .map((c, i) =>
         i === countryIdx ? { ...c, images: c.images.filter((_, j) => j !== imageIdx) } : c
-      )
-      .filter((c) => c.images.length > 0);
+      );
     const newForm = { ...form, countryImages: newCountryImages };
     setForm(newForm);
     saveFormState(newForm);
@@ -1098,8 +1097,8 @@ export default function EditorPage() {
 
     setSaving(true);
     try {
-      const cleanCountryImages = form.countryImages.filter(c => c.images.length > 0);
-      const cleanCollectionImages = form.collectionImages.filter(c => c.images.length > 0);
+      const cleanCountryImages = form.countryImages;
+      const cleanCollectionImages = form.collectionImages;
       const computedMedia = new Set([
         ...cleanCountryImages.flatMap(c => c.images),
         ...cleanCollectionImages.flatMap(c => c.images)
@@ -2205,7 +2204,7 @@ export default function EditorPage() {
                                             ...prev,
                                             collectionImages: prev.collectionImages.map((c, i) =>
                                               i === idx ? { ...c, images: c.images.filter((_, j) => j !== imgIdx) } : c
-                                            ).filter((c) => c.images.length > 0),
+                                            ),
                                           }));
                                         }}
                                         className="w-5 h-5 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-[#1c212c]"

@@ -979,8 +979,8 @@ export default function AdminProfilesPage() {
 
   const saveFormState = async (newForm: typeof form) => {
     if (!editing) return;
-    const cleanCountryImages = newForm.countryImages.filter(c => c.images.length > 0);
-    const cleanCollectionImages = newForm.collectionImages.filter(c => c.images.length > 0);
+    const cleanCountryImages = newForm.countryImages;
+    const cleanCollectionImages = newForm.collectionImages;
     const computedMedia =
       cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
       cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
@@ -1007,8 +1007,7 @@ export default function AdminProfilesPage() {
     const newCountryImages = form.countryImages
       .map((c, i) =>
         i === countryIdx ? { ...c, images: c.images.filter((_, j) => j !== imageIdx) } : c
-      )
-      .filter((c) => c.images.length > 0);
+      );
     const newForm = { ...form, countryImages: newCountryImages };
     setForm(newForm);
     saveFormState(newForm);
@@ -1022,8 +1021,8 @@ export default function AdminProfilesPage() {
 
     setSaving(true);
     try {
-      const cleanCountryImages = form.countryImages.filter(c => c.images.length > 0);
-      const cleanCollectionImages = form.collectionImages.filter(c => c.images.length > 0);
+      const cleanCountryImages = form.countryImages;
+      const cleanCollectionImages = form.collectionImages;
       const computedMedia =
         cleanCountryImages.reduce((sum, c) => sum + c.images.length, 0) +
         cleanCollectionImages.reduce((sum, c) => sum + c.images.length, 0);
