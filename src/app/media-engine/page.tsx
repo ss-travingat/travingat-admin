@@ -53,14 +53,21 @@ export default function MediaEngineDashboard() {
     try {
       const res = await fetch("/api/media/stats");
       if (res.ok) setStats(await res.json());
-    } catch { }
-    finally { setLoadingStats(false); }
+      else setRetryMessage("Failed to load stats.");
+    } catch { 
+      setRetryMessage("Network error loading stats.");
+    } finally { setLoadingStats(false); }
   };
 
   const fetchJobs = async (pageNumber = 1, isPolling = false) => {
     if (!isPolling) setLoadingJobs(true);
     try {
-      const res = await fetch(`/api/media/queue?page=${pageNumber}`);
+      let url = `/api/media/queue?page=${pageNumber}&page_size=20`;
+      if (activeTab === "PROCESSING") url += "&status_in=PROCESSING,PENDING,RETRYING";
+      if (activeTab === "FAILED") url += "&status_in=FAILURE,ERROR";
+      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         const raw = Array.isArray(data) ? data : data.results ?? [];
@@ -68,15 +75,18 @@ export default function MediaEngineDashboard() {
         setJobs(filtered);
 
         if (!Array.isArray(data) && data.count) {
-          const pageSize = 10; // Default fallback
+          const pageSize = 20; 
           setTotalPages(Math.ceil(data.count / pageSize));
         } else {
           setTotalPages(data.next ? pageNumber + 1 : pageNumber);
         }
         setHasMore(!!data.next);
+      } else {
+        setRetryMessage("Failed to load jobs.");
       }
-    } catch { }
-    finally {
+    } catch {
+      setRetryMessage("Network error loading jobs.");
+    } finally {
       setLoadingJobs(false);
     }
   };
@@ -84,7 +94,6 @@ export default function MediaEngineDashboard() {
   const goToPage = (newPage: number) => {
     if (newPage < 1 || (newPage > totalPages && totalPages > 1)) return;
     setPage(newPage);
-    fetchJobs(newPage);
   };
 
   const refresh = async () => {
@@ -112,59 +121,62 @@ export default function MediaEngineDashboard() {
   };
 
   useEffect(() => {
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       fetchStats();
-      fetchJobs(1);
-    }, 0);
-  }, [page]);
+      fetchJobs(page);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [page, activeTab, searchQuery]);
 
   useEffect(() => {
-    const defaultWsUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
-    const baseUrl = process.env.NEXT_PUBLIC_WS_URL || defaultWsUrl;
-    const ws = new WebSocket(`${baseUrl}/ws/media-jobs/`);
+    let ws: WebSocket | null = null;
+    let reconnectTimer: any = null;
     
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "job_update" && data.job) {
-          setJobs(prevJobs => {
-            const idx = prevJobs.findIndex((j: any) => j.id === data.job.id);
-            if (idx >= 0) {
-              const newJobs = [...prevJobs];
-              newJobs[idx] = data.job;
-              return newJobs;
-            } else {
-              return [data.job, ...prevJobs];
+    const connect = () => {
+      const defaultWsUrl = `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}`;
+      const baseUrl = process.env.NEXT_PUBLIC_WS_URL || defaultWsUrl;
+      ws = new WebSocket(`${baseUrl}/ws/media-jobs/`);
+      
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "job_update" && data.job) {
+            setJobs(prevJobs => {
+              const idx = prevJobs.findIndex((j: any) => j.id === data.job.id);
+              if (idx >= 0) {
+                const newJobs = [...prevJobs];
+                newJobs[idx] = data.job;
+                return newJobs;
+              } else {
+                return [data.job, ...prevJobs];
+              }
+            });
+            if (["SUCCESS", "FAILURE"].includes(data.job.status)) {
+               fetchStats();
             }
-          });
-          if (["SUCCESS", "FAILURE"].includes(data.job.status)) {
-             fetchStats();
           }
+        } catch (err) {
+          console.error("WebSocket message error", err);
         }
-      } catch (err) {
-        console.error("WebSocket message error", err);
-      }
+      };
+
+      ws.onclose = () => {
+        reconnectTimer = setTimeout(connect, 3000);
+      };
     };
 
-    return () => ws.close();
+    connect();
+
+    return () => {
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      if (ws) {
+        ws.onclose = null;
+        ws.close();
+      }
+    };
   }, []);
 
-  const filteredJobs = useMemo(() => {
-    return jobs.filter(j => {
-      // Tab filtering
-      if (activeTab === "PROCESSING" && !(j.status === "PROCESSING" || j.status === "PENDING")) return false;
-      if (activeTab === "FAILED" && !(j.status === "FAILURE" || j.status === "ERROR")) return false;
-      
-      // Search filtering
-      if (searchQuery) {
-        const filename = (j.media_filename || "").toLowerCase();
-        const id = (j.media_id || "").toLowerCase();
-        const search = searchQuery.toLowerCase();
-        if (!filename.includes(search) && !id.includes(search)) return false;
-      }
-      return true;
-    });
-  }, [jobs, activeTab, searchQuery]);
+  const filteredJobs = jobs;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-blue-500/30">
@@ -183,19 +195,17 @@ export default function MediaEngineDashboard() {
                 type="text" 
                 placeholder="Find image..." 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                 className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 hover:border-white/20 focus:border-blue-500/50 focus:bg-blue-500/5 rounded-xl text-sm text-white placeholder-white/30 outline-none transition-all w-full md:w-64"
               />
             </div>
             <button
               onClick={async () => {
-                const res = await fetch("/api/media/scan_unoptimized", { method: "POST" });
-                if (res.ok) alert("Scan queued successfully!");
-                else {
-                  const res2 = await fetch("/api/media/scan-unoptimized", { method: "POST" });
-                  if (res2.ok) alert("Scan queued successfully!");
+                try {
+                  const res = await fetch("/api/media/scan-unoptimized", { method: "POST" });
+                  if (res.ok) alert("Scan queued successfully!");
                   else alert("Failed to queue scan.");
-                }
+                } catch { alert("Network error."); }
               }}
               className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-blue-500/20 shrink-0"
             >
@@ -272,7 +282,7 @@ export default function MediaEngineDashboard() {
               {(["ALL", "PROCESSING", "FAILED"] as const).map(tab => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => { setActiveTab(tab); setPage(1); }}
                   className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                     activeTab === tab 
                       ? "bg-white/10 text-white shadow-sm" 
@@ -395,17 +405,39 @@ export default function MediaEngineDashboard() {
                 <button
                   onClick={() => goToPage(page - 1)}
                   disabled={page <= 1 || loadingJobs}
-                  className="px-4 py-2 bg-white/[0.03] hover:bg-white/[0.06] disabled:opacity-30 disabled:hover:bg-white/[0.03] rounded-xl transition-colors border border-white/5 font-medium text-sm text-white/70 hover:text-white flex items-center gap-1"
+                  className="px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] disabled:opacity-30 disabled:hover:bg-white/[0.03] rounded-xl transition-colors border border-white/5 font-medium text-sm text-white/70 hover:text-white flex items-center"
                 >
                   <span className="material-symbols-rounded text-[18px]">arrow_back</span>
-                  Prev
                 </button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum = page - 2 + i;
+                  if (page <= 2) pageNum = i + 1;
+                  else if (page >= totalPages - 1) pageNum = totalPages - 4 + i;
+                  
+                  if (pageNum < 1 || pageNum > totalPages) return null;
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => goToPage(pageNum)}
+                      disabled={loadingJobs}
+                      className={`w-9 h-9 flex items-center justify-center rounded-xl transition-colors border text-sm font-medium ${
+                        page === pageNum 
+                          ? "bg-blue-600 border-blue-500 text-white" 
+                          : "bg-white/[0.03] hover:bg-white/[0.06] border-white/5 text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+
                 <button
                   onClick={() => goToPage(page + 1)}
                   disabled={(!hasMore && page >= totalPages) || loadingJobs}
-                  className="px-4 py-2 bg-white/[0.03] hover:bg-white/[0.06] disabled:opacity-30 disabled:hover:bg-white/[0.03] rounded-xl transition-colors border border-white/5 font-medium text-sm text-white/70 hover:text-white flex items-center gap-1"
+                  className="px-3 py-2 bg-white/[0.03] hover:bg-white/[0.06] disabled:opacity-30 disabled:hover:bg-white/[0.03] rounded-xl transition-colors border border-white/5 font-medium text-sm text-white/70 hover:text-white flex items-center"
                 >
-                  Next
                   <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
                 </button>
               </div>
