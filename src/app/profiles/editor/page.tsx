@@ -736,19 +736,19 @@ export default function EditorPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key, mediaType: "VIDEO" }),
         });
-      } catch (err) {
-        console.warn("Media engine optimization trigger failed", err);
+      } catch (e) {
+        console.warn("Media engine optimization trigger failed", e);
       }
 
-      const isLastInBatch = !batch || batch.current === batch.total;
+      const isLastInBatch = !batch || batch?.current === batch?.total;
       if (isLastInBatch) {
         setUploading((prev) => prev ? { ...prev, stage: "done" } : null);
         await new Promise((r) => setTimeout(r, 800));
       }
       showToast("Video uploaded");
       return publicUrl;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Network error";
+    } catch (e: any) {
+      const msg = e?.message || "Network error";
       showToast(`Upload failed: ${msg}`, true);
       return null;
     } finally {
