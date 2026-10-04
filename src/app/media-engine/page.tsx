@@ -47,7 +47,7 @@ export default function MediaEngineDashboard() {
   const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"ALL" | "PROCESSING" | "FAILED">("ALL");
+  const [activeTab, setActiveTab] = useState<"ALL" | "PROCESSING" | "FAILED" | "RECYCLE_BIN">("ALL");
 
   const fetchStats = async () => {
     try {
@@ -62,27 +62,58 @@ export default function MediaEngineDashboard() {
   const fetchJobs = async (pageNumber = 1, isPolling = false) => {
     if (!isPolling) setLoadingJobs(true);
     try {
-      let url = `/api/media/queue?page=${pageNumber}&page_size=20`;
-      if (activeTab === "PROCESSING") url += "&status_in=PROCESSING,PENDING,RETRYING";
-      if (activeTab === "FAILED") url += "&status_in=FAILURE,ERROR";
-      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
-
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        const raw = Array.isArray(data) ? data : data.results ?? [];
-        const filtered = raw.filter((j: any) => j.job_type === "IMAGE_PROCESSING");
-        setJobs(filtered);
-
-        if (!Array.isArray(data) && data.count) {
-          const pageSize = 20; 
-          setTotalPages(Math.ceil(data.count / pageSize));
+      if (activeTab === "RECYCLE_BIN") {
+        const res = await fetch(`/api/media/recycle_bin?page=${pageNumber}&page_size=20`);
+        if (res.ok) {
+          const data = await res.json();
+          const raw = Array.isArray(data) ? data : data.results ?? [];
+          // Map MediaAsset objects to look like MediaJob objects for the UI
+          const mapped = raw.map((asset: any) => ({
+            id: asset.id,
+            media_id: asset.id,
+            job_type: "IMAGE_PROCESSING",
+            status: "DELETED",
+            media_filename: asset.original?.filename || "Unknown",
+            media_url: asset.optimized?.url || asset.original?.url,
+            created_at: asset.created_at,
+            error_message: "Soft deleted",
+            deleted: true
+          }));
+          setJobs(mapped);
+          
+          if (!Array.isArray(data) && data.count) {
+            const pageSize = 20; 
+            setTotalPages(Math.ceil(data.count / pageSize));
+          } else {
+            setTotalPages(data.next ? pageNumber + 1 : pageNumber);
+          }
+          setHasMore(!!data.next);
         } else {
-          setTotalPages(data.next ? pageNumber + 1 : pageNumber);
+          setRetryMessage("Failed to load recycle bin.");
         }
-        setHasMore(!!data.next);
       } else {
-        setRetryMessage("Failed to load jobs.");
+        let url = `/api/media/queue?page=${pageNumber}&page_size=20`;
+        if (activeTab === "PROCESSING") url += "&status_in=PROCESSING,PENDING,RETRYING";
+        if (activeTab === "FAILED") url += "&status_in=FAILURE,ERROR";
+        if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+  
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          const raw = Array.isArray(data) ? data : data.results ?? [];
+          const filtered = raw.filter((j: any) => j.job_type === "IMAGE_PROCESSING");
+          setJobs(filtered);
+  
+          if (!Array.isArray(data) && data.count) {
+            const pageSize = 20; 
+            setTotalPages(Math.ceil(data.count / pageSize));
+          } else {
+            setTotalPages(data.next ? pageNumber + 1 : pageNumber);
+          }
+          setHasMore(!!data.next);
+        } else {
+          setRetryMessage("Failed to load jobs.");
+        }
       }
     } catch {
       setRetryMessage("Network error loading jobs.");
@@ -105,16 +136,22 @@ export default function MediaEngineDashboard() {
     setRefreshing(false);
   };
 
-  const retryJob = async (jobId: string) => {
+  const retryJob = async (jobId: string, deleted?: boolean) => {
     try {
       setRetryMessage(null);
-      const res = await fetch(`/api/media/queue/${jobId}/retry`, { method: "POST" });
+      let res;
+      if (deleted) {
+        // Restore from recycle bin
+        res = await fetch(`/api/media/${jobId}/restore/`, { method: "POST" });
+      } else {
+        res = await fetch(`/api/media/queue/${jobId}/retry`, { method: "POST" });
+      }
       if (res.ok) {
-        setRetryMessage("Job queued for retry.");
+        setRetryMessage(deleted ? "Asset restored successfully." : "Job queued for retry.");
         fetchJobs(page);
       } else {
         const d = await res.json();
-        setRetryMessage(d.error || "Failed to retry job.");
+        setRetryMessage(d.error || (deleted ? "Failed to restore asset." : "Failed to retry job."));
       }
     } catch { setRetryMessage("Network error."); }
     setTimeout(() => setRetryMessage(null), 5000);
@@ -279,7 +316,7 @@ export default function MediaEngineDashboard() {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex p-1 bg-white/[0.03] border border-white/5 rounded-xl w-fit">
-              {(["ALL", "PROCESSING", "FAILED"] as const).map(tab => (
+              {(["ALL", "PROCESSING", "FAILED", "RECYCLE_BIN"] as const).map(tab => (
                 <button
                   key={tab}
                   onClick={() => { setActiveTab(tab); setPage(1); }}
@@ -289,7 +326,7 @@ export default function MediaEngineDashboard() {
                       : "text-white/40 hover:text-white/70 hover:bg-white/5"
                   }`}
                 >
-                  {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  {tab.replace("_", " ").toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
                 </button>
               ))}
             </div>
@@ -380,14 +417,14 @@ export default function MediaEngineDashboard() {
                     )}
                   </div>
                   
-                  {/* Quick Action (Retry) */}
-                  {["FAILURE", "ERROR", "RETRYING"].includes(job.status) && (
+                  {/* Quick Action (Retry/Restore) */}
+                  {["FAILURE", "ERROR", "RETRYING", "DELETED"].includes(job.status) && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); retryJob(job.id); }}
+                      onClick={(e) => { e.stopPropagation(); retryJob(job.id, job.deleted); }}
                       className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center shadow-lg backdrop-blur-md transition-colors"
-                      title="Retry processing"
+                      title={job.deleted ? "Restore from Recycle Bin" : "Retry processing"}
                     >
-                      <span className="material-symbols-rounded text-[16px]">replay</span>
+                      <span className="material-symbols-rounded text-[16px]">{job.deleted ? "restore" : "replay"}</span>
                     </button>
                   )}
                 </div>
