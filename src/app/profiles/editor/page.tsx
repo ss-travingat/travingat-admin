@@ -1501,6 +1501,7 @@ export default function EditorPage() {
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                   Preview
                                 </button>
+                                {/* 
                                 <button
                                   type="button"
                                   onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.cover), type: "cover" })}
@@ -1509,6 +1510,7 @@ export default function EditorPage() {
                                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                   Crop
                                 </button>
+                                */}
                               </div>
                             </>
                           ) : (
@@ -1584,7 +1586,7 @@ export default function EditorPage() {
                                 </div>
                               )}
                             </div>
-                            {form.images.avatar && (
+                            {/* form.images.avatar && (
                               <button
                                 type="button"
                                 onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.avatar), type: "avatar" })}
@@ -1595,7 +1597,7 @@ export default function EditorPage() {
                                   <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                                 </svg>
                               </button>
-                            )}
+                            ) */}
                           </div>
                           <div className="flex flex-col gap-2">
                             <Button
