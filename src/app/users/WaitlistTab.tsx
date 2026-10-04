@@ -36,6 +36,7 @@ type WaitlistEntry = {
   featured_countries_count?: number | null;
   explorer_card_show_badge?: boolean;
   updated_at: string;
+  featured_applied_at?: string | null;
 };
 
 type Filter = "all" | "confirmed" | "unconfirmed";

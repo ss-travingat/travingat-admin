@@ -22,6 +22,7 @@ type WaitlistEntry = {
   links?: string[] | null;
   featured_countries_count?: number | null;
   explorer_card_show_badge?: boolean;
+  featured_applied_at?: string | null;
 };
 
 export default function WaitlistDetailsCard({
@@ -246,7 +247,9 @@ export default function WaitlistDetailsCard({
           </p>
           <div className="content-stretch flex flex-[1_0_0] flex-col items-start min-w-px relative" data-node-id="15600:58320" data-name="Value Container">
             <p className="[word-break:break-word] font-medium leading-[normal] not-italic relative shrink-0 text-[14px] text-white w-full" data-node-id="15600:58321">
-              {formatDate(entry.updated_at)}
+              {(!entry.get_featured_status || entry.get_featured_status.toLowerCase() === 'not created' || !entry.featured_applied_at) 
+                ? "N/A" 
+                : formatDate(entry.featured_applied_at)}
             </p>
           </div>
         </div>
