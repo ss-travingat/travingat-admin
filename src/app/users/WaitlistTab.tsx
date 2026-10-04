@@ -575,7 +575,7 @@ export function WaitlistTab() {
                 if (entry.email) searchParams.set("email", entry.email);
                 if (entry.country) searchParams.set("country", entry.country);
                 if (entry.id) searchParams.set("waitlistId", entry.id.toString());
-                window.open(`/profiles?${searchParams.toString()}`, "_blank");
+                window.open(`/profiles/editor?${searchParams.toString()}`, "_blank");
               }}
               onReject={() => {
                 // Reject logic
