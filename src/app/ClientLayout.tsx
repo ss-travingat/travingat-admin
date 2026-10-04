@@ -16,7 +16,7 @@ export default function ClientLayout({
 
   useEffect(() => {
     if (pathname !== "/login" && !hasSession) {
-      router.replace("/login");
+      router.replace("/login"); 
     }
   }, [pathname, hasSession, router]);
 

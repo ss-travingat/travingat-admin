@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/Textarea";
 import BulkUploadModal from "../components/BulkUploadModal";
 import CountrySelect from "../components/CountrySelect";
 import ProfileCropModal from "@/components/ProfileCropModal";
+import Lightbox from "@/components/ui/Lightbox";
+import SortableImageGrid from "@/components/ui/SortableImageGrid";
 
 interface CountryImage {
   countryCode: string;
@@ -44,7 +46,9 @@ interface Profile {
   collections: number;
   images: {
     cover: string;
+    coverCrop?: any;
     avatar: string;
+    avatarCrop?: any;
     gallery: string[];
   };
   align: "start" | "end";
@@ -355,6 +359,7 @@ export default function EditorPage() {
   const [pendingCollectionTitle, setPendingCollectionTitle] = useState<string>("");
   const [mediaPickerTarget, setMediaPickerTarget] = useState<{ type: "country" | "collection" | "about"; idx?: number } | null>(null);
   const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
+  const [lightbox, setLightbox] = useState<{ items: { url: string; label?: string }[]; index: number } | null>(null);
 
   // Orphan cleanup state
   const [orphanScanning, setOrphanScanning] = useState(false);
@@ -861,11 +866,24 @@ export default function EditorPage() {
 
   const handleCropSave = async (croppedFile: File, cropData: any) => {
     if (!cropConfig) return;
-    const urlOrObj = await handleImageUpload(croppedFile, cropConfig.type);
-    if (urlOrObj) {
+    
+    let url = typeof cropConfig.src === "string" && !cropConfig.file ? cropConfig.src : null;
+    
+    if (cropConfig.file) {
+      const urlOrObj = await handleImageUpload(cropConfig.file, cropConfig.type);
+      if (urlOrObj) {
+        url = typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url;
+      }
+    }
+    
+    if (url) {
       setForm((prev) => ({
         ...prev,
-        images: { ...prev.images, [cropConfig.type]: typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url },
+        images: { 
+          ...prev.images, 
+          [cropConfig.type]: url,
+          [`${cropConfig.type}Crop`]: cropData 
+        },
       }));
     }
     setCropConfig(null);
@@ -1249,6 +1267,7 @@ export default function EditorPage() {
           imageSrc={cropConfig.src}
           type={cropConfig.type}
           title={cropConfig.type === "cover" ? "Crop Cover Image" : "Crop Avatar"}
+          initialCropData={cropConfig.type === "cover" ? form.images.coverCrop : form.images.avatarCrop}
           onSave={handleCropSave}
           onCancel={() => setCropConfig(null)}
           onReplace={() => {
@@ -1383,188 +1402,24 @@ export default function EditorPage() {
       )}
 
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[#1c212c] bg-[#0a0a0a]/90 backdrop-blur-xl">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <a
-              href="/profiles"
-              className="inline-flex items-center gap-2 rounded-full border border-[#1c212c] bg-white/5 px-3 py-1.5 text-sm text-white/60 transition hover:border-white/20 hover:text-white"
-            >
-              <span aria-hidden>←</span>
-              <span>Back</span>
-            </a>
-            <span className="hidden sm:block text-white/15">/</span>
-            <div className="min-w-0">
-              <h1 className="truncate text-lg font-semibold tracking-[-0.02em]">Featured Profiles CMS</h1>
-              <p className="hidden md:block text-xs text-[#7e889c]">Design-driven profile editing, media curation, and quick publishing.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <Button
-              type="button"
-              onClick={scanOrphans}
-              disabled={orphanScanning}
-              variant="ghost"
-              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-[#1c212c] rounded-full text-xs text-white/55 hover:text-white transition-colors disabled:opacity-50"
-            >
-              {orphanScanning ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                  Scanning…
-                </span>
-              ) : "🧹 Scan Orphans"}
-            </Button>
-            <span className="inline-flex items-center rounded-full border border-[#1c212c] bg-white/5 px-3 py-1.5 text-xs text-white/55">
-              {profiles.length} profile{profiles.length !== 1 ? "s" : ""}
-            </span>
+      <header className="sticky top-0 z-40 border-b border-[#1c212c] bg-[#0a0a0a]/90 backdrop-blur-xl">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center gap-4">
+          <a
+            href="/profiles"
+            className="inline-flex items-center gap-2 rounded-full border border-[#1c212c] bg-white/5 px-3 py-1.5 text-sm text-white/60 transition hover:border-white/20 hover:text-white"
+          >
+            <span aria-hidden>←</span>
+            <span>Back</span>
+          </a>
+          <span className="hidden sm:block text-white/15">/</span>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-semibold tracking-[-0.02em]">Profile Editor</h1>
+            <p className="hidden md:block text-xs text-[#7e889c]">
+              {editing ? "Edit existing profile details and media." : "Create a new featured profile."}
+            </p>
           </div>
         </div>
       </header>
-
-      <div className="relative overflow-hidden border-b border-[#1c212c] bg-[#0a0a0a]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(90,69,249,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_28%)]" />
-        <div className="max-w-6xl mx-auto px-6 py-8 lg:py-10 relative z-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl space-y-4">
-              <span className="inline-flex items-center rounded-full border border-[#1c212c] bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.24em] text-white/50">
-                Profile studio
-              </span>
-              <div className="space-y-3">
-                <h2 className="text-[30px] leading-[1.05] tracking-[-0.04em] font-semibold text-white md:text-[42px] lg:text-[48px]">
-                  Polish and publish profiles
-                </h2>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3 sm:max-w-md">
-              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Profiles</p>
-                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">{profiles.length}</p>
-              </div>
-              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Media</p>
-                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">
-                  {profiles.reduce((sum, profile) => sum + profile.media, 0)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[#1c212c] bg-white/4 px-4 py-4 backdrop-blur-sm">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-[#7e889c]">Published</p>
-                <p className="mt-2 text-2xl font-semibold tracking-[-0.04em]">Live</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Orphan Cleanup Panel */}
-      {orphanPanelOpen && (
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="rounded-2xl border border-[#1c212c] bg-white/4 p-5 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">🧹</span>
-                <div>
-                  <h3 className="text-sm font-semibold">Orphaned Files Cleanup</h3>
-                  <p className="text-xs text-white/40">Images uploaded but never saved to a profile</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  onClick={scanOrphans}
-                  disabled={orphanScanning}
-                  variant="ghost"
-                  className="px-3 py-1.5 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-xs font-medium disabled:opacity-50"
-                >
-                  {orphanScanning ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                      Scanning…
-                    </span>
-                  ) : "Re-scan"}
-                </Button>
-                <button
-                  onClick={() => { setOrphanPanelOpen(false); setOrphanResult(null); }}
-                  className="text-white/30 hover:text-white/60 text-sm cursor-pointer p-1"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {orphanResult && orphanResult.totalOrphaned === 0 && (
-              <div className="text-center py-6">
-                <span className="text-3xl">✨</span>
-                <p className="text-sm text-white/50 mt-2">No orphaned files found. Everything is clean!</p>
-                <p className="text-xs text-white/30 mt-1">{orphanResult.totalR2} files in R2 · {orphanResult.totalReferenced} referenced by profiles</p>
-              </div>
-            )}
-
-            {orphanResult && orphanResult.totalOrphaned > 0 && (
-              <>
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <p className="text-xs text-white/50">
-                    {orphanResult.totalOrphaned} orphaned file{orphanResult.totalOrphaned !== 1 ? "s" : ""} · {(orphanResult.totalOrphanedBytes / 1024 / 1024).toFixed(1)}MB wasted
-                    <span className="text-white/30 ml-2">({orphanResult.totalR2} total in R2 · {orphanResult.totalReferenced} referenced)</span>
-                  </p>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      if (confirm(`Delete ${orphanResult.totalOrphaned} orphaned file${orphanResult.totalOrphaned !== 1 ? "s" : ""}? This cannot be undone.`)) {
-                        deleteOrphans(orphanResult.orphans.map((o) => o.key));
-                      }
-                    }}
-                    disabled={orphanDeleting}
-                    variant="ghost"
-                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-xs font-medium disabled:opacity-50"
-                  >
-                    {orphanDeleting ? (
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="w-3 h-3 border-2 border-red-400/30 border-t-red-400 rounded-full animate-spin inline-block" />
-                        Deleting…
-                      </span>
-                    ) : `Delete All (${orphanResult.totalOrphaned})`}
-                  </Button>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 max-h-64 overflow-y-auto">
-                  {orphanResult.orphans.map((orphan) => {
-                    const isVid = /\.(mp4|mov|webm|m4v)$/i.test(orphan.url);
-                    return (
-                      <div key={orphan.key} className="group relative rounded-lg overflow-hidden bg-white/5 aspect-square">
-                        {isVid ? (
-                          <div className="w-full h-full flex items-center justify-center text-white/20">
-                            <span className="text-2xl">▶</span>
-                          </div>
-                        ) : (
-                          <img
-                            src={orphan.url}
-                            alt="Orphaned"
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        )}
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5">
-                          <p className="text-[10px] text-white/50 truncate">{orphan.key.split("/").pop()}</p>
-                          <p className="text-[9px] text-white/30">{(orphan.size / 1024).toFixed(0)}KB</p>
-                        </div>
-                        <button
-                          onClick={() => {
-                            if (confirm("Delete this file?")) {
-                              deleteOrphans([orphan.key]);
-                            }
-                          }}
-                          className="absolute top-1 right-1 w-5 h-5 bg-black/70 rounded-full text-[10px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer text-white/70 hover:text-white"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col gap-6 xl:gap-8">
         {/* Form Panel */}
@@ -1602,48 +1457,80 @@ export default function EditorPage() {
 
             <div className="space-y-6 max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
               {currentStep === 2 && (
-                <div className="space-y-6">
-                  <div className="space-y-4 rounded-2xl border border-[#1c212c] bg-[#12161f] p-5">
-                    <h3 className="text-[15px] font-semibold text-white pb-3 border-b border-[#1c212c]">
-                      Images
-                    </h3>
+                <div className="space-y-5">
 
-                    {/* Cover Image */}
-                    <div>
-                      <label className="text-sm text-white/60 block mb-2">
-                        Cover Image
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <div className="w-32 h-20 rounded-lg bg-white/5 shrink-0 relative group">
+                  {/* ── Cover & Avatar Hero Section ── */}
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#1c212c] flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#5A45F9]/30 to-[#8B7BFF]/10 flex items-center justify-center">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8B7BFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                          <circle cx="8.5" cy="8.5" r="1.5" />
+                          <polyline points="21 15 16 10 5 21" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-[15px] font-semibold text-white">Profile Images</h3>
+                        <p className="text-xs text-white/40">Cover photo and avatar displayed on the profile</p>
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-5">
+                      {/* Cover Image - Wide Preview */}
+                      <div>
+                        <label className="text-[13px] text-white/50 font-medium block mb-2.5 flex items-center gap-2">
+                          <span>Cover Image</span>
+                          {form.images.cover && <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Uploaded</span>}
+                        </label>
+                        <div className="relative rounded-xl overflow-hidden bg-[#0a0e16] border border-[#1c212c] aspect-[16/5] group">
                           {form.images.cover ? (
                             <>
-                              <div className="absolute inset-0 rounded-lg overflow-hidden">
-                                <LoadedImage src={toLandingAssetUrl(form.images.cover)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.cover))} alt="Cover" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
+                              <LoadedImage
+                                src={toLandingAssetUrl(form.images.cover)}
+                                thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.cover))}
+                                alt="Cover"
+                                containerClassName="w-full h-full absolute inset-0"
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                              <div className="absolute bottom-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                                <button
+                                  type="button"
+                                  onClick={() => setLightbox({ items: [{ url: toLandingAssetUrl(form.images.cover), label: "Cover Image" }], index: 0 })}
+                                  className="px-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-xs font-medium rounded-lg transition-colors border border-white/10 cursor-pointer"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  Preview
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.cover), type: "cover" })}
+                                  className="px-3 py-1.5 bg-[#5A45F9]/80 hover:bg-[#5A45F9] backdrop-blur-sm text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                                  Crop
+                                </button>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.cover), type: "cover" })}
-                                className="absolute -top-2.5 -right-2.5 w-8 h-8 bg-[#0a0a0a] border border-[#2d2f37] rounded-full flex items-center justify-center cursor-pointer text-white shadow-md z-10 transition-colors hover:bg-[#1a1a1a]"
-                                title="Edit"
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-                                </svg>
-                              </button>
                             </>
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
-                              No cover
+                            <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                              <div className="w-14 h-14 rounded-2xl bg-white/5 border border-dashed border-[#2a3040] flex items-center justify-center">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/20">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <circle cx="8.5" cy="8.5" r="1.5" />
+                                  <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                              </div>
+                              <p className="text-sm text-white/30">No cover image uploaded</p>
                             </div>
                           )}
                         </div>
-                        <div>
+                        <div className="mt-3 flex items-center gap-2">
                           <Button
                             type="button"
                             onClick={() => coverInputRef.current?.click()}
                             disabled={uploading !== null}
                             variant="ghost"
-                            className="px-4 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {uploading?.field === "cover" ? (
                               <span className="inline-flex items-center gap-2">
@@ -1654,8 +1541,14 @@ export default function EditorPage() {
                                 )}
                                 {uploading.stage === "processing" ? "Processing…" : uploading.stage === "uploading" ? "Uploading…" : "Uploaded!"}
                               </span>
-                            ) : "Upload Cover"}
+                            ) : (
+                              <span className="flex items-center gap-1.5">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Upload Cover
+                              </span>
+                            )}
                           </Button>
+                          <span className="text-xs text-white/25">PNG, JPG, WebP up to 20MB</span>
                           <input
                             ref={coverInputRef}
                             type="file"
@@ -1663,83 +1556,113 @@ export default function EditorPage() {
                             onChange={handleCoverUpload}
                             className="hidden"
                           />
-                          <p className="text-xs text-white/30 mt-1">
-                            PNG, JPG up to 20MB
-                          </p>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Avatar Image */}
-                    <div>
-                      <label className="text-sm text-white/60 block mb-2">
-                        Avatar
-                      </label>
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 rounded-xl bg-white/5 shrink-0 relative group">
-                          {form.images.avatar ? (
-                            <>
-                              <div className="absolute inset-0 rounded-xl overflow-hidden">
-                                <LoadedImage src={toLandingAssetUrl(form.images.avatar)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.avatar))} alt="Avatar" containerClassName="w-full h-full absolute inset-0" className="w-full h-full object-cover" />
-                              </div>
+                      {/* Avatar - Larger circle preview */}
+                      <div className="pt-2 border-t border-[#1c212c]/60">
+                        <label className="text-[13px] text-white/50 font-medium block mb-2.5 flex items-center gap-2">
+                          <span>Avatar</span>
+                          {form.images.avatar && <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/20">Uploaded</span>}
+                        </label>
+                        <div className="flex items-center gap-5">
+                          <div className="relative group">
+                            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-[#0a0e16] border-2 border-[#1c212c] transition-all group-hover:border-[#5A45F9]/40 group-hover:shadow-[0_0_20px_rgba(90,69,249,0.15)]">
+                              {form.images.avatar ? (
+                                <LoadedImage
+                                  src={toLandingAssetUrl(form.images.avatar)}
+                                  thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(form.images.avatar))}
+                                  alt="Avatar"
+                                  containerClassName="w-full h-full absolute inset-0"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/15">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+                            {form.images.avatar && (
                               <button
                                 type="button"
                                 onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.avatar), type: "avatar" })}
-                                className="absolute -top-2.5 -right-2.5 w-8 h-8 bg-[#0a0a0a] border border-[#2d2f37] rounded-full flex items-center justify-center cursor-pointer text-white shadow-md z-10 transition-colors hover:bg-[#1a1a1a]"
+                                className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#5A45F9] hover:bg-[#6B58FF] rounded-xl flex items-center justify-center cursor-pointer text-white shadow-lg z-10 transition-colors border-2 border-[#12161f]"
                                 title="Edit"
                               >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
                                 </svg>
                               </button>
-                            </>
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-white/20 text-xs">
-                              No avatar
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <Button
-                            type="button"
-                            onClick={() => avatarInputRef.current?.click()}
-                            disabled={uploading !== null}
-                            variant="ghost"
-                            className="px-4 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {uploading?.field === "avatar" ? (
-                              <span className="inline-flex items-center gap-2">
-                                {uploading.stage === "done" ? (
-                                  <span className="text-emerald-400">✓</span>
-                                ) : (
-                                  <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                                )}
-                                {uploading.stage === "processing" ? "Processing…" : uploading.stage === "uploading" ? "Uploading…" : "Uploaded!"}
-                              </span>
-                            ) : "Upload Avatar"}
-                          </Button>
-                          <input
-                            ref={avatarInputRef}
-                            type="file"
-                            accept="image/jpeg, image/png, image/webp, image/avif"
-                            onChange={handleAvatarUpload}
-                            className="hidden"
-                          />
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              type="button"
+                              onClick={() => avatarInputRef.current?.click()}
+                              disabled={uploading !== null}
+                              variant="ghost"
+                              className="px-4 py-2 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                              {uploading?.field === "avatar" ? (
+                                <span className="inline-flex items-center gap-2">
+                                  {uploading.stage === "done" ? (
+                                    <span className="text-emerald-400">✓</span>
+                                  ) : (
+                                    <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                                  )}
+                                  {uploading.stage === "processing" ? "Processing…" : uploading.stage === "uploading" ? "Uploading…" : "Uploaded!"}
+                                </span>
+                              ) : (
+                                <span className="flex items-center gap-1.5">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                  Upload Avatar
+                                </span>
+                              )}
+                            </Button>
+                            <input
+                              ref={avatarInputRef}
+                              type="file"
+                              accept="image/jpeg, image/png, image/webp, image/avif"
+                              onChange={handleAvatarUpload}
+                              className="hidden"
+                            />
+                            <p className="text-xs text-white/25">Square image recommended</p>
+                          </div>
                         </div>
                       </div>
                     </div>
+                  </div>
 
-
-                    {/* About Photos */}
-                    <div>
-                      <label className="text-sm text-white/60 block mb-2">
-                        About Photos ({form.aboutImages.length}/4)
-                      </label>
-                      <div className="flex flex-wrap gap-2 mb-2">
+                  {/* ── About Photos Section ── */}
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#1c212c] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/25 to-emerald-600/10 flex items-center justify-center">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-[15px] font-semibold text-white">About Photos</h3>
+                          <p className="text-xs text-white/40">Displayed in the About tab</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-white/5 text-white/40 border border-[#1c212c]">{form.aboutImages.length}/4</span>
+                    </div>
+                    <div className="p-5">
+                      {/* About images grid */}
+                      <div className="grid grid-cols-4 gap-3 mb-4">
                         {form.aboutImages.map((url, i) => (
                           <div
                             key={i}
-                            className="relative w-20 h-16 rounded-lg overflow-hidden bg-white/5 group"
+                            className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#0a0e16] border border-[#1c212c] group hover:border-[#2a3040] hover:shadow-[0_8px_30px_rgba(0,0,0,0.4)] transition-all cursor-pointer"
+                            onClick={() => setLightbox({
+                              items: form.aboutImages.map((u, j) => ({ url: toLandingAssetUrl(u), label: `About Photo ${j + 1}` })),
+                              index: i,
+                            })}
                           >
                             <LoadedImage
                               src={toLandingAssetUrl(url)}
@@ -1748,20 +1671,31 @@ export default function EditorPage() {
                               containerClassName="w-full h-full absolute inset-0"
                               className="w-full h-full object-cover"
                             />
-                            <button
-                              onClick={() => removeAboutImage(i)}
-                              className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/70 rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 cursor-pointer"
-                            >
-                              ×
-                            </button>
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                              <span className="text-[10px] text-white/60 font-medium">Photo {i + 1}</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); removeAboutImage(i); }}
+                                className="w-6 h-6 bg-red-500/20 hover:bg-red-500 rounded-lg flex items-center justify-center text-red-400 hover:text-white transition-all border border-red-500/30 hover:border-red-500 cursor-pointer"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="3 6 5 6 21 6" />
+                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                         ))}
                         {Array.from({ length: Math.max(0, 4 - form.aboutImages.length) }).map((_, i) => (
                           <div
                             key={`about-placeholder-${i}`}
-                            className="w-20 h-16 rounded-lg border border-dashed border-[#20242d] bg-white/5 flex items-center justify-center text-[10px] text-white/30"
+                            className="aspect-[4/3] rounded-xl border-2 border-dashed border-[#1c212c] bg-[#0a0e16]/50 flex flex-col items-center justify-center gap-1.5 text-white/20 hover:border-[#2a3040] hover:text-white/30 transition-colors"
                           >
-                            Slot {form.aboutImages.length + i + 1}
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                              <line x1="12" y1="5" x2="12" y2="19" />
+                              <line x1="5" y1="12" x2="19" y2="12" />
+                            </svg>
+                            <span className="text-[10px] font-medium">Slot {form.aboutImages.length + i + 1}</span>
                           </div>
                         ))}
                       </div>
@@ -1771,7 +1705,7 @@ export default function EditorPage() {
                           onClick={() => aboutInputRef.current?.click()}
                           disabled={uploading !== null || form.aboutImages.length >= 4}
                           variant="ghost"
-                          className="px-4 py-2 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-2 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           {uploading?.field === "about" ? (
                             <span className="inline-flex items-center gap-2">
@@ -1786,7 +1720,12 @@ export default function EditorPage() {
                                   ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
                                   : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
                             </span>
-                          ) : "+ Add Media"}
+                          ) : (
+                            <span className="flex items-center gap-1.5">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                              Add Media
+                            </span>
+                          )}
                         </Button>
                         <input
                           ref={aboutInputRef}
@@ -1839,231 +1778,215 @@ export default function EditorPage() {
                             onClick={() => setMediaPickerTarget({ type: "about" })}
                             disabled={form.aboutImages.length >= 4}
                             variant="ghost"
-                            className="px-4 py-2 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 bg-[#5A45F9]/15 hover:bg-[#5A45F9]/25 text-[#8B7BFF] rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-[#5A45F9]/20"
                           >
-                            Select from media
+                            <span className="flex items-center gap-1.5">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                              Select from media
+                            </span>
                           </Button>
                         )}
                       </div>
-                      <p className="text-xs text-white/30 mt-1">
-                        Only displayed in the About tab. Max 4 photos.
-                      </p>
                     </div>
+                  </div>
 
-                    {/* Country Images */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm text-white/60 block">
-                          Country Images
-                        </label>
-                        <BulkUploadModal
-                          onUploadComplete={(results) => {
-                            setForm(prev => {
-                              const newCountryImages = [...prev.countryImages];
-                              results.forEach(({ countryCode, urls }) => {
-                                const existingIndex = newCountryImages.findIndex(c => c.countryCode === countryCode);
-                                if (existingIndex >= 0) {
-                                  newCountryImages[existingIndex] = {
-                                    ...newCountryImages[existingIndex],
-                                    images: [...newCountryImages[existingIndex].images, ...urls]
-                                  };
-                                } else {
-                                  newCountryImages.push({
-                                    countryCode,
-                                    images: urls
-                                  });
-                                }
-                              });
-                              return { ...prev, countryImages: newCountryImages };
-                            });
-                            showToast("Bulk upload completed successfully!");
-                          }}
-                        />
+                  {/* ── Country Images Section ── */}
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#1c212c] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/25 to-orange-500/10 flex items-center justify-center">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-[15px] font-semibold text-white">Country Images</h3>
+                          <p className="text-xs text-white/40">{form.countryImages.length} {form.countryImages.length === 1 ? 'country' : 'countries'} with media</p>
+                        </div>
                       </div>
-                      <div className="space-y-2 mb-2">
-                        {form.countryImages.map((ci, idx) => {
-                          const country = COUNTRY_LIST.find((c) => c.code === ci.countryCode);
-                          return (
-                            <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-1.5">
-                                  {country && (
-                                    <img
-                                      src={`/flags/${ci.countryCode}.svg`}
-                                      alt={country.name}
-                                      className="w-4 h-3 rounded-sm object-cover"
-                                    />
-                                  )}
-                                  <div className="flex flex-col gap-0.5 ml-2">
-                                    <span className="text-sm text-white font-medium leading-none">{country?.name || ci.countryCode}</span>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
-                                      {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
-                                    </div>
+                      <BulkUploadModal
+                        onUploadComplete={(results) => {
+                          setForm(prev => {
+                            const newCountryImages = [...prev.countryImages];
+                            results.forEach(({ countryCode, urls }) => {
+                              const existingIndex = newCountryImages.findIndex(c => c.countryCode === countryCode);
+                              if (existingIndex >= 0) {
+                                newCountryImages[existingIndex] = {
+                                  ...newCountryImages[existingIndex],
+                                  images: [...newCountryImages[existingIndex].images, ...urls]
+                                };
+                              } else {
+                                newCountryImages.push({
+                                  countryCode,
+                                  images: urls
+                                });
+                              }
+                            });
+                            return { ...prev, countryImages: newCountryImages };
+                          });
+                          showToast("Bulk upload completed successfully!");
+                        }}
+                      />
+                    </div>
+                    <div className="p-5 space-y-4">
+                      {form.countryImages.map((ci, idx) => {
+                        const country = COUNTRY_LIST.find((c) => c.code === ci.countryCode);
+                        const countryImgUrls = ci.images.map((u: any) => typeof u === 'string' ? u : u.url);
+                        return (
+                          <div key={idx} className="rounded-xl bg-[#0a0e16] border border-[#1c212c] overflow-hidden hover:border-[#1f2735] transition-colors">
+                            {/* Country header */}
+                            <div className="px-4 py-3 flex items-center justify-between border-b border-[#1c212c]/60 bg-gradient-to-r from-white/[0.02] to-transparent">
+                              <div className="flex items-center gap-3">
+                                {country && (
+                                  <img
+                                    src={`/flags/${ci.countryCode}.svg`}
+                                    alt={country.name}
+                                    className="w-6 h-4 rounded-sm object-cover shadow-sm"
+                                  />
+                                )}
+                                <div>
+                                  <span className="text-sm text-white font-semibold">{country?.name || ci.countryCode}</span>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[11px] text-white/35">
+                                      {ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos
+                                    </span>
+                                    {ci.updated_at && <span className="text-[11px] text-white/25">• {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <label className="px-2 py-1 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-md text-xs font-medium transition-colors cursor-pointer whitespace-nowrap flex items-center gap-2">
-                                    {uploading?.field === "country" && uploading?.idx === idx ? (
-                                      <span className="inline-flex items-center gap-1.5">
-                                        {uploading.stage === "done" ? (
-                                          <span className="text-emerald-400">✓</span>
-                                        ) : (
-                                          <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
-                                        )}
-                                        {uploading.stage === "processing"
-                                          ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                          : uploading.stage === "uploading"
-                                            ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
-                                            : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
-                                      </span>
-                                    ) : "+ Add Media"}
-                                    <input
-                                      type="file"
-                                      accept="image/jpeg, image/png, image/webp, image/avif"
-                                      multiple
-                                      className="hidden"
-                                      onChange={async (e) => {
-                                        const files = Array.from(e.target.files ?? []);
-                                        if (files.length === 0) return;
-                                        e.target.value = "";
-                                        const urls: string[] = [];
-                                        for (let fi = 0; fi < files.length; fi++) {
-                                          const file = files[fi];
-                                          const batch = { current: fi + 1, total: files.length };
-                                          if (file.type.startsWith("video/")) {
-                                            const url = await handleVideoUpload(file, "country", idx, batch);
-                                            if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                          } else {
-                                            const url = await handleImageUpload(file, "country", idx, batch);
-                                            if (url) urls.push(typeof url === 'string' ? url : url.url);
-                                          }
-                                        }
-                                        if (urls.length > 0) {
-                                          const newCountryImages = form.countryImages.map((c, i) =>
-                                            i === idx ? { ...c, images: [...c.images, ...urls] } : c
-                                          );
-                                          const newForm = { ...form, countryImages: newCountryImages };
-                                          setForm(newForm);
-                                          saveFormState(newForm);
-                                        }
-                                      }}
-                                    />
-
-                                  </label>
-                                  {canPickFromMedia && (
-                                    <Button
-                                      type="button"
-                                      onClick={() => setMediaPickerTarget({ type: "country", idx })}
-                                      variant="ghost"
-                                      className="px-2 py-1 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-md text-xs font-medium whitespace-nowrap"
-                                    >
-                                      Select from media
-                                    </Button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <label className="px-3 py-1.5 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5">
+                                  {uploading?.field === "country" && uploading?.idx === idx ? (
+                                    <span className="inline-flex items-center gap-1.5">
+                                      {uploading.stage === "done" ? (
+                                        <span className="text-emerald-400">✓</span>
+                                      ) : (
+                                        <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                                      )}
+                                      {uploading.stage === "processing"
+                                        ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                        : uploading.stage === "uploading"
+                                          ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                          : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                      Add Media
+                                    </>
                                   )}
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg, image/png, image/webp, image/avif"
+                                    multiple
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const files = Array.from(e.target.files ?? []);
+                                      if (files.length === 0) return;
+                                      e.target.value = "";
+                                      const urls: string[] = [];
+                                      for (let fi = 0; fi < files.length; fi++) {
+                                        const file = files[fi];
+                                        const batch = { current: fi + 1, total: files.length };
+                                        if (file.type.startsWith("video/")) {
+                                          const url = await handleVideoUpload(file, "country", idx, batch);
+                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                        } else {
+                                          const url = await handleImageUpload(file, "country", idx, batch);
+                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                        }
+                                      }
+                                      if (urls.length > 0) {
+                                        const newCountryImages = form.countryImages.map((c, i) =>
+                                          i === idx ? { ...c, images: [...c.images, ...urls] } : c
+                                        );
+                                        const newForm = { ...form, countryImages: newCountryImages };
+                                        setForm(newForm);
+                                        saveFormState(newForm);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                                {canPickFromMedia && (
                                   <Button
                                     type="button"
-                                    onClick={() =>
-                                      setForm((prev) => ({
-                                        ...prev,
-                                        countryImages: prev.countryImages.filter((_, i) => i !== idx),
-                                      }))
-                                    }
+                                    onClick={() => setMediaPickerTarget({ type: "country", idx })}
                                     variant="ghost"
-                                    className="p-1 hover:bg-red-500/20 rounded-md text-white/40 hover:text-red-400 transition-colors cursor-pointer text-xs"
+                                    className="px-3 py-1.5 bg-[#5A45F9]/15 hover:bg-[#5A45F9]/25 text-[#8B7BFF] rounded-lg text-xs font-medium border border-[#5A45F9]/20 transition-colors"
                                   >
-                                    ✕
+                                    Select from media
                                   </Button>
-                                </div>
+                                )}
+                                <Button
+                                  type="button"
+                                  onClick={() =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      countryImages: prev.countryImages.filter((_, i) => i !== idx),
+                                    }))
+                                  }
+                                  variant="ghost"
+                                  className="p-1.5 hover:bg-red-500/20 rounded-lg text-white/30 hover:text-red-400 transition-colors cursor-pointer"
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </Button>
                               </div>
-                              <div className="flex flex-wrap gap-2">
-                                {ci.images.map((imgEntry: any, imgIdx: number) => {
-                                  const imgUrl = typeof imgEntry === "string" ? imgEntry : imgEntry.url;
-                                  const isVid = /\.(mp4|mov|webm|m4v)$/i.test(imgUrl);
-                                  return (
-                                    <div key={imgIdx} className="relative group w-16 h-12 shrink-0">
-                                      <div className="w-full h-full rounded-md overflow-hidden bg-white/5">
-                                        {isVid ? (
-                                          <>
-                                            <video
-                                              muted
-                                              playsInline
-                                              loop
-                                              preload="metadata"
-                                              className="w-full h-full object-cover"
-                                              onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
-                                              onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                              onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
-                                            >
-                                              <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
-                                              <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
-                                            </video>
-                                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
-                                              <span className="text-white text-[16px] drop-shadow">▶</span>
-                                            </div>
-                                          </>
-                                        ) : (
-                                          <LoadedImage
-                                            src={toLandingAssetUrl(imgUrl)}
-                                            thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
-                                            alt={`${country?.name || ci.countryCode} ${imgIdx + 1}`}
-                                            containerClassName="w-full h-full absolute inset-0"
-                                            className="w-full h-full object-cover"
-                                          />
-                                        )}
-                                        {ci.coverPhoto === imgUrl && (
-                                          <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
-                                        )}
-                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setForm((prev) => ({
-                                                ...prev,
-                                                countryImages: prev.countryImages.map((c, i) =>
-                                                  i === idx ? { ...c, coverPhoto: imgUrl } : c
-                                                ),
-                                              }));
-                                            }}
-                                            className="px-2 py-1 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
-                                          >
-                                            Set Cover
-                                          </button>
-                                        </div>
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          deleteCountryMedia(idx, imgIdx);
-                                        }}
-                                        className="absolute -top-1.5 -right-1.5 z-20 w-4 h-4 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-[#1c212c]"
-                                      >
-                                        ✕
-                                      </button>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <Textarea
-                                placeholder={`About ${country?.name || ci.countryCode}...`}
-                                value={ci.about || ""}
-                                onChange={(e) =>
+                            </div>
+                            {/* Sortable image grid */}
+                            <div className="p-4">
+                              <SortableImageGrid
+                                images={countryImgUrls}
+                                coverPhoto={ci.coverPhoto}
+                                onReorder={(newImages) => {
                                   setForm((prev) => ({
                                     ...prev,
                                     countryImages: prev.countryImages.map((c, i) =>
-                                      i === idx ? { ...c, about: e.target.value } : c
+                                      i === idx ? { ...c, images: newImages } : c
                                     ),
-                                  }))
-                                }
-                                className="bg-[#000000] border border-[#20242d] text-white min-h-[80px]"
+                                  }));
+                                }}
+                                onRemove={(imgIdx) => deleteCountryMedia(idx, imgIdx)}
+                                onSetCover={(url) => {
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    countryImages: prev.countryImages.map((c, i) =>
+                                      i === idx ? { ...c, coverPhoto: url } : c
+                                    ),
+                                  }));
+                                }}
+                                onImageClick={(imgIdx) => {
+                                  setLightbox({
+                                    items: countryImgUrls.map((u, j) => ({
+                                      url: toLandingAssetUrl(u),
+                                      label: `${country?.name || ci.countryCode} — Photo ${j + 1}`,
+                                    })),
+                                    index: imgIdx,
+                                  });
+                                }}
                               />
+                              <div className="mt-4">
+                                <Textarea
+                                  placeholder={`About ${country?.name || ci.countryCode}...`}
+                                  value={ci.about || ""}
+                                  onChange={(e) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      countryImages: prev.countryImages.map((c, i) =>
+                                        i === idx ? { ...c, about: e.target.value } : c
+                                      ),
+                                    }))
+                                  }
+                                  className="bg-[#080b12] border border-[#1c212c] text-white min-h-[80px] rounded-xl focus:border-[#5A45F9] transition-colors"
+                                />
+                              </div>
                             </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex gap-2 items-end">
+                          </div>
+                        );
+                      })}
+                      {/* Add country */}
+                      <div className="flex gap-2 items-end pt-2">
                         <div className="flex-1">
                           <CountrySelect
                             label=""
@@ -2090,38 +2013,55 @@ export default function EditorPage() {
                             }
                             setPendingCountryCode("");
                           }}
-                          className="px-3 py-2.5 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                          className="px-4 py-2.5 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-1.5"
                         >
-                          + Add Country
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          Add Country
                         </button>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Collection Images */}
-                    <div>
-                      <label className="text-sm text-white/60 block mb-2">
-                        Collection Images
-                      </label>
-                      <div className="space-y-2 mb-2">
-                        {(form.collectionImages || []).map((ci, idx) => (
-                          <div key={idx} className="bg-white/5 rounded-lg p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1.5">
-                                <div className="flex flex-col gap-0.5 ml-2">
-                                  <span className="text-sm text-white font-medium leading-none">{ci.title}</span>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[0.65rem] text-white/40">({ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos)</span>
-                                    {ci.updated_at && <span className="text-[0.65rem] text-white/30">• Updated {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
-                                  </div>
+                  {/* ── Collection Images Section ── */}
+                  <div className="rounded-2xl border border-[#1c212c] bg-[#12161f] overflow-hidden">
+                    <div className="px-5 py-4 border-b border-[#1c212c] flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500/25 to-rose-500/10 flex items-center justify-center">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="3" width="7" height="7"/>
+                            <rect x="14" y="3" width="7" height="7"/>
+                            <rect x="14" y="14" width="7" height="7"/>
+                            <rect x="3" y="14" width="7" height="7"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-[15px] font-semibold text-white">Collections</h3>
+                          <p className="text-xs text-white/40">{(form.collectionImages || []).length} {(form.collectionImages || []).length === 1 ? 'collection' : 'collections'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-5 space-y-4">
+                      {(form.collectionImages || []).map((ci, idx) => {
+                        const collImgUrls = ci.images.map((u: any) => typeof u === 'string' ? u : u.url);
+                        return (
+                          <div key={idx} className="rounded-xl bg-[#0a0e16] border border-[#1c212c] overflow-hidden hover:border-[#1f2735] transition-colors">
+                            <div className="px-4 py-3 flex items-center justify-between border-b border-[#1c212c]/60 bg-gradient-to-r from-white/[0.02] to-transparent">
+                              <div>
+                                <span className="text-sm text-white font-semibold">{ci.title}</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  <span className="text-[11px] text-white/35">
+                                    {ci.images.filter((u: any) => !(typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} photos · {ci.images.filter((u: any) => (typeof u === 'string' ? u : u.url).match(/\.(mp4|mov|webm|m4v)$/i)).length} videos
+                                  </span>
+                                  {ci.updated_at && <span className="text-[11px] text-white/25">• {new Date(ci.updated_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2 flex-wrap">
+                              <div className="flex items-center gap-2">
                                 {canPickFromMedia && (
                                   <Button
                                     type="button"
                                     onClick={() => setMediaPickerTarget({ type: "collection", idx })}
                                     variant="ghost"
-                                    className="px-2 py-1 bg-[#5A45F9]/20 hover:bg-[#5A45F9]/30 text-[#8B7BFF] rounded-md text-xs font-medium whitespace-nowrap"
+                                    className="px-3 py-1.5 bg-[#5A45F9]/15 hover:bg-[#5A45F9]/25 text-[#8B7BFF] rounded-lg text-xs font-medium border border-[#5A45F9]/20 transition-colors"
                                   >
                                     Select from media
                                   </Button>
@@ -2135,114 +2075,83 @@ export default function EditorPage() {
                                     }))
                                   }
                                   variant="ghost"
-                                  className="p-1 hover:bg-red-500/20 rounded-md text-white/40 hover:text-red-400 transition-colors cursor-pointer text-xs"
+                                  className="p-1.5 hover:bg-red-500/20 rounded-lg text-white/30 hover:text-red-400 transition-colors cursor-pointer"
                                 >
-                                  ✕
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 </Button>
                               </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
-                              {ci.images.map((imgEntry: any, imgIdx: number) => {
-                                const imgUrl = typeof imgEntry === "string" ? imgEntry : imgEntry.url;
-                                const isVid = /\.(mp4|mov|webm|m4v)$/i.test(imgUrl);
-                                return (
-                                  <div key={imgIdx} className="relative group w-16 h-12 rounded-md overflow-hidden bg-white/5 shrink-0">
-                                    {isVid ? (
-                                      <>
-                                        <video
-                                          muted
-                                          playsInline
-                                          loop
-                                          preload="metadata"
-                                          className="w-full h-full object-cover"
-                                          onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
-                                          onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                                          onClick={(e) => { const v = e.currentTarget; if (v.paused) v.play().catch(() => { }); else { v.pause(); v.currentTime = 0; } }}
-                                        >
-                                          <source src={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))} type="video/webm" />
-                                          <source src={toLandingAssetUrl(imgUrl)} type="video/mp4" />
-                                        </video>
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity">
-                                          <span className="text-white text-[16px] drop-shadow">▶</span>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <LoadedImage
-                                        src={toLandingAssetUrl(imgUrl)}
-                                        thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(imgUrl))}
-                                        alt={`${ci.title} ${imgIdx + 1}`}
-                                        containerClassName="w-full h-full absolute inset-0"
-                                        className="w-full h-full object-cover"
-                                      />
-                                    )}
-                                    {ci.coverPhoto === imgUrl && (
-                                      <div className="absolute top-1 left-1 z-20 bg-[#5A45F9] text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm pointer-events-none shadow-sm">COVER</div>
-                                    )}
-                                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1 z-10">
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setForm((prev) => ({
-                                            ...prev,
-                                            collectionImages: prev.collectionImages.map((c, i) =>
-                                              i === idx ? { ...c, coverPhoto: imgUrl } : c
-                                            ),
-                                          }));
-                                        }}
-                                        className="px-1.5 py-0.5 bg-white/20 hover:bg-[#5A45F9] text-white text-[9px] font-medium rounded-sm transition-colors"
-                                      >
-                                        Set Cover
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setForm((prev) => ({
-                                            ...prev,
-                                            collectionImages: prev.collectionImages.map((c, i) =>
-                                              i === idx ? { ...c, images: c.images.filter((_, j) => j !== imgIdx) } : c
-                                            ),
-                                          }));
-                                        }}
-                                        className="w-5 h-5 bg-black/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer text-[9px] leading-none border border-[#1c212c]"
-                                      >
-                                        ✕
-                                      </button>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                            <div className="p-4">
+                              <SortableImageGrid
+                                images={collImgUrls}
+                                coverPhoto={ci.coverPhoto}
+                                onReorder={(newImages) => {
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    collectionImages: prev.collectionImages.map((c, i) =>
+                                      i === idx ? { ...c, images: newImages } : c
+                                    ),
+                                  }));
+                                }}
+                                onRemove={(imgIdx) => {
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    collectionImages: prev.collectionImages.map((c, i) =>
+                                      i === idx ? { ...c, images: c.images.filter((_, j) => j !== imgIdx) } : c
+                                    ),
+                                  }));
+                                }}
+                                onSetCover={(url) => {
+                                  setForm((prev) => ({
+                                    ...prev,
+                                    collectionImages: prev.collectionImages.map((c, i) =>
+                                      i === idx ? { ...c, coverPhoto: url } : c
+                                    ),
+                                  }));
+                                }}
+                                onImageClick={(imgIdx) => {
+                                  setLightbox({
+                                    items: collImgUrls.map((u, j) => ({
+                                      url: toLandingAssetUrl(u),
+                                      label: `${ci.title} — Photo ${j + 1}`,
+                                    })),
+                                    index: imgIdx,
+                                  });
+                                }}
+                              />
+                              <div className="mt-4 space-y-3">
+                                <Textarea
+                                  placeholder={`About ${ci.title}...`}
+                                  value={ci.about || ""}
+                                  onChange={(e) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      collectionImages: prev.collectionImages.map((c, i) =>
+                                        i === idx ? { ...c, about: e.target.value } : c
+                                      ),
+                                    }))
+                                  }
+                                  className="bg-[#080b12] border border-[#1c212c] text-white min-h-[80px] rounded-xl focus:border-[#5A45F9] transition-colors"
+                                />
+                                <MultiCountrySelect
+                                  label="Countries for this collection"
+                                  value={ci.countryCodes || []}
+                                  onChange={(codes) =>
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      collectionImages: prev.collectionImages.map((c, i) =>
+                                        i === idx ? { ...c, countryCodes: codes } : c
+                                      ),
+                                    }))
+                                  }
+                                />
+                              </div>
                             </div>
-                            <Textarea
-                              placeholder={`About ${ci.title}...`}
-                              value={ci.about || ""}
-                              onChange={(e) =>
-                                setForm((prev) => ({
-                                  ...prev,
-                                  collectionImages: prev.collectionImages.map((c, i) =>
-                                    i === idx ? { ...c, about: e.target.value } : c
-                                  ),
-                                }))
-                              }
-                              className="bg-[#000000] border border-[#20242d] text-white min-h-[80px]"
-                            />
-                            <MultiCountrySelect
-                              label="Countries for this collection"
-                              value={ci.countryCodes || []}
-                              onChange={(codes) =>
-                                setForm((prev) => ({
-                                  ...prev,
-                                  collectionImages: prev.collectionImages.map((c, i) =>
-                                    i === idx ? { ...c, countryCodes: codes } : c
-                                  ),
-                                }))
-                              }
-                            />
                           </div>
-                        ))}
-                      </div>
-                      <div className="flex gap-2 items-end">
+                        );
+                      })}
+                      {/* Add collection */}
+                      <div className="flex gap-2 items-end pt-2">
                         <div className="flex-1">
                           <input
                             type="text"
@@ -2264,7 +2173,7 @@ export default function EditorPage() {
                               }
                             }}
                             placeholder="Collection title..."
-                            className="w-full px-3 py-2.5 bg-[#000000] border border-[#20242d] rounded-lg text-sm text-white placeholder:text-[#6f798b] focus:outline-none focus:border-[#5A45F9] transition-colors"
+                            className="w-full px-3 py-2.5 bg-[#080b12] border border-[#1c212c] rounded-lg text-sm text-white placeholder:text-[#6f798b] focus:outline-none focus:border-[#5A45F9] transition-colors"
                           />
                         </div>
                         <button
@@ -2282,13 +2191,24 @@ export default function EditorPage() {
                             }));
                             setPendingCollectionTitle("");
                           }}
-                          className="px-3 py-2.5 bg-[#1c212c] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                          className="px-4 py-2.5 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-1.5"
                         >
-                          + Add Collection
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          Add Collection
                         </button>
                       </div>
                     </div>
                   </div>
+
+                  {/* Lightbox */}
+                  {lightbox && (
+                    <Lightbox
+                      items={lightbox.items}
+                      currentIndex={lightbox.index}
+                      onClose={() => setLightbox(null)}
+                      onNavigate={(index) => setLightbox(prev => prev ? { ...prev, index } : null)}
+                    />
+                  )}
                 </div>
               )}
 
