@@ -2335,30 +2335,6 @@ export default function EditorPage() {
                     }
                   />
 
-                  {/* Homeland */}
-                  <div className="space-y-2">
-                    <CountrySelect
-                      label="Homeland Country"
-                      value={form.homelandFlagCode}
-                      onChange={(code, name) =>
-                        setForm((prev) => ({
-                          ...prev,
-                          homelandFlagCode: code,
-                          // Pre-fill city text if empty, otherwise keep what admin typed
-                          homeland: prev.homeland || name,
-                        }))
-                      }
-                    />
-                    <Input
-                      type="text"
-                      value={form.homeland || ""}
-                      onChange={(e) =>
-                        setForm((prev) => ({ ...prev, homeland: e.target.value }))
-                      }
-                      placeholder="City, e.g. Bogota"
-                      className="bg-[#000000] border border-[#20242d] placeholder:text-[#6f798b] focus:border-[#5A45F9]"
-                    />
-                  </div>
 
                   {/* Currently In */}
                   <div className="space-y-2">
