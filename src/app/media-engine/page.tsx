@@ -157,6 +157,39 @@ export default function MediaEngineDashboard() {
     setTimeout(() => setRetryMessage(null), 5000);
   };
 
+  const deleteItem = async (jobId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this asset? This cannot be undone.")) return;
+    try {
+      setRetryMessage(null);
+      const res = await fetch(`/api/media/${jobId}/hard_delete/`, { method: "DELETE" });
+      if (res.ok) {
+        setRetryMessage("Asset permanently deleted.");
+        fetchJobs(page);
+      } else {
+        const d = await res.json();
+        setRetryMessage(d.error || "Failed to delete asset.");
+      }
+    } catch { setRetryMessage("Network error."); }
+    setTimeout(() => setRetryMessage(null), 5000);
+  };
+
+  const emptyRecycleBin = async () => {
+    if (!confirm("Are you sure you want to empty the recycle bin? All items will be permanently deleted.")) return;
+    try {
+      setRetryMessage(null);
+      const res = await fetch(`/api/media/empty_recycle_bin/`, { method: "DELETE" });
+      if (res.ok) {
+        const d = await res.json();
+        setRetryMessage(d.status || "Recycle bin emptied.");
+        fetchJobs(1);
+      } else {
+        const d = await res.json();
+        setRetryMessage(d.error || "Failed to empty recycle bin.");
+      }
+    } catch { setRetryMessage("Network error."); }
+    setTimeout(() => setRetryMessage(null), 5000);
+  };
+
   useEffect(() => {
     const timeout = setTimeout(() => {
       fetchStats();
@@ -331,11 +364,22 @@ export default function MediaEngineDashboard() {
               ))}
             </div>
 
-            {!loadingJobs && (
-              <div className="text-sm font-medium text-white/40">
-                Showing <span className="text-white/80">{filteredJobs.length}</span> images
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {activeTab === "RECYCLE_BIN" && !loadingJobs && filteredJobs.length > 0 && (
+                <button
+                  onClick={emptyRecycleBin}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 transition-all flex items-center gap-1.5"
+                >
+                  <span className="material-symbols-rounded text-[16px]">delete_forever</span>
+                  Empty Bin
+                </button>
+              )}
+              {!loadingJobs && (
+                <div className="text-sm font-medium text-white/40">
+                  Showing <span className="text-white/80">{filteredJobs.length}</span> images
+                </div>
+              )}
+            </div>
           </div>
 
           {loadingJobs ? (
@@ -417,15 +461,27 @@ export default function MediaEngineDashboard() {
                     )}
                   </div>
                   
-                  {/* Quick Action (Retry/Restore) */}
+                  {/* Quick Actions (Retry/Restore/Delete) */}
                   {["FAILURE", "ERROR", "RETRYING", "DELETED"].includes(job.status) && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); retryJob(job.id, job.deleted); }}
-                      className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center shadow-lg backdrop-blur-md transition-colors"
-                      title={job.deleted ? "Restore from Recycle Bin" : "Retry processing"}
-                    >
-                      <span className="material-symbols-rounded text-[16px]">{job.deleted ? "restore" : "replay"}</span>
-                    </button>
+                    <div className="absolute top-3 right-3 z-20 flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); retryJob(job.id, job.deleted); }}
+                        className={`w-8 h-8 rounded-full text-white flex items-center justify-center shadow-lg backdrop-blur-md transition-colors ${job.deleted ? "bg-green-500/80 hover:bg-green-500" : "bg-red-500/80 hover:bg-red-500"}`}
+                        title={job.deleted ? "Restore from Recycle Bin" : "Retry processing"}
+                      >
+                        <span className="material-symbols-rounded text-[16px]">{job.deleted ? "restore" : "replay"}</span>
+                      </button>
+                      
+                      {job.deleted && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteItem(job.id); }}
+                          className="w-8 h-8 rounded-full bg-red-500/80 hover:bg-red-500 text-white flex items-center justify-center shadow-lg backdrop-blur-md transition-colors"
+                          title="Permanently Delete"
+                        >
+                          <span className="material-symbols-rounded text-[16px]">delete_forever</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
