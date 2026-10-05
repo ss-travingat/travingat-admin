@@ -283,6 +283,19 @@ export default function MediaEngineDashboard() {
               <span className="hidden sm:inline">Scan Unoptimized</span>
             </button>
             <button
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/media/scan-missing-thumbnails", { method: "POST" });
+                  if (res.ok) alert("Scan for missing thumbnails queued successfully!");
+                  else alert("Failed to queue scan.");
+                } catch { alert("Network error."); }
+              }}
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-purple-500/20 shrink-0"
+            >
+              <span className="material-symbols-rounded text-[18px]">image_search</span>
+              <span className="hidden sm:inline">Scan Thumbnails</span>
+            </button>
+            <button
               onClick={refresh}
               disabled={refreshing}
               className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-white/10 active:bg-white/5 disabled:opacity-50 rounded-xl text-white/70 transition-colors border border-white/10 shrink-0"
