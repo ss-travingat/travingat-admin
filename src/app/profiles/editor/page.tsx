@@ -1550,7 +1550,17 @@ export default function EditorPage() {
                               </span>
                             )}
                           </Button>
-                          <span className="text-xs text-white/25">PNG, JPG, WebP up to 20MB</span>
+                          {form.images.cover && (
+                            <Button
+                              type="button"
+                              onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, cover: "" } }))}
+                              variant="ghost"
+                              className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Remove
+                            </Button>
+                          )}
+                          <span className="text-xs text-white/25 ml-2">PNG, JPG, WebP up to 20MB</span>
                           <input
                             ref={coverInputRef}
                             type="file"
@@ -1600,7 +1610,8 @@ export default function EditorPage() {
                             ) */}
                           </div>
                           <div className="flex flex-col gap-2">
-                            <Button
+                            <div className="flex items-center gap-2">
+                              <Button
                               type="button"
                               onClick={() => avatarInputRef.current?.click()}
                               disabled={uploading !== null}
@@ -1623,6 +1634,17 @@ export default function EditorPage() {
                                 </span>
                               )}
                             </Button>
+                            {form.images.avatar && (
+                              <Button
+                                type="button"
+                                onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, avatar: "" } }))}
+                                variant="ghost"
+                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Remove
+                              </Button>
+                            )}
+                          </div>
                             <input
                               ref={avatarInputRef}
                               type="file"

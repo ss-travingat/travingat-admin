@@ -82,11 +82,11 @@ function SortableItem({
         )}
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/40 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
 
       {/* Drag handle */}
       <div
-        className="absolute top-2 left-2 p-1.5 rounded-lg bg-black/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-white/70 hover:text-white"
+        className="absolute top-2 left-2 p-1.5 rounded-lg bg-black/40 backdrop-blur-sm opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-white/70 hover:text-white z-20"
         {...attributes}
         {...listeners}
       >
@@ -94,13 +94,13 @@ function SortableItem({
       </div>
 
       {isCover && (
-        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-[#5A45F9] text-[10px] font-bold tracking-wider uppercase text-white shadow-lg pointer-events-none">
+        <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-[#5A45F9] text-[10px] font-bold tracking-wider uppercase text-white shadow-lg pointer-events-none z-20">
           Cover
         </div>
       )}
 
       {/* Actions */}
-      <div className="absolute bottom-2 inset-x-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute bottom-2 inset-x-2 flex items-center justify-between opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-20">
         {onSetCover ? (
           <button
             type="button"
