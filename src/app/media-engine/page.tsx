@@ -272,7 +272,7 @@ export default function MediaEngineDashboard() {
             <button
               onClick={async () => {
                 try {
-                  const res = await fetch("/api/media/scan-unoptimized", { method: "POST" });
+                  const res = await fetch("/api/media/scan-unoptimized/", { method: "POST" });
                   if (res.ok) alert("Scan queued successfully!");
                   else alert("Failed to queue scan.");
                 } catch { alert("Network error."); }
@@ -285,7 +285,7 @@ export default function MediaEngineDashboard() {
             <button
               onClick={async () => {
                 try {
-                  const res = await fetch("/api/media/scan-missing-thumbnails", { method: "POST" });
+                  const res = await fetch("/api/media/scan-missing-thumbnails/", { method: "POST" });
                   if (res.ok) alert("Scan for missing thumbnails queued successfully!");
                   else alert("Failed to queue scan.");
                 } catch { alert("Network error."); }
