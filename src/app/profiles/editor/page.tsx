@@ -1346,19 +1346,19 @@ export default function EditorPage() {
                           if (disabled) return;
                           const { type, idx } = mediaPickerTarget;
                           if (type === "country" && typeof idx === "number") {
-                            setForm((prev) => ({
+                            setForm((prev: any) => ({
                               ...prev,
-                              countryImages: prev.countryImages.map((c, ci) =>
-                                ci === idx ? { ...c, images: isAlreadyAdded ? c.images.filter(u => u !== url) : [...c.images, url] } : c
+                              countryImages: prev.countryImages.map((c: any, ci: number) =>
+                                ci === idx ? { ...c, images: isAlreadyAdded ? c.images.filter((u: any) => extractUrl(u) !== extractUrl(url)) : [...c.images, url] } : c
                               ),
                             }));
                             return;
                           }
 
                           if (type === "collection" && typeof idx === "number") {
-                            setForm((prev) => ({
+                            setForm((prev: any) => ({
                               ...prev,
-                              collectionImages: prev.collectionImages.map((c, ci) =>
+                              collectionImages: prev.collectionImages.map((c: any, ci: number) =>
                                 ci === idx ? {
                                   ...c,
                                   images: isAlreadyAdded
@@ -1372,7 +1372,7 @@ export default function EditorPage() {
 
                           setForm((prev: any) => ({
                             ...prev,
-                            aboutImages: isAlreadyAdded ? prev.aboutImages.filter((u: any) => u !== url) : [...prev.aboutImages, url].slice(0, 4),
+                            aboutImages: isAlreadyAdded ? prev.aboutImages.filter((u: any) => extractUrl(u) !== extractUrl(url)) : [...prev.aboutImages, extractUrl(url)].slice(0, 4),
                           }));
                         }}
                         className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer hover:ring-2 hover:ring-[#5A45F9]"} ${isAlreadyAdded ? "ring-2 ring-warning-500" : ""}`}
@@ -2181,9 +2181,9 @@ export default function EditorPage() {
                                 images={ci.images}
                                 coverPhoto={ci.coverPhoto}
                                 onReorder={(newImages) => {
-                                  setForm((prev) => ({
+                                  setForm((prev: any) => ({
                                     ...prev,
-                                    collectionImages: prev.collectionImages.map((c, i) =>
+                                    collectionImages: prev.collectionImages.map((c: any, i: number) =>
                                       i === idx ? { ...c, images: newImages } : c
                                     ),
                                   }));
