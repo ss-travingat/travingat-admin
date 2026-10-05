@@ -116,10 +116,12 @@ function MultiCountrySelect({
   label,
   value,
   onChange,
+  autoSelected = [],
 }: {
   label: string;
   value: string[];
   onChange: (codes: string[]) => void;
+  autoSelected?: string[];
 }) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -141,7 +143,10 @@ function MultiCountrySelect({
       c.code.toLowerCase().includes(search.toLowerCase())
   );
 
+  const allSelected = Array.from(new Set([...value, ...autoSelected]));
+
   const toggle = (code: string) => {
+    if (autoSelected.includes(code)) return;
     if (value.includes(code)) {
       onChange(value.filter((c) => c !== code));
     } else {
@@ -152,19 +157,19 @@ function MultiCountrySelect({
   return (
     <div ref={ref} className="relative">
       <label className="text-[13px] text-[#b3bccf] font-medium block mb-1.5">
-        {label} <span className="text-white/30">({value.length} selected)</span>
+        {label} <span className="text-white/30">({allSelected.length} selected)</span>
       </label>
       <button
         type="button"
         onClick={() => setOpen(!open)}
         className="w-full px-4 py-2.5 bg-[#000000] border border-[#20242d] rounded-lg text-sm text-left hover:border-white/20 transition-colors cursor-pointer"
       >
-        {value.length > 0 ? (
+        {allSelected.length > 0 ? (
           <div className="flex flex-wrap gap-1">
-            {value.slice(0, 10).map((code) => (
+            {allSelected.slice(0, 10).map((code) => (
               <span
                 key={code}
-                className="inline-flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded text-xs"
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs ${autoSelected.includes(code) ? "bg-[#5A45F9]/20 border border-[#5A45F9]/30" : "bg-white/10"}`}
               >
                 <img
                   src={`/flags/${code}.svg`}
@@ -174,9 +179,9 @@ function MultiCountrySelect({
                 {code}
               </span>
             ))}
-            {value.length > 10 && (
+            {allSelected.length > 10 && (
               <span className="text-white/30 text-xs py-0.5">
-                +{value.length - 10} more
+                +{allSelected.length - 10} more
               </span>
             )}
           </div>
@@ -202,18 +207,18 @@ function MultiCountrySelect({
                 key={c.code}
                 type="button"
                 onClick={() => toggle(c.code)}
-                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 hover:bg-white/10 transition-colors cursor-pointer ${value.includes(c.code)
+                className={`w-full px-4 py-2 text-left text-sm flex items-center gap-2 transition-colors ${autoSelected.includes(c.code) ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:bg-white/10"} ${allSelected.includes(c.code)
                   ? "bg-[#5A45F9]/20 text-white"
                   : "text-white/70"
                   }`}
               >
                 <div
-                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${value.includes(c.code)
+                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${allSelected.includes(c.code)
                     ? "bg-[#5A45F9] border-[#5A45F9]"
                     : "border-white/20"
                     }`}
                 >
-                  {value.includes(c.code) && (
+                  {allSelected.includes(c.code) && (
                     <span className="text-white text-xs">✓</span>
                   )}
                 </div>
@@ -2226,6 +2231,7 @@ export default function EditorPage() {
                                 <MultiCountrySelect
                                   label="Countries for this collection"
                                   value={ci.countryCodes || []}
+                                  autoSelected={Array.from(new Set(ci.images.map((img: any) => typeof img === "string" ? null : img.countryCode).filter(Boolean)))}
                                   onChange={(codes) =>
                                     setForm((prev) => ({
                                       ...prev,
