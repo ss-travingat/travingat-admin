@@ -15,7 +15,7 @@ interface ProfileCropModalProps {
   imageSrc: string;
   type: "cover" | "avatar";
   initialCropData?: any;
-  onSave: (croppedFile: File, cropData: any) => void;
+  onSave: (croppedFile: File, cropData: any) => void | Promise<void>;
   onCancel: () => void;
   onReplace?: () => void;
   onDelete?: () => void;
@@ -97,7 +97,7 @@ export default function ProfileCropModal({
       if (!croppedFile) throw new Error("Failed to crop image");
 
       const finalData = { ...cropState, mediaSize: naturalMediaSize };
-      onSave(croppedFile, finalData);
+      await onSave(croppedFile, finalData);
     } catch (e) {
       console.error(e);
       alert("Failed to save crop.");
