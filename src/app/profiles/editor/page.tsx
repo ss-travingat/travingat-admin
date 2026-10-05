@@ -15,7 +15,7 @@ import SortableImageGrid from "@/components/ui/SortableImageGrid";
 
 interface CountryImage {
   countryCode: string;
-  images: string[];
+  images: (string | { url: string; countryCode?: string })[];
   coverPhoto?: string;
   about?: string;
   updated_at?: string;
@@ -23,7 +23,7 @@ interface CountryImage {
 
 interface CollectionImage {
   title: string;
-  images: string[];
+  images: (string | { url: string; countryCode?: string })[];
   coverPhoto?: string;
   about?: string;
   countryCodes?: string[];
@@ -871,23 +871,23 @@ export default function EditorPage() {
 
   const handleCropSave = async (croppedFile: File, cropData: any) => {
     if (!cropConfig) return;
-    
+
     let url = typeof cropConfig.src === "string" && !cropConfig.file ? cropConfig.src : null;
-    
+
     if (cropConfig.file) {
       const urlOrObj = await handleImageUpload(cropConfig.file, cropConfig.type);
       if (urlOrObj) {
         url = typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url;
       }
     }
-    
+
     if (url) {
       setForm((prev) => ({
         ...prev,
-        images: { 
-          ...prev.images, 
+        images: {
+          ...prev.images,
           [cropConfig.type]: url,
-          [`${cropConfig.type}Crop`]: cropData 
+          [`${cropConfig.type}Crop`]: cropData
         },
       }));
     }
@@ -1315,106 +1315,106 @@ export default function EditorPage() {
                     return true;
                   })
                   .map((url, i) => {
-                  const extractUrl = (img: any) => typeof img === "string" ? img : (img as any).url;
+                    const extractUrl = (img: any) => typeof img === "string" ? img : (img as any).url;
 
-                  const existing = mediaPickerTarget.type === "country"
-                    ? form.countryImages[mediaPickerTarget.idx ?? -1]?.images ?? []
-                    : mediaPickerTarget.type === "collection"
-                      ? form.collectionImages[mediaPickerTarget.idx ?? -1]?.images ?? []
-                      : form.aboutImages;
-                  const existingUrls = existing.map(extractUrl);
+                    const existing = mediaPickerTarget.type === "country"
+                      ? form.countryImages[mediaPickerTarget.idx ?? -1]?.images ?? []
+                      : mediaPickerTarget.type === "collection"
+                        ? form.collectionImages[mediaPickerTarget.idx ?? -1]?.images ?? []
+                        : form.aboutImages;
+                    const existingUrls = existing.map(extractUrl);
 
-                  const isAlreadyAdded = existingUrls.includes(extractUrl(url));
-                  const isVid = /\.(mp4|mov|webm|m4v)$/i.test(extractUrl(url));
-                  const aboutLimitReached = mediaPickerTarget.type === "about" && form.aboutImages.length >= 4;
-                  const videoBlockedForAbout = mediaPickerTarget.type === "about" && isVid;
-                  const disabled = (!isAlreadyAdded && aboutLimitReached) || videoBlockedForAbout;
+                    const isAlreadyAdded = existingUrls.includes(extractUrl(url));
+                    const isVid = /\.(mp4|mov|webm|m4v)$/i.test(extractUrl(url));
+                    const aboutLimitReached = mediaPickerTarget.type === "about" && form.aboutImages.length >= 4;
+                    const videoBlockedForAbout = mediaPickerTarget.type === "about" && isVid;
+                    const disabled = (!isAlreadyAdded && aboutLimitReached) || videoBlockedForAbout;
 
-                  const getCountryForUrl = (mediaUrl: any) => {
-                    const strUrl = extractUrl(mediaUrl);
-                    const match = form.countryImages.find(c => c.images.map(extractUrl).includes(strUrl));
-                    return match?.countryCode;
-                  };
-                  const countryCode = getCountryForUrl(url);
+                    const getCountryForUrl = (mediaUrl: any) => {
+                      const strUrl = extractUrl(mediaUrl);
+                      const match = form.countryImages.find(c => c.images.map(extractUrl).includes(strUrl));
+                      return match?.countryCode;
+                    };
+                    const countryCode = getCountryForUrl(url);
 
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => {
-                        if (disabled) return;
-                        const { type, idx } = mediaPickerTarget;
-                        if (type === "country" && typeof idx === "number") {
-                          setForm((prev) => ({
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => {
+                          if (disabled) return;
+                          const { type, idx } = mediaPickerTarget;
+                          if (type === "country" && typeof idx === "number") {
+                            setForm((prev) => ({
+                              ...prev,
+                              countryImages: prev.countryImages.map((c, ci) =>
+                                ci === idx ? { ...c, images: isAlreadyAdded ? c.images.filter(u => u !== url) : [...c.images, url] } : c
+                              ),
+                            }));
+                            return;
+                          }
+
+                          if (type === "collection" && typeof idx === "number") {
+                            setForm((prev) => ({
+                              ...prev,
+                              collectionImages: prev.collectionImages.map((c, ci) =>
+                                ci === idx ? {
+                                  ...c,
+                                  images: isAlreadyAdded
+                                    ? c.images.filter((u: any) => extractUrl(u) !== extractUrl(url))
+                                    : [...c.images, countryCode ? { url: extractUrl(url), countryCode } : extractUrl(url)]
+                                } : c
+                              ),
+                            }));
+                            return;
+                          }
+
+                          setForm((prev: any) => ({
                             ...prev,
-                            countryImages: prev.countryImages.map((c, ci) =>
-                              ci === idx ? { ...c, images: isAlreadyAdded ? c.images.filter(u => u !== url) : [...c.images, url] } : c
-                            ),
+                            aboutImages: isAlreadyAdded ? prev.aboutImages.filter((u: any) => u !== url) : [...prev.aboutImages, url].slice(0, 4),
                           }));
-                          return;
-                        }
-
-                        if (type === "collection" && typeof idx === "number") {
-                          setForm((prev) => ({
-                            ...prev,
-                            collectionImages: prev.collectionImages.map((c, ci) =>
-                              ci === idx ? { 
-                                ...c, 
-                                images: isAlreadyAdded 
-                                  ? c.images.filter((u: any) => extractUrl(u) !== extractUrl(url)) 
-                                  : [...c.images, countryCode ? { url: extractUrl(url), countryCode } : extractUrl(url)] 
-                              } : c
-                            ),
-                          }));
-                          return;
-                        }
-
-                        setForm((prev) => ({
-                          ...prev,
-                          aboutImages: isAlreadyAdded ? prev.aboutImages.filter(u => u !== url) : [...prev.aboutImages, url].slice(0, 4),
-                        }));
-                      }}
-                      className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer hover:ring-2 hover:ring-[#5A45F9]"} ${isAlreadyAdded ? "ring-2 ring-warning-500" : ""}`}
-                    >
-                      {isVid ? (
-                        <>
-                          <video
-                            muted
-                            playsInline
-                            loop
-                            preload="metadata"
-                            className="w-full h-full object-cover"
-                            onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
-                            onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
-                          >
-                            <source src={getOptimizedMediaUrl(toLandingAssetUrl(url))} type="video/webm" />
-                            <source src={toLandingAssetUrl(url)} type="video/mp4" />
-                          </video>
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity z-10">
-                            <span className="text-white text-[14px] drop-shadow">▶</span>
+                        }}
+                        className={`group relative aspect-square rounded-xl overflow-hidden bg-white/5 transition-all ${disabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer hover:ring-2 hover:ring-[#5A45F9]"} ${isAlreadyAdded ? "ring-2 ring-warning-500" : ""}`}
+                      >
+                        {isVid ? (
+                          <>
+                            <video
+                              muted
+                              playsInline
+                              loop
+                              preload="metadata"
+                              className="w-full h-full object-cover"
+                              onMouseEnter={(e) => e.currentTarget.play().catch(() => { })}
+                              onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                            >
+                              <source src={getOptimizedMediaUrl(toLandingAssetUrl(url))} type="video/webm" />
+                              <source src={toLandingAssetUrl(url)} type="video/mp4" />
+                            </video>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-0 transition-opacity z-10">
+                              <span className="text-white text-[14px] drop-shadow">▶</span>
+                            </div>
+                          </>
+                        ) : (
+                          <LoadedImage src={toLandingAssetUrl(url)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))} alt={`Media ${i + 1}`} containerClassName="w-full h-full absolute inset-0 z-0" className="w-full h-full object-cover" />
+                        )}
+                        {isAlreadyAdded && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
+                            <span className="material-symbols-rounded text-warning-500 text-[40px] drop-shadow-md">check_circle</span>
                           </div>
-                        </>
-                      ) : (
-                        <LoadedImage src={toLandingAssetUrl(url)} thumbnailSrc={getOptimizedMediaUrl(toLandingAssetUrl(url))} alt={`Media ${i + 1}`} containerClassName="w-full h-full absolute inset-0 z-0" className="w-full h-full object-cover" />
-                      )}
-                      {isAlreadyAdded && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
-                          <span className="material-symbols-rounded text-warning-500 text-[40px] drop-shadow-md">check_circle</span>
-                        </div>
-                      )}
-                      {countryCode && (
-                        <div className="absolute top-2 right-2 z-20">
-                          <img
-                            src={`/flags/${countryCode.toUpperCase()}.svg`}
-                            alt={countryCode}
-                            className="h-3.5 w-5 rounded-sm object-cover drop-shadow-md"
-                          />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
+                        )}
+                        {countryCode && (
+                          <div className="absolute top-2 right-2 z-20">
+                            <img
+                              src={`/flags/${countryCode.toUpperCase()}.svg`}
+                              alt={countryCode}
+                              className="h-3.5 w-5 rounded-sm object-cover drop-shadow-md"
+                            />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
               </div>
             </div>
             <button onClick={() => { setMediaPickerTarget(null); saveFormState(form); }} className="mt-4 w-full py-2.5 bg-[#5A45F9] hover:bg-[#4a35e9] rounded-lg text-sm font-medium transition-colors cursor-pointer">
@@ -1521,10 +1521,10 @@ export default function EditorPage() {
                                   onClick={() => setLightbox({ items: [{ url: toLandingAssetUrl(form.images.cover), label: "Cover Image" }], index: 0 })}
                                   className="px-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-xs font-medium rounded-lg transition-colors border border-white/10 cursor-pointer"
                                 >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline mr-1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
                                   Preview
                                 </button>
-                                {/* 
+                                {/*
                                 <button
                                   type="button"
                                   onClick={() => setCropConfig({ src: toLandingAssetUrl(form.images.cover), type: "cover" })}
@@ -1567,7 +1567,7 @@ export default function EditorPage() {
                               </span>
                             ) : (
                               <span className="flex items-center gap-1.5">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
                                 Upload Cover
                               </span>
                             )}
@@ -1612,7 +1612,7 @@ export default function EditorPage() {
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-white/15">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
                                   </svg>
                                 </div>
                               )}
@@ -1649,21 +1649,21 @@ export default function EditorPage() {
                                   </span>
                                 ) : (
                                   <span className="flex items-center gap-1.5">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
                                     Upload Avatar
                                   </span>
                                 )}
                               </button>
-                            {form.images.avatar && (
-                              <button
-                                type="button"
-                                onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, avatar: "" } }))}
-                                className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors"
-                              >
-                                Remove
-                              </button>
-                            )}
-                          </div>
+                              {form.images.avatar && (
+                                <button
+                                  type="button"
+                                  onClick={() => setForm(prev => ({ ...prev, images: { ...prev.images, avatar: "" } }))}
+                                  className="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
                             <input
                               ref={avatarInputRef}
                               type="file"
@@ -1684,8 +1684,8 @@ export default function EditorPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/25 to-emerald-600/10 flex items-center justify-center">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
                           </svg>
                         </div>
                         <div>
@@ -1765,7 +1765,7 @@ export default function EditorPage() {
                             </span>
                           ) : (
                             <span className="flex items-center gap-1.5">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                               Add Media
                             </span>
                           )}
@@ -1824,7 +1824,7 @@ export default function EditorPage() {
                             className="px-4 py-2 bg-[#5A45F9]/15 hover:bg-[#5A45F9]/25 text-[#8B7BFF] rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-[#5A45F9]/20"
                           >
                             <span className="flex items-center gap-1.5">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
                               Select from media
                             </span>
                           </Button>
@@ -1839,9 +1839,9 @@ export default function EditorPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/25 to-orange-500/10 flex items-center justify-center">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="2" y1="12" x2="22" y2="12"/>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="2" y1="12" x2="22" y2="12" />
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                           </svg>
                         </div>
                         <div>
@@ -1916,7 +1916,7 @@ export default function EditorPage() {
                                     </span>
                                   ) : (
                                     <>
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                       Add Media
                                     </>
                                   )}
@@ -1973,7 +1973,7 @@ export default function EditorPage() {
                                   variant="ghost"
                                   className="p-1.5 hover:bg-red-500/20 rounded-lg text-white/30 hover:text-red-400 transition-colors cursor-pointer"
                                 >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                                 </Button>
                               </div>
                             </div>
@@ -1983,9 +1983,9 @@ export default function EditorPage() {
                                 images={countryImgUrls}
                                 coverPhoto={ci.coverPhoto}
                                 onReorder={(newImages) => {
-                                  setForm((prev) => ({
+                                  setForm((prev: any) => ({
                                     ...prev,
-                                    countryImages: prev.countryImages.map((c, i) =>
+                                    countryImages: prev.countryImages.map((c: any, i: number) =>
                                       i === idx ? { ...c, images: newImages } : c
                                     ),
                                   }));
@@ -2058,7 +2058,7 @@ export default function EditorPage() {
                           }}
                           className="px-4 py-2.5 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-1.5"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                           Add Country
                         </button>
                       </div>
@@ -2071,10 +2071,10 @@ export default function EditorPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500/25 to-rose-500/10 flex items-center justify-center">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="3" width="7" height="7"/>
-                            <rect x="14" y="3" width="7" height="7"/>
-                            <rect x="14" y="14" width="7" height="7"/>
-                            <rect x="3" y="14" width="7" height="7"/>
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
                           </svg>
                         </div>
                         <div>
@@ -2115,7 +2115,7 @@ export default function EditorPage() {
                                     </span>
                                   ) : (
                                     <>
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                                       Add Media
                                     </>
                                   )}
@@ -2172,7 +2172,7 @@ export default function EditorPage() {
                                   variant="ghost"
                                   className="p-1.5 hover:bg-red-500/20 rounded-lg text-white/30 hover:text-red-400 transition-colors cursor-pointer"
                                 >
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                                 </Button>
                               </div>
                             </div>
@@ -2289,7 +2289,7 @@ export default function EditorPage() {
                           }}
                           className="px-4 py-2.5 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-sm font-medium transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex items-center gap-1.5"
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                           Add Collection
                         </button>
                       </div>
