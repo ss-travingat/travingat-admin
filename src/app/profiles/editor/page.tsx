@@ -835,7 +835,7 @@ export default function EditorPage() {
           body: JSON.stringify({
             key,
             mediaType: "IMAGE",
-            thumbnails: type === "avatar" || type === "cover" ? [] : [720]
+            thumbnails: type === "avatar" || type === "cover" ? [144] : [144, 720]
           }),
         });
       } catch (err) {
