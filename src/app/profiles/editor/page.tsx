@@ -1292,11 +1292,24 @@ export default function EditorPage() {
             <p className="text-xs text-white/40 mb-3">
               {mediaPickerTarget.type === "about"
                 ? `Tap photos to add them to About (${form.aboutImages.length}/4 selected).`
-                : "Tap items to add them. Already added items are dimmed."}
+                : mediaPickerTarget.type === "collection"
+                  ? "Tap items to add them. Images already in this collection are hidden."
+                  : "Tap items to add them. Already added items are dimmed."}
             </p>
             <div className="overflow-y-auto flex-1 -mx-1">
               <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3 px-1">
-                {selectableMediaUrls.map((url, i) => {
+                {selectableMediaUrls
+                  .filter((url) => {
+                    const extractUrl = (img: any) => typeof img === "string" ? img : (img as any).url;
+                    if (mediaPickerTarget.type === "collection") {
+                      const currentCollection = form.collectionImages[mediaPickerTarget.idx ?? -1];
+                      if (!currentCollection) return true;
+                      const existingUrls = currentCollection.images.map(extractUrl);
+                      return !existingUrls.includes(extractUrl(url));
+                    }
+                    return true;
+                  })
+                  .map((url, i) => {
                   const extractUrl = (img: any) => typeof img === "string" ? img : (img as any).url;
 
                   const existing = mediaPickerTarget.type === "country"
@@ -1341,7 +1354,12 @@ export default function EditorPage() {
                           setForm((prev) => ({
                             ...prev,
                             collectionImages: prev.collectionImages.map((c, ci) =>
-                              ci === idx ? { ...c, images: isAlreadyAdded ? c.images.filter(u => u !== url) : [...c.images, url] } : c
+                              ci === idx ? { 
+                                ...c, 
+                                images: isAlreadyAdded 
+                                  ? c.images.filter((u: any) => extractUrl(u) !== extractUrl(url)) 
+                                  : [...c.images, countryCode ? { url: extractUrl(url), countryCode } : extractUrl(url)] 
+                              } : c
                             ),
                           }));
                           return;
@@ -2076,6 +2094,58 @@ export default function EditorPage() {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
+                                <label className="px-3 py-1.5 bg-[#1c212c] hover:bg-[#252b38] text-[#d4d4d4] hover:text-white rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5">
+                                  {uploading?.field === "collection" && uploading?.idx === idx ? (
+                                    <span className="inline-flex items-center gap-1.5">
+                                      {uploading.stage === "done" ? (
+                                        <span className="text-emerald-400">✓</span>
+                                      ) : (
+                                        <span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin inline-block" />
+                                      )}
+                                      {uploading.stage === "processing"
+                                        ? `Processing${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                        : uploading.stage === "uploading"
+                                          ? `Uploading${uploading.total && uploading.total > 1 ? ` ${uploading.current}/${uploading.total}` : ""}…`
+                                          : `Uploaded${uploading.total && uploading.total > 1 ? ` ${uploading.total}/${uploading.total}` : ""}!`}
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                      Add Media
+                                    </>
+                                  )}
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg, image/png, image/webp, image/avif"
+                                    multiple
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                      const files = Array.from(e.target.files ?? []);
+                                      if (files.length === 0) return;
+                                      e.target.value = "";
+                                      const urls: string[] = [];
+                                      for (let fi = 0; fi < files.length; fi++) {
+                                        const file = files[fi];
+                                        const batch = { current: fi + 1, total: files.length };
+                                        if (file.type.startsWith("video/")) {
+                                          const url = await handleVideoUpload(file, "collection", idx, batch);
+                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                        } else {
+                                          const url = await handleImageUpload(file, "collection", idx, batch);
+                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                        }
+                                      }
+                                      if (urls.length > 0) {
+                                        const newCollectionImages = form.collectionImages.map((c, i) =>
+                                          i === idx ? { ...c, images: [...c.images, ...urls] } : c
+                                        );
+                                        const newForm = { ...form, collectionImages: newCollectionImages };
+                                        setForm(newForm);
+                                        saveFormState(newForm);
+                                      }
+                                    }}
+                                  />
+                                </label>
                                 {canPickFromMedia && (
                                   <Button
                                     type="button"
@@ -2103,7 +2173,7 @@ export default function EditorPage() {
                             </div>
                             <div className="p-4">
                               <SortableImageGrid
-                                images={collImgUrls}
+                                images={ci.images}
                                 coverPhoto={ci.coverPhoto}
                                 onReorder={(newImages) => {
                                   setForm((prev) => ({

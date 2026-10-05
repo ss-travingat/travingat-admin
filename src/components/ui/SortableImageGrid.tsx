@@ -27,6 +27,7 @@ interface SortableItemProps {
   onRemove: (idx: number) => void;
   onSetCover?: (url: string) => void;
   onClick?: (idx: number) => void;
+  countryCode?: string;
 }
 
 function SortableItem({
@@ -37,6 +38,7 @@ function SortableItem({
   onRemove,
   onSetCover,
   onClick,
+  countryCode,
 }: SortableItemProps) {
   const {
     attributes,
@@ -99,6 +101,16 @@ function SortableItem({
         </div>
       )}
 
+      {countryCode && (
+        <div className="absolute top-2 right-2 z-20" style={{ right: isCover ? '4rem' : '0.5rem' }}>
+          <img
+            src={`/flags/${countryCode.toUpperCase()}.svg`}
+            alt={countryCode}
+            className="h-3.5 w-5 rounded-sm object-cover drop-shadow-md"
+          />
+        </div>
+      )}
+
       {/* Actions */}
       <div className="absolute bottom-2 inset-x-2 flex items-center justify-between opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity z-20">
         {onSetCover ? (
@@ -124,9 +136,9 @@ function SortableItem({
 }
 
 interface SortableImageGridProps {
-  images: string[];
+  images: (string | { url: string; countryCode?: string })[];
   coverPhoto?: string;
-  onReorder: (newImages: string[]) => void;
+  onReorder: (newImages: (string | { url: string; countryCode?: string })[]) => void;
   onRemove: (idx: number) => void;
   onSetCover?: (url: string) => void;
   onImageClick?: (idx: number) => void;
@@ -154,8 +166,8 @@ export default function SortableImageGrid({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = images.indexOf(active.id as string);
-      const newIndex = images.indexOf(over.id as string);
+      const oldIndex = items.findIndex(i => i.id === active.id);
+      const newIndex = items.findIndex(i => i.id === over.id);
       if (oldIndex !== -1 && newIndex !== -1) {
         onReorder(arrayMove(images, oldIndex, newIndex));
       }
@@ -172,7 +184,11 @@ export default function SortableImageGrid({
   }
 
   // Ensure unique IDs even if there are duplicate URLs (though unlikely in this context)
-  const items = images.map((url, i) => ({ id: url, url, index: i }));
+  const items = images.map((img, i) => {
+    const url = typeof img === 'string' ? img : img.url;
+    const countryCode = typeof img === 'string' ? undefined : img.countryCode;
+    return { id: url, url, countryCode, index: i, raw: img };
+  });
 
   return (
     <DndContext
@@ -187,6 +203,7 @@ export default function SortableImageGrid({
               key={item.id}
               id={item.id}
               url={item.url}
+              countryCode={item.countryCode}
               index={item.index}
               isCover={item.url === coverPhoto}
               onRemove={onRemove}
