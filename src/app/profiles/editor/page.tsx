@@ -2458,18 +2458,16 @@ export default function EditorPage() {
                   <MultiCountrySelect
                     label="Visited Countries"
                     value={form.visitedCountryCodes}
+                    autoSelected={Array.from(new Set(form.countryImages.map(c => c.countryCode)))}
                     onChange={(codes) =>
                       setForm((prev) => ({
                         ...prev,
                         visitedCountryCodes: codes,
-                        countries: codes.length,
+                        countries: Array.from(new Set([...codes, ...form.countryImages.map(c => c.countryCode)])).length,
                       }))
                     }
                   />
                 </div>
-
-
-
               )}
 
               {currentStep === 4 && (
