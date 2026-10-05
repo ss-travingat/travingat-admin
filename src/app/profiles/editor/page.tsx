@@ -840,7 +840,7 @@ export default function EditorPage() {
           body: JSON.stringify({
             key,
             mediaType: "IMAGE",
-            thumbnails: type === "avatar" || type === "cover" ? [144] : [144, 720]
+            thumbnails: [144, 720]
           }),
         });
       } catch (err) {
@@ -874,8 +874,9 @@ export default function EditorPage() {
 
     let url = typeof cropConfig.src === "string" && !cropConfig.file ? cropConfig.src : null;
 
-    if (cropConfig.file) {
-      const urlOrObj = await handleImageUpload(cropConfig.file, cropConfig.type);
+    if (croppedFile || cropConfig.file) {
+      const fileToUpload = croppedFile || cropConfig.file;
+      const urlOrObj = await handleImageUpload(fileToUpload, cropConfig.type);
       if (urlOrObj) {
         url = typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url;
       }
