@@ -140,7 +140,8 @@ function MultiCountrySelect({
   const filtered = COUNTRY_LIST.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase())
+      c.code.toLowerCase().includes(search.toLowerCase()) ||
+      c.aliases?.some(alias => alias.toLowerCase().includes(search.toLowerCase()))
   );
 
   const allSelected = Array.from(new Set([...value, ...autoSelected]));
