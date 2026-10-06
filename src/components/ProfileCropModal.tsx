@@ -45,6 +45,7 @@ export default function ProfileCropModal({
   const [cropState, setCropState] = useState<CropData>(() => ({
     ...defaultCropState,
     ...initialCropData,
+    aspectRatio: aspectRatio, // Always enforce the current hardcoded aspect ratio
   }));
 
   const setCrop = (c: any) => {
