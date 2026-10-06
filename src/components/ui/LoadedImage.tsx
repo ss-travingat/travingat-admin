@@ -87,6 +87,14 @@ export default function LoadedImage({
       setIsHealing(false); // Prevent multiple triggers
     }
 
+    if (fallbackSrc) {
+      // Delay revocation slightly to allow the CSS transition (opacity crossfade) to finish seamlessly
+      setTimeout(() => {
+        URL.revokeObjectURL(fallbackSrc);
+        globalBlobFallbackMap.delete(src);
+      }, 1000);
+    }
+
     onLoad?.();
   };
 
