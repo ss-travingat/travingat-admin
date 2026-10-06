@@ -465,6 +465,12 @@ export default function MediaEngineDashboard() {
                         <span className="material-symbols-rounded text-[14px]">schedule</span>
                         {new Date(job.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </div>
+                      {job.media_quality && (
+                        <div className="flex items-center gap-1 text-white/60">
+                          <span className="material-symbols-rounded text-[12px]">high_quality</span>
+                          {job.media_quality}%
+                        </div>
+                      )}
                     </div>
                     
                     {job.error_message && (

@@ -259,6 +259,7 @@ export default function MediaEngineJobPage() {
                       {thumb720.width && <span>{thumb720.width} × {thumb720.height}</span>}
                       {thumb720.file_size && <span>{formatBytes(thumb720.file_size)}</span>}
                       {thumb720.content_type && <span className="font-mono">{thumb720.content_type}</span>}
+                      {thumb720.quality && <span>{thumb720.quality}% Quality</span>}
                     </div>
                   )}
                 </div>
