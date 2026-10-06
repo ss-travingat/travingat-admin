@@ -33,7 +33,7 @@ export default function ProfileCropModal({
   title = "Crop Image",
 }: ProfileCropModalProps) {
   // Default aspect ratios
-  const aspectRatio = type === "cover" ? 344 / 226 : 1; // Cover approx 1.5, Avatar 1:1
+  const aspectRatio = type === "cover" ? 640 / 662 : 1; // Cover matches frontend aspect-[640/662], Avatar 1:1
 
   const defaultCropState = {
     crop: { x: 0, y: 0 },
