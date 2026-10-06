@@ -4,6 +4,8 @@ import { useState, useRef } from "react";
 import { COUNTRY_LIST, matchCountryExact } from "@/lib/countries";
 import { Button } from "@/components/ui/Button";
 import CountrySelect from "./CountrySelect";
+import { toLandingAssetUrl } from "@/lib/landing-assets";
+import { globalBlobFallbackMap } from "@/components/ui/LoadedImage";
 
 interface BulkUploadModalProps {
   onUploadComplete: (results: { countryCode: string; urls: any[] }[]) => void;
@@ -172,6 +174,10 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
               body: file,
             });
             if (!putRes.ok) throw new Error("Upload failed");
+            
+            // Register local fallback for instant UI update
+            const blobUrl = URL.createObjectURL(file);
+            globalBlobFallbackMap.set(toLandingAssetUrl(publicUrl), blobUrl);
             
             // Optimize
             const urlObj = new URL(publicUrl);
