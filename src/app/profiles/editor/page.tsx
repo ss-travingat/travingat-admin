@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import LoadedImage from "@/components/ui/LoadedImage";
 import { toLandingAssetUrl, getOptimizedMediaUrl } from "@/lib/landing-assets";
-import { COUNTRY_LIST } from "@/lib/countries";
+import { COUNTRY_LIST, searchCountry } from "@/lib/countries";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -137,12 +137,7 @@ function MultiCountrySelect({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const filtered = COUNTRY_LIST.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.aliases?.some(alias => alias.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = COUNTRY_LIST.filter(c => searchCountry(c, search));
 
   const allSelected = Array.from(new Set([...value, ...autoSelected]));
 

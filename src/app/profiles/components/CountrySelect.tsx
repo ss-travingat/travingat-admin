@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { COUNTRY_LIST } from "@/lib/countries";
+import { COUNTRY_LIST, searchCountry } from "@/lib/countries";
 import { Input } from "@/components/ui/Input";
 
 export default function CountrySelect({
@@ -29,12 +29,7 @@ export default function CountrySelect({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const filtered = COUNTRY_LIST.filter(
-    (c) =>
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.aliases?.some(alias => alias.toLowerCase().includes(search.toLowerCase()))
-  );
+  const filtered = COUNTRY_LIST.filter(c => searchCountry(c, search));
 
   const selected = COUNTRY_LIST.find((c) => c.code === value);
 

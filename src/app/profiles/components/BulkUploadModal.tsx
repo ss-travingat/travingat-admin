@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { COUNTRY_LIST } from "@/lib/countries";
+import { COUNTRY_LIST, matchCountryExact } from "@/lib/countries";
 import { Button } from "@/components/ui/Button";
 import CountrySelect from "./CountrySelect";
 
@@ -73,12 +73,7 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
     const parsedFolders = Array.from(folderMap.entries()).map(([folderName, files]) => {
       // Try to fuzzy match folder name to a country code
       const normalizedFolder = folderName.toLowerCase().replace(/[^a-z0-9]/g, "");
-      const match = COUNTRY_LIST.find(
-        c => 
-          c.name.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedFolder ||
-          c.code.toLowerCase() === normalizedFolder ||
-          c.aliases?.some(alias => alias.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedFolder)
-      );
+      const match = COUNTRY_LIST.find(c => matchCountryExact(c, folderName));
 
       return {
         originalName: folderName,
