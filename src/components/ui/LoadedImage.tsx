@@ -166,17 +166,19 @@ export default function LoadedImage({
       )}
 
       {/* Real image stays hidden until loaded, preserving skeleton-first UX. */}
-      <img
-        ref={imgRef}
-        src={currentSrc}
-        alt={alt}
-        className={`relative z-10 transition-all duration-700 ${status === "loaded" ? "opacity-100 blur-none" : "opacity-0 blur-lg"} ${className}`}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        {...(priority ? { fetchPriority: "high" as any, loading: "eager" } : { loading: "lazy" })}
-        onClick={onClick}
-        onLoad={handleLoad}
-        onError={handleError}
-      />
+      <div className={`absolute inset-0 z-10 transition-all duration-700 ${status === "loaded" ? "opacity-100 blur-none" : "opacity-0 blur-lg"}`}>
+        <img
+          ref={imgRef}
+          src={currentSrc}
+          alt={alt}
+          className={`w-full h-full ${className}`}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          {...(priority ? { fetchPriority: "high" as any, loading: "eager" } : { loading: "lazy" })}
+          onClick={onClick}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+      </div>
 
       {/* Fallback Error State — shown when all retries fail */}
       {status === "error" && (
