@@ -101,6 +101,7 @@ export default function LoadedImage({
   const handleError = () => {
     // If thumbnail failed, fall back to the original src
     if (useThumbnail && thumbnailSrc) {
+      console.warn(`[LoadedImage] Thumbnail failed. Falling back to main image: ${src}`);
       setUseThumbnail(false);
       setRetryCount(0);
       setStatus("loading");
@@ -126,10 +127,10 @@ export default function LoadedImage({
   };
 
   useEffect(() => {
-    // Force error state if image hangs for more than 1 minute
+    // Force error state if image hangs for more than 5 minutes
     maxLoadTimeoutRef.current = setTimeout(() => {
       setStatus("error");
-    }, 60000);
+    }, 300000);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
