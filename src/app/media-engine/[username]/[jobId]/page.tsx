@@ -265,6 +265,55 @@ export default function MediaEngineJobPage() {
                 </div>
               );
             })()}
+
+            {/* 144p Thumbnail */}
+            {asset.thumbnails && asset.thumbnails.length > 0 && (() => {
+              const thumb144 = asset.thumbnails.find((t: any) => t.size === 144);
+              if (!thumb144) return null;
+              
+              const thumbUrl = getProxiedImageUrl(thumb144?.url);
+              return (
+                <div className="bg-[#1A1A1A] rounded-2xl border border-white/5 overflow-hidden">
+                  <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-semibold text-white/60">144p Thumbnail (Blur Preview)</span>
+                      <span className="ml-2 text-xs font-mono text-white/20">{thumb144?.size}w</span>
+                    </div>
+                    {thumbUrl && (
+                      <a href={thumbUrl} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-1.5 text-xs text-white/30 hover:text-blue-400 transition-colors">
+                        <Download className="w-3.5 h-3.5" /> Download
+                      </a>
+                    )}
+                  </div>
+                  <div className="relative bg-[#0D0D0D] flex items-center justify-center min-h-[140px] p-6">
+                    <div className="absolute inset-0 opacity-[0.03]"
+                      style={{ backgroundImage: 'repeating-conic-gradient(#fff 0% 25%, transparent 0% 50%)', backgroundSize: '16px 16px' }} />
+                    {thumbUrl ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={thumbUrl}
+                        alt="144p thumbnail"
+                        className="relative max-w-full max-h-[140px] object-contain rounded-lg shadow-2xl blur-[2px]"
+                      />
+                    ) : (
+                      <div className="relative flex flex-col items-center gap-3 text-white/20">
+                        <ImageIcon className="w-10 h-10" />
+                        <span className="text-xs">No thumbnail</span>
+                      </div>
+                    )}
+                  </div>
+                  {thumb144 && (
+                    <div className="px-5 py-3 border-t border-white/5 flex items-center gap-4 text-xs text-white/30">
+                      {thumb144.width && <span>{thumb144.width} × {thumb144.height}</span>}
+                      {thumb144.file_size && <span>{formatBytes(thumb144.file_size)}</span>}
+                      {thumb144.content_type && <span className="font-mono">{thumb144.content_type}</span>}
+                      {thumb144.quality && <span>{thumb144.quality}% Quality</span>}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* ── Right Sidebar ─────────────────────────────────────── */}
