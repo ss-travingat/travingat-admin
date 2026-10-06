@@ -33,7 +33,7 @@ export default function ProfileCropModal({
   title = "Crop Image",
 }: ProfileCropModalProps) {
   // Default aspect ratios
-  const aspectRatio = type === "cover" ? 344 / 528 : 1; // Cover matches Adventure card, Avatar 1:1
+  const aspectRatio = type === "cover" ? 640 / 662 : 1; // Cover matches main profile page, Avatar 1:1
 
   const defaultCropState = {
     crop: { x: 0, y: 0 },
