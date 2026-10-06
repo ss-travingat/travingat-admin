@@ -32,7 +32,8 @@ export default function CountrySelect({
   const filtered = COUNTRY_LIST.filter(
     (c) =>
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.code.toLowerCase().includes(search.toLowerCase())
+      c.code.toLowerCase().includes(search.toLowerCase()) ||
+      c.aliases?.some(alias => alias.toLowerCase().includes(search.toLowerCase()))
   );
 
   const selected = COUNTRY_LIST.find((c) => c.code === value);

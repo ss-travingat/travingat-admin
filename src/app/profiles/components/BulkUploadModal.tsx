@@ -76,7 +76,8 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
       const match = COUNTRY_LIST.find(
         c => 
           c.name.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedFolder ||
-          c.code.toLowerCase() === normalizedFolder
+          c.code.toLowerCase() === normalizedFolder ||
+          c.aliases?.some(alias => alias.toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedFolder)
       );
 
       return {
