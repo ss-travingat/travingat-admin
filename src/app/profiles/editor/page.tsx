@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, Suspense } from "react";
-import LoadedImage from "@/components/ui/LoadedImage";
+import LoadedImage, { globalBlobFallbackMap } from "@/components/ui/LoadedImage";
 import { toLandingAssetUrl, getOptimizedMediaUrl } from "@/lib/landing-assets";
 import { COUNTRY_LIST, searchCountry } from "@/lib/countries";
 import { Button } from "@/components/ui/Button";
@@ -869,26 +869,53 @@ export default function EditorPage() {
     if (!cropConfig) return;
 
     let url = typeof cropConfig.src === "string" && !cropConfig.file ? cropConfig.src : null;
+    const type = cropConfig.type;
 
     if (croppedFile || cropConfig.file) {
       const fileToUpload = croppedFile || cropConfig.file;
-      const urlOrObj = await handleImageUpload(fileToUpload, cropConfig.type);
-      if (urlOrObj) {
-        url = typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url;
-      }
-    }
-
-    if (url) {
+      const blobUrl = URL.createObjectURL(fileToUpload!);
+      
       setForm((prev) => ({
         ...prev,
         images: {
           ...prev.images,
-          [cropConfig.type]: url,
-          [`${cropConfig.type}Crop`]: cropData
+          [type]: blobUrl,
+          [`${type}Crop`]: cropData
         },
       }));
+      setCropConfig(null);
+
+      const urlOrObj = await handleImageUpload(fileToUpload!, type);
+      if (urlOrObj) {
+        url = typeof urlOrObj === 'string' ? urlOrObj : urlOrObj.url;
+        globalBlobFallbackMap.set(toLandingAssetUrl(url), blobUrl);
+        setForm((prev) => ({
+          ...prev,
+          images: {
+            ...prev.images,
+            [type]: url,
+            [`${type}Crop`]: cropData
+          },
+        }));
+      } else {
+        setForm((prev) => ({
+          ...prev,
+          images: { ...prev.images, [type]: "" },
+        }));
+      }
+    } else {
+      if (url) {
+        setForm((prev) => ({
+          ...prev,
+          images: {
+            ...prev.images,
+            [type]: url,
+            [`${type}Crop`]: cropData
+          },
+        }));
+      }
+      setCropConfig(null);
     }
-    setCropConfig(null);
   };
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -913,77 +940,7 @@ export default function EditorPage() {
     e.target.value = "";
   };
 
-  const handleGalleryUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    // Reset input so the same files can be re-selected if needed
-    e.target.value = "";
-    for (let fi = 0; fi < files.length; fi++) {
-      const file = files[fi];
-      const batch = { current: fi + 1, total: files.length };
-      const url = await handleImageUpload(file, "gallery", undefined, batch);
-      if (url) {
-        setForm((prev) => ({
-          ...prev,
-          images: { ...prev.images, gallery: [...prev.images.gallery, typeof url === 'string' ? url : url.url] },
-        }));
-      }
-    }
-  };
 
-  const handleGalleryVideoUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    e.target.value = "";
-    for (let fi = 0; fi < files.length; fi++) {
-      const file = files[fi];
-      const batch = { current: fi + 1, total: files.length };
-      const url = await handleVideoUpload(file, "gallery", undefined, batch);
-      if (url) {
-        setForm((prev) => ({
-          ...prev,
-          images: { ...prev.images, gallery: [...prev.images.gallery, typeof url === 'string' ? url : url.url] },
-        }));
-      }
-    }
-  };
-
-  const handleAboutUpload = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const files = Array.from(e.target.files ?? []);
-    if (files.length === 0) return;
-    e.target.value = "";
-
-    const availableSlots = Math.max(0, 4 - form.aboutImages.length);
-    if (availableSlots === 0) {
-      showToast("About section supports up to 4 photos.", true);
-      return;
-    }
-
-    const filesToUpload = files.slice(0, availableSlots);
-    const uploadedUrls: string[] = [];
-
-    for (const file of filesToUpload) {
-      const url = await handleImageUpload(file, "about");
-      if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
-    }
-
-    if (uploadedUrls.length > 0) {
-      setForm((prev) => ({
-        ...prev,
-        aboutImages: [...prev.aboutImages, ...uploadedUrls].slice(0, 4),
-      }));
-    }
-
-    if (files.length > filesToUpload.length) {
-      showToast("Only the first 4 About photos are kept.");
-    }
-  };
 
   const removeGalleryImage = (index: number) => {
     setForm((prev) => ({
@@ -1784,29 +1741,41 @@ export default function EditorPage() {
                             }
 
                             const filesToUpload = files.slice(0, availableSlots);
-                            const uploadedUrls: string[] = [];
+                            const previews = filesToUpload.map(f => URL.createObjectURL(f));
+                            
+                            setForm((prev) => ({
+                              ...prev,
+                              aboutImages: [...prev.aboutImages, ...previews].slice(0, 4),
+                            }));
+
+                            if (files.length > filesToUpload.length) {
+                              showToast("Only the first 4 About media items are kept.");
+                            }
 
                             for (let fi = 0; fi < filesToUpload.length; fi++) {
                               const file = filesToUpload[fi];
                               const batch = { current: fi + 1, total: filesToUpload.length };
+                              let url;
                               if (file.type.startsWith("video/")) {
-                                const url = await handleVideoUpload(file, "about", undefined, batch);
-                                if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
+                                url = await handleVideoUpload(file, "about", undefined, batch);
                               } else {
-                                const url = await handleImageUpload(file, "about", undefined, batch);
-                                if (url) uploadedUrls.push(typeof url === 'string' ? url : url.url);
+                                url = await handleImageUpload(file, "about", undefined, batch);
                               }
-                            }
-
-                            if (uploadedUrls.length > 0) {
-                              setForm((prev) => ({
-                                ...prev,
-                                aboutImages: [...prev.aboutImages, ...uploadedUrls].slice(0, 4),
-                              }));
-                            }
-
-                            if (files.length > filesToUpload.length) {
-                              showToast("Only the first 4 About media items are kept.");
+                              
+                              if (url) {
+                                const finalUrl = typeof url === 'string' ? url : url.url;
+                                globalBlobFallbackMap.set(toLandingAssetUrl(finalUrl), previews[fi]);
+                                setForm(prev => {
+                                  const newAbout = [...prev.aboutImages];
+                                  const idx = newAbout.indexOf(previews[fi]);
+                                  if (idx !== -1) newAbout[idx] = finalUrl;
+                                  return { ...prev, aboutImages: newAbout };
+                                });
+                              } else {
+                                setForm(prev => {
+                                  return { ...prev, aboutImages: prev.aboutImages.filter(u => u !== previews[fi]) };
+                                });
+                              }
                             }
                           }}
                           className="hidden"
@@ -1926,25 +1895,56 @@ export default function EditorPage() {
                                       const files = Array.from(e.target.files ?? []);
                                       if (files.length === 0) return;
                                       e.target.value = "";
-                                      const urls: string[] = [];
+                                      const previews = files.map(f => URL.createObjectURL(f));
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        countryImages: prev.countryImages.map((c, i) =>
+                                          i === idx ? { ...c, images: [...c.images, ...previews] } : c
+                                        )
+                                      }));
                                       for (let fi = 0; fi < files.length; fi++) {
                                         const file = files[fi];
                                         const batch = { current: fi + 1, total: files.length };
+                                        let url;
                                         if (file.type.startsWith("video/")) {
-                                          const url = await handleVideoUpload(file, "country", idx, batch);
-                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                          url = await handleVideoUpload(file, "country", idx, batch);
                                         } else {
-                                          const url = await handleImageUpload(file, "country", idx, batch);
-                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                          url = await handleImageUpload(file, "country", idx, batch);
                                         }
-                                      }
-                                      if (urls.length > 0) {
-                                        const newCountryImages = form.countryImages.map((c, i) =>
-                                          i === idx ? { ...c, images: [...c.images, ...urls] } : c
-                                        );
-                                        const newForm = { ...form, countryImages: newCountryImages };
-                                        setForm(newForm);
-                                        saveFormState(newForm);
+                                        if (url) {
+                                          const finalUrl = typeof url === 'string' ? url : url.url;
+                                          globalBlobFallbackMap.set(toLandingAssetUrl(finalUrl), previews[fi]);
+                                          setForm((prev) => {
+                                            const newForm = {
+                                              ...prev,
+                                              countryImages: prev.countryImages.map((c, i) => {
+                                                if (i === idx) {
+                                                  const newImages = [...c.images];
+                                                  const imgIdx = newImages.indexOf(previews[fi]);
+                                                  if (imgIdx !== -1) newImages[imgIdx] = finalUrl;
+                                                  return { ...c, images: newImages };
+                                                }
+                                                return c;
+                                              })
+                                            };
+                                            if (fi === files.length - 1) saveFormState(newForm);
+                                            return newForm;
+                                          });
+                                        } else {
+                                          setForm((prev) => {
+                                            const newForm = {
+                                              ...prev,
+                                              countryImages: prev.countryImages.map((c, i) => {
+                                                if (i === idx) {
+                                                  return { ...c, images: c.images.filter(u => u !== previews[fi]) };
+                                                }
+                                                return c;
+                                              })
+                                            };
+                                            if (fi === files.length - 1) saveFormState(newForm);
+                                            return newForm;
+                                          });
+                                        }
                                       }
                                     }}
                                   />
@@ -2125,25 +2125,56 @@ export default function EditorPage() {
                                       const files = Array.from(e.target.files ?? []);
                                       if (files.length === 0) return;
                                       e.target.value = "";
-                                      const urls: string[] = [];
+                                      const previews = files.map(f => URL.createObjectURL(f));
+                                      setForm((prev) => ({
+                                        ...prev,
+                                        collectionImages: prev.collectionImages.map((c, i) =>
+                                          i === idx ? { ...c, images: [...c.images, ...previews] } : c
+                                        )
+                                      }));
                                       for (let fi = 0; fi < files.length; fi++) {
                                         const file = files[fi];
                                         const batch = { current: fi + 1, total: files.length };
+                                        let url;
                                         if (file.type.startsWith("video/")) {
-                                          const url = await handleVideoUpload(file, "collection", idx, batch);
-                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                          url = await handleVideoUpload(file, "collection", idx, batch);
                                         } else {
-                                          const url = await handleImageUpload(file, "collection", idx, batch);
-                                          if (url) urls.push(typeof url === 'string' ? url : url.url);
+                                          url = await handleImageUpload(file, "collection", idx, batch);
                                         }
-                                      }
-                                      if (urls.length > 0) {
-                                        const newCollectionImages = form.collectionImages.map((c, i) =>
-                                          i === idx ? { ...c, images: [...c.images, ...urls] } : c
-                                        );
-                                        const newForm = { ...form, collectionImages: newCollectionImages };
-                                        setForm(newForm);
-                                        saveFormState(newForm);
+                                        if (url) {
+                                          const finalUrl = typeof url === 'string' ? url : url.url;
+                                          globalBlobFallbackMap.set(toLandingAssetUrl(finalUrl), previews[fi]);
+                                          setForm((prev) => {
+                                            const newForm = {
+                                              ...prev,
+                                              collectionImages: prev.collectionImages.map((c, i) => {
+                                                if (i === idx) {
+                                                  const newImages = [...c.images];
+                                                  const imgIdx = newImages.indexOf(previews[fi]);
+                                                  if (imgIdx !== -1) newImages[imgIdx] = finalUrl;
+                                                  return { ...c, images: newImages };
+                                                }
+                                                return c;
+                                              })
+                                            };
+                                            if (fi === files.length - 1) saveFormState(newForm);
+                                            return newForm;
+                                          });
+                                        } else {
+                                          setForm((prev) => {
+                                            const newForm = {
+                                              ...prev,
+                                              collectionImages: prev.collectionImages.map((c, i) => {
+                                                if (i === idx) {
+                                                  return { ...c, images: c.images.filter(u => u !== previews[fi]) };
+                                                }
+                                                return c;
+                                              })
+                                            };
+                                            if (fi === files.length - 1) saveFormState(newForm);
+                                            return newForm;
+                                          });
+                                        }
                                       }
                                     }}
                                   />
