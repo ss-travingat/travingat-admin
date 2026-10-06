@@ -271,6 +271,7 @@ export default function BulkUploadModal({ onUploadComplete }: BulkUploadModalPro
                       ? 'bg-[#5A45F9]/[0.08] border-[#5A45F9]/40 shadow-[0_0_20px_rgba(90,69,249,0.1)]' 
                       : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.04]'
                   }`}
+                  style={{ zIndex: detectedFolders.length - idx }}
                 >
                   <div className="flex items-center gap-5 relative z-10">
                     <div className="flex items-center justify-center">
