@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef } from "react";
 import LoadedImage, { globalBlobFallbackMap } from "@/components/ui/LoadedImage";
 import { toLandingAssetUrl, getOptimizedMediaUrl } from "@/lib/landing-assets";
 import { COUNTRY_LIST, searchCountry } from "@/lib/countries";
@@ -344,7 +344,6 @@ function TagInput({
 }
 
 export default function EditorPage() {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [editing, setEditing] = useState<Profile | null>(null);
   const [form, setForm] = useState<Omit<Profile, "id">>(emptyForm);
   const [loading, setLoading] = useState(true);
@@ -354,7 +353,6 @@ export default function EditorPage() {
   const [uploading, setUploading] = useState<{ field: "cover" | "avatar" | "gallery" | "about" | "country" | "collection"; stage: "processing" | "uploading" | "done"; idx?: number; current?: number; total?: number } | null>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
   const aboutInputRef = useRef<HTMLInputElement>(null);
   const [pendingCountryCode, setPendingCountryCode] = useState<string>("");
   const [pendingCollectionTitle, setPendingCollectionTitle] = useState<string>("");
@@ -362,53 +360,14 @@ export default function EditorPage() {
   const [handleStatus, setHandleStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
   const [lightbox, setLightbox] = useState<{ items: { url: string; label?: string }[]; index: number } | null>(null);
 
-  // Orphan cleanup state
-  const [orphanScanning, setOrphanScanning] = useState(false);
-  const [orphanResult, setOrphanResult] = useState<{
-    orphans: { key: string; url: string; size: number; lastModified: string }[];
-    totalR2: number;
-    totalReferenced: number;
-    totalOrphaned: number;
-    totalOrphanedBytes: number;
-  } | null>(null);
-  const [orphanDeleting, setOrphanDeleting] = useState(false);
-  const [orphanPanelOpen, setOrphanPanelOpen] = useState(false);
 
   const showToast = (msg: string, error = false) => {
     setToast({ msg, error });
     setTimeout(() => setToast(null), 3500);
   };
 
-  const fetchProfiles = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/profiles", { cache: "no-store" });
-      const data = await res.json();
-      const normalizedProfiles = (Array.isArray(data) ? data : []).map((profile) => {
-        const aboutImages = Array.isArray(profile.aboutImages) ? profile.aboutImages : (Array.isArray(profile.about_images) ? profile.about_images : []);
-        const countryImages = Array.isArray(profile.countryImages) ? profile.countryImages : (Array.isArray(profile.country_images) ? profile.country_images : []);
-        const rawCollectionImages = Array.isArray(profile.collectionImages) ? profile.collectionImages : (Array.isArray(profile.collection_images) ? profile.collection_images : []);
-        const collectionImages = rawCollectionImages.map((collection: any) => ({
-          ...collection,
-          countryCodes: Array.isArray(collection.countryCodes) ? collection.countryCodes : (Array.isArray(collection.country_codes) ? collection.country_codes : []),
-        }));
-        return {
-          ...profile,
-          aboutImages,
-          countryImages,
-          collectionImages,
-        };
-      }) as Profile[];
-      setProfiles([...normalizedProfiles].reverse());
-    } catch {
-      showToast("Failed to load profiles");
-    }
-    setLoading(false);
-  };
 
   useEffect(() => {
-    setTimeout(fetchProfiles, 0);
-
     // Check if we are navigated here to create or edit a profile
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -467,7 +426,6 @@ export default function EditorPage() {
         window.history.replaceState({}, '', '/profiles/editor');
       } else if (params.get("create") === "true") {
         const email = params.get("email") || "";
-        const waitlistId = params.get("waitlistId") || "";
         const countryName = params.get("country") || "";
 
         let flagCode = "";
@@ -615,8 +573,6 @@ export default function EditorPage() {
   }, [form.handle, editing]);
 
   const scanOrphans = async () => {
-    setOrphanScanning(true);
-    setOrphanPanelOpen(true);
     try {
       const res = await fetch("/api/profiles/orphans");
       const data = await res.json();
@@ -624,7 +580,6 @@ export default function EditorPage() {
         showToast(data.error || "Scan failed", true);
         return;
       }
-      setOrphanResult(data);
       if (data.totalOrphaned === 0) {
         showToast("No orphaned files found! ✨");
       } else {
@@ -632,34 +587,9 @@ export default function EditorPage() {
       }
     } catch {
       showToast("Failed to scan orphans", true);
-    } finally {
-      setOrphanScanning(false);
     }
   };
 
-  const deleteOrphans = async (keys: string[]) => {
-    if (keys.length === 0) return;
-    setOrphanDeleting(true);
-    try {
-      const res = await fetch("/api/profiles/orphans", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keys }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showToast(data.error || "Delete failed", true);
-        return;
-      }
-      showToast(`Deleted ${data.deleted} orphaned file${data.deleted !== 1 ? "s" : ""}`);
-      // Re-scan to update the list
-      await scanOrphans();
-    } catch {
-      showToast("Failed to delete orphans", true);
-    } finally {
-      setOrphanDeleting(false);
-    }
-  };
 
   const handleVideoUpload = async (
     file: File,
@@ -874,7 +804,7 @@ export default function EditorPage() {
     if (croppedFile || cropConfig.file) {
       const fileToUpload = croppedFile || cropConfig.file;
       const blobUrl = URL.createObjectURL(fileToUpload!);
-      
+
       setForm((prev) => ({
         ...prev,
         images: {
@@ -1046,8 +976,6 @@ export default function EditorPage() {
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
         showToast(errData?.error || `Save failed (${res.status})`, true);
-      } else {
-        fetchProfiles();
       }
     } catch {
       showToast("Failed to save changes", true);
@@ -1143,7 +1071,6 @@ export default function EditorPage() {
         setEditing(null);
         setForm(emptyForm);
       }
-      fetchProfiles();
     } catch {
       showToast("Failed to delete");
     }
@@ -1742,7 +1669,7 @@ export default function EditorPage() {
 
                             const filesToUpload = files.slice(0, availableSlots);
                             const previews = filesToUpload.map(f => URL.createObjectURL(f));
-                            
+
                             setForm((prev) => ({
                               ...prev,
                               aboutImages: [...prev.aboutImages, ...previews].slice(0, 4),
@@ -1761,7 +1688,7 @@ export default function EditorPage() {
                               } else {
                                 url = await handleImageUpload(file, "about", undefined, batch);
                               }
-                              
+
                               if (url) {
                                 const finalUrl = typeof url === 'string' ? url : url.url;
                                 globalBlobFallbackMap.set(toLandingAssetUrl(finalUrl), previews[fi]);
